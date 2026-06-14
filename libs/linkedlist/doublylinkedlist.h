@@ -102,15 +102,13 @@ class DoublyLinkedList{
             if(!node)
                 return nullptr;
 
-            shared_ptr<Node> newNode = make_shared<Node>(args...);
 
             if(node == tail){
-                tail->next = newNode;
-                newNode->previous = tail->previous;
-
-                tail = newNode;
+                return Append(args...);
             } else {
+                shared_ptr<Node> newNode = make_shared<Node>(args...);
                 shared_ptr<Node> nextNode = node->next;
+
                 if(!nextNode)
                     return nullptr;
                     
@@ -119,9 +117,9 @@ class DoublyLinkedList{
 
                 node->next = newNode;
                 newNode->previous = node;
-            }
 
-            return newNode;
+                return newNode;
+            }
         }
 
         void Remove(shared_ptr<Node>& node){

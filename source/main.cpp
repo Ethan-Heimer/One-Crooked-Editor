@@ -87,6 +87,7 @@ int main(int argc, char** argv){
     bool quit = false;
     Point curserPosition;
     int lineOffset = 0;
+    int colOffset = 0;
 
     while(!quit){
         int row, col;
@@ -99,7 +100,7 @@ int main(int argc, char** argv){
         }
         
         for(int i = lineOffset; i < (row + lineOffset) && currentNode; i++){
-            printw("%s \n", currentNode->data->Substring(0, col-2).c_str());
+            printw("%s \n", currentNode->data->Substring(colOffset, colOffset + col - 2).c_str());
             currentNode = currentNode->next;
         }
 
@@ -109,7 +110,13 @@ int main(int argc, char** argv){
         if(curserPosition.y >= 5 && curserPosition.y < lineOffset + 5)
             lineOffset--;
 
-        move(curserPosition.y - lineOffset, currentLine->data->GetGapIndex());
+        if(currentLine->data->GetGapIndex() >= col-2 - 5 + colOffset)
+            colOffset++;
+
+        if(currentLine->data->GetGapIndex() >= 5 && currentLine->data->GetGapIndex() < colOffset + 5)
+            colOffset--;
+
+        move(curserPosition.y - lineOffset, currentLine->data->GetGapIndex() - colOffset);
         refresh();
 
         int input = getch();

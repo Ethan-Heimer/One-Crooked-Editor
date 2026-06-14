@@ -5,4 +5,6 @@ cmake ..
 make
 
 cd bin
-./CrookedEditor ../../source/main.cpp
+sudo cp ./CrookedEditor /usr/local/bin/
+
+

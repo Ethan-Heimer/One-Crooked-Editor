@@ -134,11 +134,8 @@ class GapBuffer{
             bool render = true;
 
             for(int i = to; i < from && i < buffer.size(); i++){
-                if(i == gapStart)
-                    render = false;
-
-                if(i == gapEnd)
-                    render = true;
+                if(i >= gapStart && i < gapEnd)
+                    continue;
 
                 if(render)
                     stream << buffer[i];
