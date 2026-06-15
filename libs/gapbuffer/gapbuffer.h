@@ -129,16 +129,19 @@ class GapBuffer{
             return stream.str();
         }
 
-        string Substring(int to, int from) const{
-            stringstream stream;
-            bool render = true;
+        string Substring(int from, int to) const{
+            if(to < from)
+                return string{};
 
-            for(int i = to; i < from && i < buffer.size(); i++){
+            stringstream stream;
+            int length = to - from;
+
+            for(int i = from; length != 0 && i < buffer.size(); i++){
                 if(i >= gapStart && i < gapEnd)
                     continue;
-
-                if(render)
-                    stream << buffer[i];
+                
+                stream << buffer[i];
+                length--;
             }
 
             return stream.str(); 
@@ -147,7 +150,6 @@ class GapBuffer{
         string ToString() const{
             return Substring(0, buffer.size());
         }
-
 
         string BeforeGap(){
             stringstream stream;

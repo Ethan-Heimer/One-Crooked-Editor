@@ -5,7 +5,7 @@
 using namespace std;
 
 template <typename T>
-class DoublyLinkedList{
+class DoublyIndexedLinkedList{
     public:
         struct Node{
             template<typename... U>
@@ -16,6 +16,8 @@ class DoublyLinkedList{
 
             shared_ptr<Node> next;
             weak_ptr<Node> previous;
+
+            int index = 0;
 
             bool operator==(const Node& other) const{
                 return data.get() == other.data.get();
@@ -54,20 +56,26 @@ class DoublyLinkedList{
 
         template<typename... U>
         shared_ptr<Node> Append(U... args){
+            shared_ptr<Node> newNode;
+
             if(!head){
-                head = std::make_shared<Node>(args...);
+                newNode = std::make_shared<Node>(args...);
+                head = newNode;
                 tail = head;
             }
             else{
-                shared_ptr<Node> newNode = make_shared<Node>(args...);
+                newNode = make_shared<Node>(args...);
 
                 tail->next = newNode;
                 newNode->previous = tail;
 
                 tail = newNode;
             }
+            
+            if(newNode)
+                UpdateIndexes(newNode);
 
-            return tail;
+            return newNode;
         }
 
         template<typename... U>
@@ -94,6 +102,9 @@ class DoublyLinkedList{
                 newNode->next = node;
             }
 
+            if(newNode)
+                UpdateIndexes(newNode);
+
             return newNode;
         }
 
@@ -118,6 +129,9 @@ class DoublyLinkedList{
                 node->next = newNode;
                 newNode->previous = node;
 
+                if(newNode)
+                    UpdateIndexes(newNode);
+
                 return newNode;
             }
         }
@@ -133,6 +147,9 @@ class DoublyLinkedList{
                     nextNode->previous.reset();
 
                 head = nextNode; 
+                
+                if(head)
+                    UpdateIndexes(head);
             } else if(node == tail){
                 shared_ptr<Node> previousNode = node->previous.lock();
 
@@ -147,9 +164,10 @@ class DoublyLinkedList{
                 if(previousNode)
                     previousNode->next = nextNode;
 
-
-                if(nextNode)
+                if(nextNode){
                     nextNode->previous = previousNode;
+                    UpdateIndexes(nextNode);
+                }
             }
         }
 
@@ -202,6 +220,19 @@ class DoublyLinkedList{
             }
 
             return false;
+        }
+
+        void UpdateIndexes(shared_ptr<Node>& start){
+            shared_ptr<Node> currentNode = start;
+            while(currentNode){
+                shared_ptr<Node> previousNode = currentNode->previous.lock();
+                int previousIndex = -1;
+                if(previousNode){
+                    previousIndex = previousNode->index;
+                }
+                currentNode->index = previousIndex+1;
+                currentNode = currentNode->next; 
+            }
         }
 
         Iterator begin() { return Iterator(head); };
