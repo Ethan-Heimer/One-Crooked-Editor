@@ -10,7 +10,7 @@ v0.002 Fixes some basic visual bugs. aside form a case where the position of the
 the bounds of the screen (which shoudn't happen), the cursor will not desync. 
 
 Line numbers have been added, and to do so (as well as fix the desync bug), I've made the doubly-linked-list 
-that represents the lines of text assing indexes to nodes. This may mean that this linked list structure is 
+that represents the lines of text assign indexes to nodes. This may mean that this linked list structure is 
 worse performing that just using a dynamic array (due to pointer chasing and arrays having better traversal. Insertion and deletion might be faster depending on CPU
 optimizations too), however i'll worry about it if performance starts to tank.
 
