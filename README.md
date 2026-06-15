@@ -18,7 +18,7 @@ Other bugs fixed to make the editor's 'ui' work better- as well as a slight perf
 
 ### New Commands
 - `ctrl+w` - save (no longer quits)
-- `ctrl+x` - quit
+- `ctrl+x` - quit
 
 ## 06/14/2026 - Initial Commit!
 
