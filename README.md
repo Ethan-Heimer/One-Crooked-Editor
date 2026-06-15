@@ -1,7 +1,9 @@
 # One Crooked Editor
 
 Crooked Editor is an educational project, and its designed to embrace breaking things and iteration. 
-From this commit forward- the code for this project will be written with this editor, includeing this readme! No AI.
+From this commit forward- the code for this project will be written with this editor, including this readme! No AI.
+
+looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
 ## 06/14/2026 - Initial Changes!
