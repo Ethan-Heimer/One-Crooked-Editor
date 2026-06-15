@@ -4,5 +4,7 @@ cd build
 cmake ..
 make
 
-cd bin
-./CrookedEditor ../../source/main.cpp
+if (( $? == 0)); then  
+    cd bin
+    ./CrookedEditor ../../source/main.cpp
+fi

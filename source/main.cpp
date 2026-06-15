@@ -5,45 +5,21 @@
 #include <fstream>
 
 #include "gapbuffer/gapbuffer.h"
-#include "linkedlist/doublylinkedlist.h"
+#include "linkedlist/doublyindexedlinkedlist.h"
 
 #define ctrl(x) ((x) & 0x1f)
 
 using namespace std;
-using Node = shared_ptr<DoublyLinkedList<GapBuffer>::Node>;
+using Node = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
 
-struct Point{
-    int x = 0;
-    int y = 0;
-};
-
-void SetCursorY(Node& line, Point& point, int Y){
-    int differance = Y - point.y;
-
-    for(int i = 0; i < abs(differance); i++){
-        if(differance < 0){
-            if(line->previous.lock()){
-                line = line->previous.lock();
-                point.y --;
-            }
-            else
-                break;
+void Save(DoublyIndexedLinkedList<GapBuffer>& lines, const string& fileName){
+    ofstream saveFile{fileName};
+    if(saveFile.is_open()){
+        for(auto node : lines){
+            saveFile << ((string)*node).c_str() << endl;
         }
-        else{
-            if(line->next){
-                line = line->next;
-                point.y ++;
-            }
-            else
-                break;
-        }
-
+        saveFile.close();
     }
-}
-
-void SetCursorX(Node& line, Point& point, int X){
-    point.x = X;
-    line->data->MoveGapTo(X);
 }
 
 int main(int argc, char** argv){
@@ -54,7 +30,7 @@ int main(int argc, char** argv){
     const string fileName{argv[1]};
     ifstream inputFile{fileName};
 
-    DoublyLinkedList<GapBuffer> lines;
+    DoublyIndexedLinkedList<GapBuffer> lines;
     Node currentLine;
     string line;
 
@@ -85,38 +61,47 @@ int main(int argc, char** argv){
     idlok(stdscr, FALSE);
 
     bool quit = false;
-    Point curserPosition;
     int lineOffset = 0;
     int colOffset = 0;
 
     while(!quit){
+        const int lineColWidth = 3;
         int row, col;
         getmaxyx(stdscr, row, col);
 
         erase();
-        Node currentNode = lines.head;
-        for(int i = 0; i < lineOffset && currentNode; i++){
-            currentNode = currentNode->next; 
-        }
         
-        for(int i = lineOffset; i < (row + lineOffset) && currentNode; i++){
-            printw("%s \n", currentNode->data->Substring(colOffset, colOffset + col - 2).c_str());
+        Node currentNode = currentLine;
+        while(currentNode && currentNode->index != lineOffset){
+            currentNode = currentNode->previous.lock();   
+        }
+
+        for(int i = 0; i < row && currentNode; i++){
+            printw(" %*d| %s \n", 
+                    lineColWidth,
+                    currentNode->index+1,
+                    currentNode->data->Substring(colOffset, colOffset + col - 6 - lineColWidth).c_str());
+
             currentNode = currentNode->next;
         }
+        
+        int currentLineNumber = currentLine->index;
+        int currentCursorCol = currentLine->data->GetGapIndex();
 
-        if(curserPosition.y >= row - 5 + lineOffset)
+        while(currentLineNumber - lineOffset >= row - 5)
             lineOffset++;
 
-        if(curserPosition.y >= 5 && curserPosition.y < lineOffset + 5)
+        if(currentLineNumber < lineOffset)
             lineOffset--;
 
-        if(currentLine->data->GetGapIndex() >= col-2 - 5 + colOffset)
+        while(currentCursorCol - colOffset > col - 10){
             colOffset++;
+        }
 
-        if(currentLine->data->GetGapIndex() >= 5 && currentLine->data->GetGapIndex() < colOffset + 5)
+        while(currentCursorCol < colOffset)
             colOffset--;
 
-        move(curserPosition.y - lineOffset, currentLine->data->GetGapIndex() - colOffset);
+        move(currentLineNumber - lineOffset, currentCursorCol - colOffset + lineColWidth+3);
         refresh();
 
         int input = getch();
@@ -124,14 +109,21 @@ int main(int argc, char** argv){
         if(input == ERR)
             continue;
 
-        else if(input == ctrl('w'))
+        else if(input == ctrl('x'))
             quit = true;
-        else if(input == KEY_DOWN){
-            SetCursorY(currentLine, curserPosition, curserPosition.y+1);
+        else if(input == ctrl('w'))
+            Save(lines, fileName);
+        else if(input == ctrl('X')){
+           quit = true; 
+           Save(lines, fileName);
         }
-        
+        else if(input == KEY_DOWN){
+            if(currentLine->next)
+                currentLine = currentLine->next;
+        } 
         else if(input == KEY_UP){
-            SetCursorY(currentLine, curserPosition, curserPosition.y-1);
+            if(currentLine->previous.lock())
+                currentLine = currentLine->previous.lock();
         }
         else if(input == KEY_LEFT){
             currentLine->data->MoveGapLeft();
@@ -148,7 +140,8 @@ int main(int argc, char** argv){
                     previousLine->data->Insert(data);
 
                     lines.Remove(currentLine);
-                    SetCursorY(currentLine, curserPosition, curserPosition.y-1); 
+                    if(currentLine->previous.lock())
+                        currentLine = currentLine->previous.lock();
                 }
             }
             else
@@ -162,7 +155,7 @@ int main(int argc, char** argv){
             currentLine->data->DeleteBetween(gapIndex, endIndex);
 
             if(currentLine->next){
-                SetCursorY(currentLine, curserPosition, curserPosition.y+1);
+                currentLine = currentLine->next;
                 currentLine->data->Insert(substring);
                 currentLine->data->MoveGapTo(0);
             }
@@ -171,17 +164,5 @@ int main(int argc, char** argv){
             currentLine->data->Insert(input);
     }
 
-    //saving
-    ofstream saveFile{fileName};
-    if(saveFile.is_open()){
-        for(auto node : lines){
-            saveFile << ((string)*node).c_str() << endl;
-        }
-        saveFile.close();
-    }
-
     endwin();
 }
-
-//END OF THE FILE WHYYYY
-//hhh

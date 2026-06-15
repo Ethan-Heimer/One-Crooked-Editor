@@ -5,7 +5,7 @@
 #include <string>
 
 int main(){
-    DoublyLinkedList<string> list;
+    DoublyIndexedLinkedList<string> list;
 
     std::cout << "Basic Appending and removal" << std::endl;
     auto node1 = list.Append("Hello");
@@ -38,7 +38,7 @@ int main(){
     }
 
     std::cout << "Appeding - removal at the tail" << std::endl;
-    DoublyLinkedList<string> list2;
+    DoublyIndexedLinkedList<string> list2;
 
     list2.Append("Head");
     list2.Append("Body");
@@ -53,11 +53,41 @@ int main(){
     }
 
     std::cout << "Backwards" << std::endl;
-    std::shared_ptr<DoublyLinkedList<string>::Node> currentNode = t3;
+    std::shared_ptr<DoublyIndexedLinkedList<string>::Node> currentNode = t3;
     while(currentNode != nullptr){
         std::cout << *currentNode->data << std::endl;
 
         currentNode = currentNode->previous.lock();
     }
 
+    std::cout << "Testing Indexes" << std::endl;
+
+    DoublyIndexedLinkedList<string> list3;
+    auto n1 = list3.Append("Hello");
+    auto n2 = list3.Append("World");
+    auto n3 = list3.Append("This is");
+    auto n4 = list3.Append("a Test");
+
+    for(auto node : list3){
+        std::cout << node.index << " " << *node << std::endl;
+    }
+
+    std::cout << "Append before and after" << std::endl;
+
+    list3.AppendAfter(n3, "AHHHHHH");
+    list3.AppendBefore(n3, "BAHHHHHHH");
+
+    for(auto node : list3){
+        std::cout << node.index << " " << *node << std::endl;
+    }
+
+    std::cout << "Removal" << std::endl;
+
+    list3.Remove(n1);
+    list3.Remove(n4);
+    list3.Remove(n3);
+
+    for(auto node : list3){
+        std::cout << node.index << " " << *node << std::endl;
+    }
 }
