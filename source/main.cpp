@@ -59,8 +59,8 @@ int main(int argc, char** argv){
     int colOffset = 0;
     while(!quit){
         int input = GetInput();
-        UpdateUI(currentLine, lineOffset, colOffset);
         ExecuteCommands(input, quit, lines, currentLine, fileName);
+        UpdateUI(currentLine, lineOffset, colOffset);
     }
 
     KillScreen();
