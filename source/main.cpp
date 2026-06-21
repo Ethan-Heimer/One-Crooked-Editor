@@ -4,12 +4,17 @@
 #include <ncurses.h>
 #include <fstream>
 
+#include "editor.h"
+#include "context.h"
 #include "gapbuffer/gapbuffer.h"
+#include "iinputmanager.h"
 #include "linkedlist/doublyindexedlinkedlist.h"
 
-#define ctrl(x) ((x) & 0x1f)
+#include "inputmanager.h"
 
 using namespace std;
+using namespace Systems::Input;
+
 using Lines = DoublyIndexedLinkedList<GapBuffer>&;
 using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
 
@@ -17,8 +22,6 @@ void InitScreen();
 void KillScreen();
 
 void LoadFile(string filenName, Lines& lines, Line& currentLine);
-
-int GetInput();
 
 void GotoNextLine(Line& currentLine);
 void GotoPreviousLine(Line& currentLine);
@@ -40,35 +43,52 @@ void ExecuteCommands(const int& input, bool& quitToken, Lines& lines,
         Line& currentLine, const string& fileName);
 
 void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset);
-void Save(Lines& lines, const string& fileName);
 
 int main(int argc, char** argv){
     if(argc < 2){
         return 1; 
     }
 
-    DoublyIndexedLinkedList<GapBuffer> lines;
-    Line currentLine;
+    std::shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
+
+
     string fileName{argv[1]};
-    LoadFile(fileName, lines, currentLine);
+
+    std::shared_ptr<Editor::Editor> editor = make_shared<Editor::Editor>(fileName);
+    Editor::States::StateContext stateContext{editor, inputManager};
 
     InitScreen();
 
-    bool quit = false;
     int lineOffset = 0;
     int colOffset = 0;
-    while(!quit){
-        int input = GetInput();
-        ExecuteCommands(input, quit, lines, currentLine, fileName);
-        UpdateUI(currentLine, lineOffset, colOffset);
+
+    while(!editor->quit){
+        stateContext.Update();        
+
+        UpdateUI(editor->buffer->currentLine, lineOffset, colOffset);
     }
 
     KillScreen();
 }
 
+/*
 void ExecuteCommands(const int& input, bool& quitToken, Lines& lines, Line& currentLine, const string& fileName){
     if(input == ERR)
         return;
+
+    if(input == KEY_BACKSPACE){
+        if(IsCursorAtBeginningOfLine(currentLine)){
+            DeleteLine(lines, currentLine);
+        }
+        else
+            DeleteCharacter(currentLine);
+    } 
+    else if(input == '\n' || input == '\r'){
+        InsertLine(lines, currentLine);
+        AppendTextToNextLine(currentLine);
+    }
+    else
+        InsertCharacter(currentLine, input);
 
     if(input == ctrl('x'))
         quitToken = true;
@@ -105,6 +125,7 @@ void ExecuteCommands(const int& input, bool& quitToken, Lines& lines, Line& curr
         InsertCharacter(currentLine, input);
 
 }
+*/
 
 void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
@@ -144,26 +165,6 @@ void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset){
         while(currentCursorCol < colOffset)
             colOffset--;
 
-}
-
-void LoadFile(string fileName, Lines& lines, Line& currentLine){
-    ifstream inputFile{fileName};
-
-    string line;
-    if(inputFile.is_open()){
-        while(getline(inputFile, line)){
-            lines.Append(line, 5);
-        }
-
-        inputFile.close();
-    }
-
-    if(lines.head)
-        currentLine = lines.head;
-    else{
-        lines.Append("", 5);    
-        currentLine = lines.head;
-    }
 }
 
 void InitScreen(){
@@ -240,18 +241,4 @@ void AppendTextToNextLine(Line& currentLine){
         currentLine->data->Insert(substring);
         currentLine->data->MoveGapTo(0);
     }
-}
-
-void Save(DoublyIndexedLinkedList<GapBuffer>& lines, const string& fileName){
-    ofstream saveFile{fileName};
-    if(saveFile.is_open()){
-        for(auto node : lines){
-            saveFile << ((string)*node).c_str() << endl;
-        }
-        saveFile.close();
-    }
-}
-
-int GetInput(){
-    return getch();
 }
