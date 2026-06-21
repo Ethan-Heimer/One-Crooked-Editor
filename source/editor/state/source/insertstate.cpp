@@ -4,32 +4,32 @@
 using namespace Editor::States;
 
 void InsertState::OnUpdate(){
-    int input = inputManager->GetKeyInput();
+    int input = inputManager.lock()->GetKeyInput();
     nextState = Insert;
 
     if(input == ERR)
         return;
 
     if(input == KEY_BACKSPACE){
-        if(editor->buffer->IsCursorAtBeginningOfLine()){
-            editor->buffer->DeleteLine();
+        if(editor.lock()->buffer->IsCursorAtBeginningOfLine()){
+            editor.lock()->buffer->DeleteLine();
         }
         else
-            editor->buffer->DeleteCharacter();
+            editor.lock()->buffer->DeleteCharacter();
     } 
     else if(input == '\n' || input == '\r'){
-        editor->buffer->InsertLine();
-        editor->buffer->AppendTextToNextLine();
+        editor.lock()->buffer->InsertLine();
+        editor.lock()->buffer->AppendTextToNextLine();
     } else if(input == 27){
         nextState = Normal;
     }
     else
-        editor->buffer->InsertCharacter(input);
+        editor.lock()->buffer->InsertCharacter(input);
 
 }
 
 void InsertState::Transition(){
     if(nextState != States::Insert){
-        context.ChangeState(nextState);
+        context.lock()->ChangeState(nextState);
     }
 }

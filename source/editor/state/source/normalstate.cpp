@@ -5,7 +5,7 @@
 using namespace Editor::States;
 
 void NormalState::OnUpdate(){
-    int input = inputManager->GetKeyInput();
+    int input = inputManager.lock()->GetKeyInput();
     nextState = Normal;
     
     if(input == ERR){
@@ -13,32 +13,31 @@ void NormalState::OnUpdate(){
     }
 
     if(input == ctrl('x'))
-        editor->quit = true;
+        editor.lock()->quit = true;
     else if(input == ctrl('w'))
-        editor->Save();
+        editor.lock()->Save();
     else if(input == ctrl('X')){
-        editor->quit = true; 
-        editor->Save();
+        editor.lock()->quit = true; 
+        editor.lock()->Save();
     }
     else if(input == KEY_DOWN){
-        editor->buffer->GotoNextLine();
+        editor.lock()->buffer->GotoNextLine();
     } 
     else if(input == KEY_UP){
-        editor->buffer->GotoPreviousLine();
+        editor.lock()->buffer->GotoPreviousLine();
     }
     else if(input == KEY_LEFT){
-        editor->buffer->MoveCursorLeft();
+        editor.lock()->buffer->MoveCursorLeft();
     }
     else if(input == KEY_RIGHT){
-        editor->buffer->MoveCursorRight();
+        editor.lock()->buffer->MoveCursorRight();
     } else if(input == 'i'){
         nextState = Insert;
-    } else 
-        editor->buffer->InsertCharacter(input);
+    }
 }
 
 void NormalState::Transition(){
     if(nextState != States::Normal){
-        context.ChangeState(nextState);
+        context.lock()->ChangeState(nextState);
     }
 };

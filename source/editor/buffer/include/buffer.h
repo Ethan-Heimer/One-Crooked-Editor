@@ -13,24 +13,24 @@ namespace Editor::Buffers{
 
             Buffer(string fileName);
 
-            void GotoNextLine();
+            void GotoNextLine() noexcept;
             
-            void GotoPreviousLine();
+            void GotoPreviousLine() noexcept;
             
-            void MoveCursorLeft();
+            void MoveCursorLeft() noexcept;
             
-            void MoveCursorRight();
+            void MoveCursorRight() noexcept;
             
-            bool IsCursorAtBeginningOfLine();
+            bool IsCursorAtBeginningOfLine() noexcept;
             
-            void InsertCharacter(char character);
+            void InsertCharacter(char character) noexcept;
             
-            void DeleteCharacter();
+            void DeleteCharacter() noexcept;
             
-            Line InsertLine();
+            Line InsertLine() noexcept;
             
-            void DeleteLine();
+            void DeleteLine() noexcept;
             
-            void AppendTextToNextLine();
+            void AppendTextToNextLine() noexcept;
     };
 }

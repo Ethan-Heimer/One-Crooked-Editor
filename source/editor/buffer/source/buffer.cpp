@@ -23,41 +23,41 @@ Buffer::Buffer(string fileName){
     }
 }
 
-void Buffer::GotoNextLine(){
+void Buffer::GotoNextLine() noexcept{
     if(currentLine->next)
         currentLine = currentLine->next;
 }
             
-void Buffer::GotoPreviousLine(){
+void Buffer::GotoPreviousLine() noexcept{
     if(currentLine->previous.lock())
         currentLine = currentLine->previous.lock();
 }
             
-void Buffer::MoveCursorLeft(){
+void Buffer::MoveCursorLeft() noexcept{
     currentLine->data->MoveGapLeft();
 }
             
-void Buffer::MoveCursorRight(){
+void Buffer::MoveCursorRight() noexcept{
     currentLine->data->MoveGapRight();
 }
             
-bool Buffer::IsCursorAtBeginningOfLine(){
+bool Buffer::IsCursorAtBeginningOfLine() noexcept{
     return currentLine->data->IsGapAtBeginning();
 }
             
-void Buffer::InsertCharacter(char character){
+void Buffer::InsertCharacter(char character) noexcept{
     currentLine->data->Insert(character);
 }
             
-void Buffer::DeleteCharacter(){
+void Buffer::DeleteCharacter() noexcept{
     currentLine->data->Delete();
 }
             
-Line Buffer::InsertLine(){
+Line Buffer::InsertLine() noexcept{
     return buffer.AppendAfter(currentLine, "", 5);
 }
             
-void Buffer::DeleteLine(){
+void Buffer::DeleteLine() noexcept{
     Line previousLine = currentLine->previous.lock();
     if(previousLine){
         string data = currentLine->data->ToString();
@@ -69,7 +69,7 @@ void Buffer::DeleteLine(){
     }
 }
             
-void Buffer::AppendTextToNextLine(){
+void Buffer::AppendTextToNextLine() noexcept{
     int gapIndex = currentLine->data->GetGapIndex();
     int endIndex = currentLine->data->BufferSize();
     string substring = currentLine->data->Substring(gapIndex, endIndex);

@@ -1,31 +1,35 @@
 #pragma once
 
-#include "gapbuffer/gapbuffer.h"
-#include "linkedlist/doublyindexedlinkedlist.h"
 #include <memory>
 #include <iinputmanager.h>
-#include "editor.h"
 
+#include "icontext.h"
+#include "ieditor.h"
+#include "ieditorstate.h"
+#include "statemachine/statemachine.h"
+
+#include "normalstate.h"
+#include "insertstate.h"
 
 using namespace std;
 using namespace Systems;
 
 namespace Editor::States{
-    enum States{
-        Normal = 0,
-        Insert = 1
-    };
-
-    class StateContext{
+    class StateContext : public IStateContext, public std::enable_shared_from_this<IStateContext>{
         public:
-            StateContext(shared_ptr<Editor> editor, shared_ptr<Input::IInputManager> inputManager);
-            ~StateContext();
+            void Initialize(weak_ptr<IEditor> editor, weak_ptr<Input::IInputManager> inputManager);
 
-            void Update();
-            void ChangeState(States state);
+            void Update() override;
+            void ChangeState(States state) override;
+
+            std::weak_ptr<IStateContext> GetWeakPointer();            
             
+
         private:
-            struct Impl; 
-            std::unique_ptr<Impl> pImpl;
+            std::unique_ptr<StateMachines::StateMachine<IEditorState>> stateMachine;
+            shared_ptr<NormalState> normalState;
+            shared_ptr<InsertState> insertState;
+
+            vector<shared_ptr<IEditorState>> states;
     };
 }

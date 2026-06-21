@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "ieditorstate.h"
 
 namespace Editor::States{

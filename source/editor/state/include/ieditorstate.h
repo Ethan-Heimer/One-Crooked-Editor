@@ -2,12 +2,11 @@
 
 #include <memory>
 
-#include "buffer.h"
-#include "gapbuffer/gapbuffer.h"
-#include "linkedlist/doublyindexedlinkedlist.h"
+#include "icontext.h"
 #include "statemachine/istate.h"
 #include "iinputmanager.h"
-#include "context.h"
+#include "icontext.h"
+#include "ieditor.h"
 
 using namespace StateMachines;
 using namespace Systems::Input;
@@ -16,14 +15,14 @@ using namespace std;
 namespace Editor::States{
     class IEditorState : public IState{
         public:
-            IEditorState(StateContext& context, shared_ptr<Editor> editor, 
-                    shared_ptr<IInputManager> inputManager)
+            IEditorState(weak_ptr<IStateContext> context, weak_ptr<IEditor> editor, 
+                    weak_ptr<IInputManager> inputManager)
                 : editor(editor), context(context), inputManager(inputManager){}
 
         protected:
-            StateContext& context;
-            shared_ptr<Editor> editor;
+            weak_ptr<IStateContext> context;
 
-            shared_ptr<IInputManager> inputManager;
+            weak_ptr<IEditor> editor;
+            weak_ptr<IInputManager> inputManager;
     };
 }

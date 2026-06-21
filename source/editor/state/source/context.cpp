@@ -16,45 +16,24 @@ using namespace Editor::States;
 using namespace StateMachines;
 using namespace std;
 
-struct StateContext::Impl{
-    vector<shared_ptr<IEditorState>> states;
+void StateContext::Initialize(weak_ptr<IEditor> editor, weak_ptr<IInputManager> inputManager){    
+    normalState = std::make_shared<NormalState>(GetWeakPointer(), editor, inputManager);
+    insertState = std::make_shared<InsertState>(GetWeakPointer(), editor, inputManager);
 
-    shared_ptr<NormalState> normalState;
-    shared_ptr<InsertState> insertState;
+    stateMachine = std::make_unique<StateMachine<IEditorState>>(normalState);
 
-    unique_ptr<StateMachine<IEditorState>> stateMachine;
-
-    Impl(StateContext& context, shared_ptr<Editor> editor, 
-            shared_ptr<IInputManager> inputManager){
-       normalState = std::make_shared<NormalState>(context, editor, inputManager);
-       insertState = std::make_shared<InsertState>(context, editor, inputManager);
-
-       stateMachine = std::make_unique<StateMachine<IEditorState>>(normalState);
-
-       states.push_back(normalState);
-       states.push_back(insertState);
-    }
-
-    void Update(){
-        stateMachine->Update();
-    }
-
-    void ChangeState(States state){
-       stateMachine->SwitchState(states[state]);
-    }
-};
-
-StateContext::StateContext(shared_ptr<Editor> editor, shared_ptr<IInputManager> inputManager)
-    : pImpl(std::make_unique<Impl>(*this, editor, inputManager)){}
-
-
-StateContext::~StateContext() = default;
-
+    states.push_back(normalState);
+    states.push_back(insertState);
+}
 
 void StateContext::Update(){
-    pImpl->Update();
+    stateMachine->Update();
 }
 
 void StateContext::ChangeState(States state){
-    pImpl->ChangeState(state);
+    stateMachine->SwitchState(states[state]);
+}
+
+std::weak_ptr<IStateContext> StateContext::GetWeakPointer(){
+    return weak_from_this();
 }

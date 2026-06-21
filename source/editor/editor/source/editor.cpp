@@ -1,8 +1,23 @@
 #include "editor.h"
+#include "context.h"
+#include "ieditor.h"
+#include "iinputmanager.h"
 #include <memory>
 #include <fstream>
 
-Editor::Editor::Editor(const string fileName) : fileName(fileName), buffer(std::make_shared<Buffer>(fileName)){}
+void Editor::Editor::Initialize(weak_ptr<Input::IInputManager> inputManager, const string fileName){
+    this->inputManager = inputManager;
+    this->fileName = fileName;
+
+    this->buffer = std::make_shared<Buffer>(fileName);
+
+    this->stateContext = std::make_shared<States::StateContext>();
+    this->stateContext->Initialize(GetWeakPtr(), inputManager);
+}
+
+void Editor::Editor::Update(){
+    stateContext->Update();
+}
 
 void Editor::Editor::Save(){
     ofstream saveFile{fileName};
@@ -13,4 +28,8 @@ void Editor::Editor::Save(){
 
         saveFile.close();
     }
+}
+
+std::weak_ptr<Editor::IEditor> Editor::Editor::GetWeakPtr(){
+    return weak_from_this();
 }
