@@ -4,7 +4,6 @@
 #include <iinputmanager.h>
 
 #include "icontext.h"
-#include "ieditor.h"
 #include "ieditorstate.h"
 #include "statemachine/statemachine.h"
 
@@ -17,7 +16,11 @@ using namespace Systems;
 namespace Editor::States{
     class StateContext : public IStateContext, public std::enable_shared_from_this<IStateContext>{
         public:
-            void Initialize(weak_ptr<IEditor> editor, weak_ptr<Input::IInputManager> inputManager);
+            weak_ptr<IEditor> editor;
+            weak_ptr<Input::IInputManager> inputManager;
+
+            StateContext(StateContextPasskey passkey, weak_ptr<IEditor> editor, weak_ptr<Input::IInputManager> inputManager);
+            void Initialize() override;
 
             void Update() override;
             void ChangeState(States state) override;

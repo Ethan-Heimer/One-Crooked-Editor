@@ -7,6 +7,8 @@
 #include "editor.h"
 #include "context.h"
 #include "gapbuffer/gapbuffer.h"
+#include "icontext.h"
+#include "ieditor.h"
 #include "iinputmanager.h"
 #include "linkedlist/doublyindexedlinkedlist.h"
 
@@ -31,8 +33,13 @@ int main(int argc, char** argv){
     std::shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
 
-    std::shared_ptr<Editor::Editor> editor = make_shared<Editor::Editor>();
-    editor->Initialize(inputManager, fileName);
+    std::shared_ptr<Editor::States::StateContextFactory> stateContextFactory 
+        = std::make_shared<Editor::States::StateContextFactory>();
+
+    std::shared_ptr<Editor::EditorFactory> editorFactory = std::make_shared<Editor::EditorFactory>();
+
+    std::shared_ptr<Editor::IEditor> editor 
+        = editorFactory->Instanciate<Editor::Editor>(inputManager, fileName, stateContextFactory);
 
     InitScreen();
 

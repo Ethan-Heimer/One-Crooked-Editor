@@ -20,16 +20,16 @@ void NormalState::OnUpdate(){
         editor.lock()->quit = true; 
         editor.lock()->Save();
     }
-    else if(input == KEY_DOWN){
+    else if(input == KEY_DOWN || input == 'j'){
         editor.lock()->buffer->GotoNextLine();
     } 
-    else if(input == KEY_UP){
+    else if(input == KEY_UP || input == 'k'){
         editor.lock()->buffer->GotoPreviousLine();
     }
-    else if(input == KEY_LEFT){
+    else if(input == KEY_LEFT || input == 'h'){
         editor.lock()->buffer->MoveCursorLeft();
     }
-    else if(input == KEY_RIGHT){
+    else if(input == KEY_RIGHT || input == 'l'){
         editor.lock()->buffer->MoveCursorRight();
     } else if(input == 'i'){
         nextState = Insert;

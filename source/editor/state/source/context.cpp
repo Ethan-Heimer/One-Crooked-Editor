@@ -1,6 +1,7 @@
 #include "context.h"
 #include "buffer.h"
 #include "gapbuffer/gapbuffer.h"
+#include "icontext.h"
 #include "ieditorstate.h"
 #include "iinputmanager.h"
 #include "insertstate.h"
@@ -16,7 +17,13 @@ using namespace Editor::States;
 using namespace StateMachines;
 using namespace std;
 
-void StateContext::Initialize(weak_ptr<IEditor> editor, weak_ptr<IInputManager> inputManager){    
+StateContext::StateContext(StateContextPasskey passkey, 
+        weak_ptr<IEditor> editor, weak_ptr<Input::IInputManager> inputManager) : IStateContext(passkey){
+    this->editor = editor;    
+    this->inputManager = inputManager;
+}
+
+void StateContext::Initialize(){    
     normalState = std::make_shared<NormalState>(GetWeakPointer(), editor, inputManager);
     insertState = std::make_shared<InsertState>(GetWeakPointer(), editor, inputManager);
 

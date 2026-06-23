@@ -23,6 +23,11 @@ void InsertState::OnUpdate(){
     } else if(input == 27){
         nextState = Normal;
     }
+    else if(input == 9){
+        for(int i = 0; i < 4; i++){
+            editor.lock()->buffer->InsertCharacter(' ');
+        }
+    }
     else
         editor.lock()->buffer->InsertCharacter(input);
 
