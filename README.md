@@ -6,6 +6,30 @@ From this commit forward- the code for this project will be written with this ed
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 06/23/2026 - A Modal Editor
+
+v0.003 Transforms Crooked Editor into a modal editor!
+
+## New Modes:
+ - Normal Mode
+ - Insert Mode
+
+Press I to enter *Insert* mode and ESC to enter *Normal Mode*
+
+*Normal Mode* is the default mode, and like vim, you can use it to position the cursor around the editor.
+*Insert Mode* allows you to edit text in the editor.
+
+## New Commands [Normal Mode]
+ - H, J, K, L to move the cursor around the editor
+ - I to enter *Insert Mode*
+
+## New Commands [Insert Mode]
+ - ESC to enter *Normal Mode*
+ - Tab inserts 4 spaces at the current position
+
+## Known Bugs
+ - Unrecongized keys can pollute the file with patterns like '^E'
+
 ## 06/14/2026 - Initial Changes!
 
 v0.002 Fixes some basic visual bugs. aside form a case where the position of the cursor is outside
