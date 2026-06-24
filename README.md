@@ -6,6 +6,19 @@ From this commit forward- the code for this project will be written with this ed
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 06/23/2026 - Dependency Injection
+v0.004 Doesn't offer any new features, it instead focuses on archetecture changes. 
+v0.003 Had some underlying issues with how relationships between objects were represented,
+and contained circular dependencies in key parts of the program. I want to implement the 
+command pattern in v0.005, and before I can do that I needed a better feel of how objects will get
+their depenancies. 
+
+you'll notice a lot of factories in main.cpp. In the case where an object needs to create its own
+dependancy and it cant be injected, a factory interface is provided.
+
+The code isn't perfect and I can think of a few ways to Improve it during v0.005, but its good enough
+to be able to implement the comman pattern for undo and redo operations.
+
 ## 06/23/2026 - A Modal Editor
 
 v0.003 Transforms Crooked Editor into a modal editor!
@@ -62,3 +75,4 @@ The goal for the next 'phase' of this project is to turn it into a modal editor.
 
 ### Known bugs
  - The cursor can 'desync' from its real position in the editor, meaning the visual cursor may be in one place but the physical place is in another. 
+

@@ -1,51 +1,34 @@
 #pragma once
 
 #include <memory>
-#include <type_traits>
 
 #include "buffer.h"
+#include "ibufferfilehandlerfactory.h"
 #include "iinputmanager.h"
-#include "inputmanager.h"
+#include "istatecontextfactory.h"
 
 using namespace std;
 
 namespace Editor{
-    class EditorFactory;
-    class EditorPasskey{
-        private:
-            EditorPasskey(){};
-            friend class EditorFactory;
+    class IEditorPasskey{
+        protected:
+            IEditorPasskey(){};
     };
 
     class IEditor{
         public:
+            IEditor(IEditorPasskey passkey){};
+
             bool quit;
 
-            IEditor(EditorPasskey passkey){}
-
+            shared_ptr<Buffers::IBufferFileHandler> bufferFileHandler;
             shared_ptr<Buffers::Buffer> buffer;
-            weak_ptr<Systems::Input::IInputManager> inputManager;
+            shared_ptr<States::IStateContext> stateContext; 
 
-            virtual void Initialize() = 0;
-            virtual void Save() = 0;
+            virtual void Initialize(weak_ptr<Systems::Input::IInputManager> inputManager, 
+                    string fileName, weak_ptr<Buffers::IBufferFileHandlerFactory> bufferFileHandlerFactory,
+                    weak_ptr<States::IStateContextFactory> stateContextFactory) = 0;
+
             virtual void Update() = 0;
-
-        protected:
-            string fileName;
-
     };
-
-    class EditorFactory{
-        public:
-            template<typename T, typename... U> 
-            requires std::is_base_of<IEditor, T>::value
-            std::shared_ptr<IEditor> Instanciate(weak_ptr<Systems::Input::IInputManager> inputManager, string fileName, U... args){
-                std::shared_ptr<IEditor> pointer = std::make_shared<T>(EditorPasskey{}, inputManager, fileName, args...);
-                pointer->Initialize();
-
-                return std::move(pointer);
-            }
-
-    };
-
 }

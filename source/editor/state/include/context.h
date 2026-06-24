@@ -1,9 +1,9 @@
 #pragma once
+#include "icontext.h"
 
 #include <memory>
 #include <iinputmanager.h>
-
-#include "icontext.h"
+#include "ibufferfilehandler.h"
 #include "ieditorstate.h"
 #include "statemachine/statemachine.h"
 
@@ -16,11 +16,10 @@ using namespace Systems;
 namespace Editor::States{
     class StateContext : public IStateContext, public std::enable_shared_from_this<IStateContext>{
         public:
-            weak_ptr<IEditor> editor;
-            weak_ptr<Input::IInputManager> inputManager;
+            using IStateContext::IStateContext;
 
-            StateContext(StateContextPasskey passkey, weak_ptr<IEditor> editor, weak_ptr<Input::IInputManager> inputManager);
-            void Initialize() override;
+            void Initialize(weak_ptr<Buffers::IBufferFileHandler> fileHandler, 
+                    weak_ptr<Buffers::Buffer> buffer, weak_ptr<Systems::Input::IInputManager> inputManager, bool* quitToken) override;
 
             void Update() override;
             void ChangeState(States state) override;

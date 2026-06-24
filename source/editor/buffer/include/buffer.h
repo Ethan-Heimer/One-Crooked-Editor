@@ -11,7 +11,7 @@ namespace Editor::Buffers{
             DoublyIndexedLinkedList<GapBuffer> buffer;
             Line currentLine;
 
-            Buffer(string fileName);
+            Buffer();
 
             void GotoNextLine() noexcept;
             
@@ -24,13 +24,16 @@ namespace Editor::Buffers{
             bool IsCursorAtBeginningOfLine() noexcept;
             
             void InsertCharacter(char character) noexcept;
+            void InsertString(string character) noexcept;
             
             void DeleteCharacter() noexcept;
             
             Line InsertLine() noexcept;
             
-            void DeleteLine() noexcept;
-            
+            void DeleteLine() noexcept;            
+
             void AppendTextToNextLine() noexcept;
+
+            void MoveToHead() noexcept;
     };
 }

@@ -1,40 +1,18 @@
 #include "editor.h"
-#include "context.h"
-#include "icontext.h"
-#include "ieditor.h"
 #include "iinputmanager.h"
 #include <memory>
-#include <fstream>
 
+void Editor::Editor::Initialize(weak_ptr<Systems::Input::IInputManager> inputManager, 
+                    string fileName, weak_ptr<Buffers::IBufferFileHandlerFactory> bufferFileHandlerFactory,
+                    weak_ptr<States::IStateContextFactory> stateContextFactory){
+    this->bufferFileHandler = bufferFileHandlerFactory.lock()->Instanciate(fileName);
+    this->buffer = bufferFileHandler->LoadNewBuffer();
 
-Editor::Editor::Editor(EditorPasskey passkey, 
-        weak_ptr<Input::IInputManager> inputManager, string fileName, 
-        weak_ptr<States::StateContextFactory> stateContextFactory) : IEditor(passkey){
-    this->inputManager = inputManager;
-    this->fileName = fileName;
-
-    this->stateContextFactory = stateContextFactory;
-}
-
-void Editor::Editor::Initialize(){
-    this->buffer = std::make_shared<Buffer>(fileName);
-
-    this->stateContext = stateContextFactory.lock()->Instanciate<States::StateContext>(GetWeakPtr(), inputManager);
+    this->stateContext = stateContextFactory.lock()->Instanciate(this->bufferFileHandler, buffer, inputManager, &quit);
 }
 
 void Editor::Editor::Update(){
     stateContext->Update();
-}
-
-void Editor::Editor::Save(){
-    ofstream saveFile{fileName};
-    if(saveFile.is_open()){
-        for(auto node : buffer->buffer){
-            saveFile << ((string)*node).c_str() << endl;
-        }
-
-        saveFile.close();
-    }
 }
 
 std::weak_ptr<Editor::IEditor> Editor::Editor::GetWeakPtr(){

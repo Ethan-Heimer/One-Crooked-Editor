@@ -13,24 +13,24 @@ void NormalState::OnUpdate(){
     }
 
     if(input == ctrl('x'))
-        editor.lock()->quit = true;
+        *quitToken = true;
     else if(input == ctrl('w'))
-        editor.lock()->Save();
+        fileHandler.lock()->WriteBufferToFile(buffer.lock());
     else if(input == ctrl('X')){
-        editor.lock()->quit = true; 
-        editor.lock()->Save();
+        *quitToken = true;
+        fileHandler.lock()->WriteBufferToFile(buffer.lock());
     }
     else if(input == KEY_DOWN || input == 'j'){
-        editor.lock()->buffer->GotoNextLine();
+        buffer.lock()->GotoNextLine();
     } 
     else if(input == KEY_UP || input == 'k'){
-        editor.lock()->buffer->GotoPreviousLine();
+        buffer.lock()->GotoPreviousLine();
     }
     else if(input == KEY_LEFT || input == 'h'){
-        editor.lock()->buffer->MoveCursorLeft();
+        buffer.lock()->MoveCursorLeft();
     }
     else if(input == KEY_RIGHT || input == 'l'){
-        editor.lock()->buffer->MoveCursorRight();
+        buffer.lock()->MoveCursorRight();
     } else if(input == 'i'){
         nextState = Insert;
     }

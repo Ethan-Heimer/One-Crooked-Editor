@@ -3,24 +3,9 @@
 
 using namespace Editor::Buffers;
 
-Buffer::Buffer(string fileName){
-    ifstream inputFile{fileName};
-
-    string line;
-    if(inputFile.is_open()){
-        while(getline(inputFile, line)){
-            buffer.Append(line, 5);
-        }
-
-        inputFile.close();
-    }
-
-    if(buffer.head)
-        currentLine = buffer.head;
-    else{
-        buffer.Append("", 5);    
-        currentLine = buffer.head;
-    }
+Buffer::Buffer(){
+    buffer.Append("", 5);    
+    currentLine = buffer.head;
 }
 
 void Buffer::GotoNextLine() noexcept{
@@ -47,6 +32,12 @@ bool Buffer::IsCursorAtBeginningOfLine() noexcept{
             
 void Buffer::InsertCharacter(char character) noexcept{
     currentLine->data->Insert(character);
+}
+
+void Buffer::InsertString(string string) noexcept{
+    for(int i = 0; i < string.length(); i++){
+        currentLine->data->Insert(string[i]);
+    }
 }
             
 void Buffer::DeleteCharacter() noexcept{
@@ -80,4 +71,8 @@ void Buffer::AppendTextToNextLine() noexcept{
         currentLine->data->Insert(substring);
         currentLine->data->MoveGapTo(0);
     }
+}
+
+void Buffer::MoveToHead() noexcept{
+    currentLine = buffer.head;
 }
