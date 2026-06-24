@@ -1,18 +1,22 @@
 #include <memory>
 
-#include <iostream>
 #include <ncurses.h>
-#include <fstream>
 
-#include "editor.h"
+#include "bufferfilehandler.h"
+#include "bufferfilehandlerfactory.h"
 #include "context.h"
+#include "editor.h"
+#include "editorfactory.h"
 #include "gapbuffer/gapbuffer.h"
+#include "ibufferfilehandlerfactory.h"
 #include "icontext.h"
-#include "ieditor.h"
+#include "istatecontextfactory.h"
+#include "ieditorfactory.h"
 #include "iinputmanager.h"
 #include "linkedlist/doublyindexedlinkedlist.h"
 
 #include "inputmanager.h"
+#include "statecontextfactory.h"
 
 using namespace std;
 using namespace Systems::Input;
@@ -33,13 +37,17 @@ int main(int argc, char** argv){
     std::shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
 
-    std::shared_ptr<Editor::States::StateContextFactory> stateContextFactory 
-        = std::make_shared<Editor::States::StateContextFactory>();
+    std::shared_ptr<Editor::States::IStateContextFactory> stateContextFactory 
+        = std::make_shared<Editor::States::StateContextFactory<Editor::States::StateContext>>();
 
-    std::shared_ptr<Editor::EditorFactory> editorFactory = std::make_shared<Editor::EditorFactory>();
+    std::shared_ptr<Editor::Buffers::IBufferFileHandlerFactory> bufferFileHandlerFactory = 
+        std::make_shared<Editor::Buffers::BufferFileHandlerFactory<BufferFileHandler>>();
+
+    std::shared_ptr<Editor::IEditorFactory> editorFactory 
+        = std::make_shared<Editor::EditorFactory<Editor::Editor>>();
 
     std::shared_ptr<Editor::IEditor> editor 
-        = editorFactory->Instanciate<Editor::Editor>(inputManager, fileName, stateContextFactory);
+        = editorFactory->Instanciate(bufferFileHandlerFactory, stateContextFactory, inputManager, fileName);
 
     InitScreen();
 

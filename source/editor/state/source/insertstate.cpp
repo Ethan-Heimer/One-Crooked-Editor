@@ -11,25 +11,25 @@ void InsertState::OnUpdate(){
         return;
 
     if(input == KEY_BACKSPACE){
-        if(editor.lock()->buffer->IsCursorAtBeginningOfLine()){
-            editor.lock()->buffer->DeleteLine();
+        if(buffer.lock()->IsCursorAtBeginningOfLine()){
+            buffer.lock()->DeleteLine();
         }
         else
-            editor.lock()->buffer->DeleteCharacter();
+            buffer.lock()->DeleteCharacter();
     } 
     else if(input == '\n' || input == '\r'){
-        editor.lock()->buffer->InsertLine();
-        editor.lock()->buffer->AppendTextToNextLine();
+        buffer.lock()->InsertLine();
+        buffer.lock()->AppendTextToNextLine();
     } else if(input == 27){
         nextState = Normal;
     }
     else if(input == 9){
         for(int i = 0; i < 4; i++){
-            editor.lock()->buffer->InsertCharacter(' ');
+            buffer.lock()->InsertCharacter(' ');
         }
     }
     else
-        editor.lock()->buffer->InsertCharacter(input);
+        buffer.lock()->InsertCharacter(input);
 
 }
 

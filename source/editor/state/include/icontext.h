@@ -1,9 +1,8 @@
 #pragma once
 
-#include <type_traits>
 #include <memory>
-#include "ieditor.h"
-#include "iinputmanager.h"
+#include <iinputmanager.h>
+#include "ibufferfilehandler.h"
 
 namespace Editor::States{
     enum States{
@@ -11,33 +10,23 @@ namespace Editor::States{
         Insert = 1
     };
 
-    class StateContextFactory;
-    class StateContextPasskey{
-        private:
-            StateContextPasskey(){};
-            friend class StateContextFactory;
+    class IStateContextPasskey{
+        protected:
+            IStateContextPasskey(){};
     };
 
     class IStateContext{
         public:
-        IStateContext(StateContextPasskey passkey){};
+        weak_ptr<Systems::Input::IInputManager> inputManager;
+        weak_ptr<Buffers::IBufferFileHandler> fileHandler;
+        weak_ptr<Buffers::Buffer> buffer;
+        bool* quitToken;
 
-        virtual void Initialize() = 0;
+        IStateContext(IStateContextPasskey passkey){};
+
+        virtual void Initialize(weak_ptr<Buffers::IBufferFileHandler> fileHandler, 
+                    weak_ptr<Buffers::Buffer> buffer, weak_ptr<Systems::Input::IInputManager> inputManager, bool* quitToken) = 0;
         virtual void Update() = 0;
         virtual void ChangeState(States state) = 0;
-    };
-
-    class StateContextFactory{
-        public:
-        template<typename T, typename... U> 
-        requires std::is_base_of<IStateContext, T>::value
-
-        std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IEditor> editor, 
-                weak_ptr<Systems::Input::IInputManager> inputManager, U... args){
-            std::shared_ptr<IStateContext> pointer = std::make_shared<T>(StateContextPasskey{}, editor, inputManager, args...);
-            pointer->Initialize();
-
-            return std::move(pointer);
-        }
     };
 }

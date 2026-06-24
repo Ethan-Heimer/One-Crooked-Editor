@@ -1,9 +1,8 @@
 #pragma once
 
-#include "ieditor.h"
 #include "iinputmanager.h"
-#include "icontext.h"
 #include <memory>
+#include "ieditor.h"
 
 using namespace std;
 using namespace Editor::Buffers;
@@ -12,16 +11,13 @@ using namespace Systems;
 namespace Editor{
     class Editor : public IEditor, public std::enable_shared_from_this<IEditor>{
         public:
-            shared_ptr<States::IStateContext> stateContext;
-            weak_ptr<States::StateContextFactory> stateContextFactory;
+            using IEditor::IEditor;
 
-            Editor(EditorPasskey passkey, weak_ptr<Input::IInputManager> inputManager, 
-                    string fileName, weak_ptr<States::StateContextFactory> stateContextFactory);
-
-            void Initialize() override;
+            virtual void Initialize(weak_ptr<Systems::Input::IInputManager> inputManager, 
+                    string fileName, weak_ptr<Buffers::IBufferFileHandlerFactory> bufferFileHandlerFactory,
+                    weak_ptr<States::IStateContextFactory> stateContextFactory) override;
 
             void Update() override;
-            void Save() override;
 
             std::weak_ptr<IEditor> GetWeakPtr();
     };
