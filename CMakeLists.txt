@@ -25,4 +25,8 @@ target_link_libraries(${NAME} PRIVATE ${CURSES_LIBRARIES})
 
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/source/systems/input/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/source/editor/editor/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/source/editor/state/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/source/editor/buffer/include")
 

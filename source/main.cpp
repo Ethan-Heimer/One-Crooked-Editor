@@ -4,74 +4,66 @@
 #include <ncurses.h>
 #include <fstream>
 
+#include "editor.h"
+#include "context.h"
 #include "gapbuffer/gapbuffer.h"
+#include "icontext.h"
+#include "ieditor.h"
+#include "iinputmanager.h"
 #include "linkedlist/doublyindexedlinkedlist.h"
 
-#define ctrl(x) ((x) & 0x1f)
+#include "inputmanager.h"
 
 using namespace std;
-using Node = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
+using namespace Systems::Input;
 
-void Save(DoublyIndexedLinkedList<GapBuffer>& lines, const string& fileName){
-    ofstream saveFile{fileName};
-    if(saveFile.is_open()){
-        for(auto node : lines){
-            saveFile << ((string)*node).c_str() << endl;
-        }
-        saveFile.close();
-    }
-}
+using Lines = DoublyIndexedLinkedList<GapBuffer>&;
+using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
+
+void InitScreen();
+void KillScreen();
+
+void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset);
 
 int main(int argc, char** argv){
     if(argc < 2){
         return 1; 
     }
 
-    const string fileName{argv[1]};
-    ifstream inputFile{fileName};
+    std::shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
+    string fileName{argv[1]};
 
-    DoublyIndexedLinkedList<GapBuffer> lines;
-    Node currentLine;
-    string line;
+    std::shared_ptr<Editor::States::StateContextFactory> stateContextFactory 
+        = std::make_shared<Editor::States::StateContextFactory>();
 
-    if(inputFile.is_open()){
-        while(getline(inputFile, line)){
-            lines.Append(line, 5);
-        }
+    std::shared_ptr<Editor::EditorFactory> editorFactory = std::make_shared<Editor::EditorFactory>();
 
-        inputFile.close();
-    }
+    std::shared_ptr<Editor::IEditor> editor 
+        = editorFactory->Instanciate<Editor::Editor>(inputManager, fileName, stateContextFactory);
 
-    if(lines.head)
-        currentLine = lines.head;
-    else{
-        lines.Append("", 5);    
-        currentLine = lines.head;
-    }
+    InitScreen();
 
-    setlocale(LC_ALL, "");
-    initscr();
-    noecho();
-    cbreak();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
-    curs_set(1);
-    nonl();
-    scrollok(stdscr, FALSE);
-    idlok(stdscr, FALSE);
-
-    bool quit = false;
     int lineOffset = 0;
     int colOffset = 0;
 
-    while(!quit){
+    while(!editor->quit){
+        editor->Update();
+        UpdateUI(editor->buffer->currentLine, lineOffset, colOffset);
+    }
+
+    KillScreen();
+}
+
+void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
+        int currentLineNumber = currentLine->index;
+        int currentCursorCol = currentLine->data->GetGapIndex();
         int row, col;
+
         getmaxyx(stdscr, row, col);
 
-        erase();
-        
-        Node currentNode = currentLine;
+        erase();        
+        Line currentNode = currentLine;
         while(currentNode && currentNode->index != lineOffset){
             currentNode = currentNode->previous.lock();   
         }
@@ -84,14 +76,13 @@ int main(int argc, char** argv){
 
             currentNode = currentNode->next;
         }
+        move(currentLineNumber - lineOffset, currentCursorCol - colOffset + lineColWidth+3);
+        refresh();
         
-        int currentLineNumber = currentLine->index;
-        int currentCursorCol = currentLine->data->GetGapIndex();
-
         while(currentLineNumber - lineOffset >= row - 5)
             lineOffset++;
 
-        if(currentLineNumber < lineOffset)
+        while(currentLineNumber < lineOffset)
             lineOffset--;
 
         while(currentCursorCol - colOffset > col - 10){
@@ -101,68 +92,21 @@ int main(int argc, char** argv){
         while(currentCursorCol < colOffset)
             colOffset--;
 
-        move(currentLineNumber - lineOffset, currentCursorCol - colOffset + lineColWidth+3);
-        refresh();
+}
 
-        int input = getch();
+void InitScreen(){
+    setlocale(LC_ALL, "");
+    initscr();
+    noecho();
+    cbreak();
+    nodelay(stdscr, TRUE);
+    keypad(stdscr, TRUE);
+    curs_set(1);
+    nonl();
+    scrollok(stdscr, FALSE);
+    idlok(stdscr, FALSE);
+}
 
-        if(input == ERR)
-            continue;
-
-        else if(input == ctrl('x'))
-            quit = true;
-        else if(input == ctrl('w'))
-            Save(lines, fileName);
-        else if(input == ctrl('X')){
-           quit = true; 
-           Save(lines, fileName);
-        }
-        else if(input == KEY_DOWN){
-            if(currentLine->next)
-                currentLine = currentLine->next;
-        } 
-        else if(input == KEY_UP){
-            if(currentLine->previous.lock())
-                currentLine = currentLine->previous.lock();
-        }
-        else if(input == KEY_LEFT){
-            currentLine->data->MoveGapLeft();
-        }
-        else if(input == KEY_RIGHT){
-            currentLine->data->MoveGapRight();
-        }
-        else if(input == KEY_BACKSPACE){
-            bool isGapAtBeginning = currentLine->data->IsGapAtBeginning();
-            if(isGapAtBeginning){
-                Node previousLine = currentLine->previous.lock();
-                if(previousLine){
-                    string data = currentLine->data->ToString();
-                    previousLine->data->Insert(data);
-
-                    lines.Remove(currentLine);
-                    if(currentLine->previous.lock())
-                        currentLine = currentLine->previous.lock();
-                }
-            }
-            else
-                currentLine->data->Delete();
-        } 
-        else if(input == '\n' || input == '\r'){
-            lines.AppendAfter(currentLine, "", 5);
-            int gapIndex = currentLine->data->GetGapIndex();
-            int endIndex = currentLine->data->BufferSize();
-            string substring = currentLine->data->Substring(gapIndex, endIndex);
-            currentLine->data->DeleteBetween(gapIndex, endIndex);
-
-            if(currentLine->next){
-                currentLine = currentLine->next;
-                currentLine->data->Insert(substring);
-                currentLine->data->MoveGapTo(0);
-            }
-        }
-        else
-            currentLine->data->Insert(input);
-    }
-
+void KillScreen(){
     endwin();
 }
