@@ -7,6 +7,7 @@ file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
 add_library(buffers SHARED ${SOURCE_FILES})
 
 #target_link_libraries(buffer PUBLIC tui)
+target_link_libraries(buffers PRIVATE editor)
 
 message("${CMAKE_SOURCE_DIR}")
 

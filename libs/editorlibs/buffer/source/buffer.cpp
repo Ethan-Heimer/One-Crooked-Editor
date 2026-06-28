@@ -3,7 +3,7 @@
 
 #define END_OF_BUFFER 0
 
-using namespace Editor::Buffers;
+using namespace Buffers;
 
 Buffer::Buffer(){
     buffer.Append("", 5);    
@@ -61,8 +61,8 @@ void Buffer::DeleteCharacter() noexcept{
     currentLine->data->Delete();
 }
             
-Line Buffer::InsertLine() noexcept{
-    return buffer.AppendAfter(currentLine, "", 5);
+void Buffer::InsertLine() noexcept{
+    buffer.AppendAfter(currentLine, "", 5);
 }
             
 void Buffer::DeleteLine() noexcept{

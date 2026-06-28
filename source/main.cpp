@@ -3,7 +3,8 @@
 #include <ncurses.h>
 #include <queue>
 
-#include "editormeta.h"
+#include "buffer.h"
+#include "metaprogramming/editormeta.h"
 
 #include "editorstates.h"
 #include "gapbuffer.h"
@@ -16,6 +17,7 @@ using namespace std;
 using namespace Systems::Input;
 using namespace Editor;
 using namespace Editor::States;
+using namespace Metaprogramming;
 
 using Lines = DoublyIndexedLinkedList<GapBuffer>&;
 using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
@@ -34,8 +36,8 @@ int main(int argc, char** argv){
     shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
 
-    constexpr auto editorFactory = Metaprogramming::DefaultEditorFactory<NormalState, InsertState>();
-    shared_ptr<IEditorContext> editor = editorFactory.Instanciate(&inputQueue, fileName);
+    constexpr auto editorFactory = DefaultEditorFactory<Buffers::Buffer, NormalState, InsertState>();
+    auto editor = editorFactory.Instanciate(&inputQueue, fileName);
 
     InitScreen();
 

@@ -10,12 +10,13 @@
 using namespace std;
 using namespace Editor;
 using namespace Editor::States;
+using namespace Buffers;
 
 namespace Editor::Metaprogramming{
-    template<typename... T>
+    template<typename E, typename... T>
     constexpr auto DefaultEditorFactory(){ 
-            return EditorContextFactory<EditorContext, 
+            return EditorContextFactory<E, EditorContext<E>, 
             StateContextFactory<StateContext, T...>, 
-            BufferFileHandlerFactory<BufferFileHandler>>{};
+            BufferFileHandlerFactory<E, BufferFileHandler>>{};
     }
 }

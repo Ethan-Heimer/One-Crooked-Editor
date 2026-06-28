@@ -2,17 +2,19 @@
 
 #include <sstream>
 
-#include "filehandling.h"
 #include "gapbuffer.h"
 
 #include "doublyindexedlinkedlist.h"
+#include "ieditable.h"
 
 using namespace FileHandling;
+using namespace Editor::Files;
+using namespace Editor;
 
-namespace Editor::Buffers{
+namespace Buffers{
     using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
 
-    class Buffer : public IFileLoadable, public IFileSaveable{
+    class Buffer : public IEditable{
         public:
             DoublyIndexedLinkedList<GapBuffer> buffer;
             Line currentLine;
@@ -22,27 +24,27 @@ namespace Editor::Buffers{
             void ReadLineFromFile(const std::string& line) override;
             std::stringstream WriteLinesToFile() override;
 
-            void GotoNextLine() noexcept;
+            void GotoNextLine() noexcept override;
             
-            void GotoPreviousLine() noexcept;
+            void GotoPreviousLine() noexcept override;
             
-            void MoveCursorLeft() noexcept;
+            void MoveCursorLeft() noexcept override;
             
-            void MoveCursorRight() noexcept;
+            void MoveCursorRight() noexcept override;
             
-            bool IsCursorAtBeginningOfLine() noexcept;
+            bool IsCursorAtBeginningOfLine() noexcept override;
             
-            void InsertCharacter(char character) noexcept;
-            void InsertString(string character) noexcept;
+            void InsertCharacter(char character) noexcept override;
+            void InsertString(string character) noexcept override;
             
-            void DeleteCharacter() noexcept;
+            void DeleteCharacter() noexcept override;
             
-            Line InsertLine() noexcept;
+            void InsertLine() noexcept override;
             
-            void DeleteLine() noexcept;            
+            void DeleteLine() noexcept override;
 
-            void AppendTextToNextLine() noexcept;
+            void AppendTextToNextLine() noexcept override;
 
-            void MoveToHead() noexcept;
+            void MoveToHead() noexcept override;
     };
 }

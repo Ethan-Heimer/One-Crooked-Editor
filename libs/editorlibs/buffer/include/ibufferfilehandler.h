@@ -3,13 +3,14 @@
 #include <string>
 
 #include "buffer.h"
-#include "filehandling.h"
+#include "editorfilehandling/ieditorfilehandler.h"
 
 using namespace std;
 using namespace FileHandling;
+using namespace Editor::Files;
 
-namespace Editor::Buffers {
-    class IBufferFileHandler : public IFileSaver, public IFileLoader<Buffers::Buffer>{
+namespace Buffers {
+    class IBufferFileHandler : public IEditorFileHandler<Buffers::Buffer>{
         public:
             IBufferFileHandler(const string fileName){}
     };

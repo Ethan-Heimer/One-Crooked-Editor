@@ -5,9 +5,14 @@
 #include <queue>
 #include <type_traits>
 
-#include "ibufferfilehandler.h"
+#include "editorfilehandling/ieditorfile.h"
+#include "editorfilehandling/ieditorfilehandler.h"
+#include "filehandling.h"
+#include "ieditable.h"
 #include "ieditorstate.h"
 #include "ieditorstatemutator.h"
+
+using namespace Editor::Files;
 
 namespace Editor::States{
     enum States{
@@ -20,27 +25,28 @@ namespace Editor::States{
             IStateContextPasskey(){};
     };
 
+
     class IStateContext : public IStateMutator, public std::enable_shared_from_this<IStateMutator>{
         public:
         map<string, std::shared_ptr<IEditorState>> states;
 
-        weak_ptr<Buffers::IBufferFileHandler> fileHandler;
-        weak_ptr<Buffers::Buffer> buffer;
+        weak_ptr<IFileSaver> fileSaver;
+        weak_ptr<IEditable> buffer;
 
         queue<int>* inputQueue;
         bool* quitToken;
 
-        IStateContext(IStateContextPasskey passkey, weak_ptr<Buffers::IBufferFileHandler> fileHandler, 
-                    weak_ptr<Buffers::Buffer> buffer, std::queue<int>* inputQueue, bool* quitToken) : 
-        fileHandler(fileHandler), buffer(buffer), inputQueue(inputQueue), quitToken(quitToken){};
+        IStateContext(IStateContextPasskey passkey, weak_ptr<IFileSaver> fileSaver, 
+                    weak_ptr<IEditable> buffer, std::queue<int>* inputQueue, bool* quitToken) : 
+        fileSaver(fileSaver), buffer(buffer), inputQueue(inputQueue), quitToken(quitToken){};
 
         virtual void Initialize(const string& defaultState) = 0;
         virtual void Update() = 0;
 
-        template<typename T>
-        requires std::is_base_of<IEditorState, T>::value
+        template<typename S>
+        requires std::is_base_of<IEditorState, S>::value
         void AddState(){
-            std::shared_ptr<IEditorState> newState = std::make_shared<T>(fileHandler, buffer, GetWeakPointer(), inputQueue, quitToken);
+            std::shared_ptr<IEditorState> newState = std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), inputQueue, quitToken);
             states[newState->StateName()] = std::move(newState);
         }
 

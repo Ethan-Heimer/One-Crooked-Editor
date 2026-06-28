@@ -1,5 +1,7 @@
 #pragma once
 
+#include "filehandling.h"
+#include "ieditable.h"
 #include "ieditorstatecontext.h"
 #include "ieditorstate.h"
 #include "ieditorstatecontextfactory.h"
@@ -20,11 +22,11 @@ namespace Editor::States {
     requires std::is_base_of_v<IStateContext, T> && (std::is_base_of_v<IEditorState, U> && ...)
     class StateContextFactory : public IStateContextFactory{
         public:
-            std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<Buffers::IBufferFileHandler> fileHandler,
-                    std::weak_ptr<Buffers::Buffer> buffer, queue<int>* inputQueue, bool* quitToken) override{
+            std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
+                    std::weak_ptr<IEditable> buffer, queue<int>* inputQueue, bool* quitToken) override{
 
             std::shared_ptr<IStateContext> pointer = std::make_shared<T>
-                (StateContextPasskey<T, U...>{}, fileHandler, buffer, inputQueue, quitToken);
+                (StateContextPasskey<T, U...>{}, fileSaver, buffer, inputQueue, quitToken);
 
             (pointer->AddState<U>(), ...);
 

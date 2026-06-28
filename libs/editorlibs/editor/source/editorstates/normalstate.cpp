@@ -20,10 +20,10 @@ void NormalState::OnUpdate(){
     if(input == ctrl('x'))
         *quitToken = true;
     else if(input == ctrl('w'))
-        fileHandler.lock()->SaveToFile(buffer.lock());
+        fileSaver.lock()->SaveToFile(buffer.lock());
     else if(input == ctrl('X')){
         *quitToken = true;
-        fileHandler.lock()->SaveToFile(buffer.lock());
+        fileSaver.lock()->SaveToFile(buffer.lock());
     }
     else if(input == KEY_DOWN || input == 'j'){
         buffer.lock()->GotoNextLine();

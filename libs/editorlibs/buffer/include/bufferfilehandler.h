@@ -2,7 +2,7 @@
 
 #include "ibufferfilehandler.h"
 
-namespace Editor::Buffers {
+namespace Buffers {
     class BufferFileHandler : public IBufferFileHandler{
         public:
             const string fileName;
