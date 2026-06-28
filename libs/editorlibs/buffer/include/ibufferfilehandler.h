@@ -10,7 +10,7 @@ using namespace FileHandling;
 using namespace Editor::Files;
 
 namespace Buffers {
-    class IBufferFileHandler : public IEditorFileHandler<Buffers::Buffer>{
+    class IBufferFileHandler : public IEditorFileHandler<Buffer>{
         public:
             IBufferFileHandler(const string fileName){}
     };
