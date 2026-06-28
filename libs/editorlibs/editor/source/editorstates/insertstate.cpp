@@ -1,10 +1,12 @@
-#include "insertstate.h"
 #include <ncurses.h>
+
+#include "editorstates.h"
+#include "editorconstants.h"
 
 using namespace Editor::States;
 
 constexpr string InsertState::StateName() const{
-    return "Insert";
+    return Constants::InsertState;
 }
 
 void InsertState::OnUpdate(){
@@ -27,7 +29,7 @@ void InsertState::OnUpdate(){
         buffer.lock()->InsertLine();
         buffer.lock()->AppendTextToNextLine();
     } else if(input == 27){
-        nextState = "Normal";
+        nextState = Constants::NormalState;
     }
     else if(input == 9){
         for(int i = 0; i < 4; i++){

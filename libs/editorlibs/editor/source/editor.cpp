@@ -1,4 +1,4 @@
-#include "editor.h"
+#include "editorcontext.h"
 #include <memory>
 
 using namespace Editor;

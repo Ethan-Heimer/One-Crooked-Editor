@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <queue>
-#include "ieditor.h"
+#include "ieditorcontext.h"
 
 using namespace std;
 using namespace Editor::Buffers;
@@ -17,7 +17,6 @@ namespace Editor{
                     shared_ptr<States::IStateContextFactory> stateContextFactory, queue<int>* inputQueue, string fileName) override;
 
             void Update() override;
-
             std::weak_ptr<IEditorContext> GetWeakPtr();
     };
 }

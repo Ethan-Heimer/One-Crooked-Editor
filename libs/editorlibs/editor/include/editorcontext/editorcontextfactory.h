@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ibufferfilehandlerfactory.h"
-#include "ieditorfactory.h"
+#include "ieditorcontextfactory.h"
 #include "ieditorstatecontextfactory.h"
 #include <memory>
 #include <queue>

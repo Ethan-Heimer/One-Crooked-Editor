@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ieditor.h"
+#include "ieditorcontext.h"
 
 namespace Editor {
     class IEditorContextFactory{

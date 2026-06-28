@@ -1,10 +1,12 @@
-#include "normalstate.h"
+#include "editorconstants.h"
+#include "editorstates.h"
+
 #include <ncurses.h>
 
 using namespace Editor::States;
 
 constexpr string NormalState::StateName() const{
-    return "Normal";
+    return Constants::NormalState;
 }
 
 void NormalState::OnUpdate(){
@@ -35,7 +37,7 @@ void NormalState::OnUpdate(){
     else if(input == KEY_RIGHT || input == 'l'){
         buffer.lock()->MoveCursorRight();
     } else if(input == 'i'){
-        nextState = "Insert";
+        nextState = Constants::InsertState;
     }
 }
 
