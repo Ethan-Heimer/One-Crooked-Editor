@@ -1,0 +1,46 @@
+#include "normalstate.h"
+#include <ncurses.h>
+
+using namespace Editor::States;
+
+constexpr string NormalState::StateName() const{
+    return "Normal";
+}
+
+void NormalState::OnUpdate(){
+    nextState = StateName();
+    if(inputQueue->empty())
+        return;
+
+    int input = inputQueue->front();    
+    inputQueue->pop();
+
+    if(input == ctrl('x'))
+        *quitToken = true;
+    else if(input == ctrl('w'))
+        fileHandler.lock()->SaveToFile(buffer.lock());
+    else if(input == ctrl('X')){
+        *quitToken = true;
+        fileHandler.lock()->SaveToFile(buffer.lock());
+    }
+    else if(input == KEY_DOWN || input == 'j'){
+        buffer.lock()->GotoNextLine();
+    } 
+    else if(input == KEY_UP || input == 'k'){
+        buffer.lock()->GotoPreviousLine();
+    }
+    else if(input == KEY_LEFT || input == 'h'){
+        buffer.lock()->MoveCursorLeft();
+    }
+    else if(input == KEY_RIGHT || input == 'l'){
+        buffer.lock()->MoveCursorRight();
+    } else if(input == 'i'){
+        nextState = "Insert";
+    }
+}
+
+void NormalState::Transition(){
+    if(nextState != StateName()){
+        stateMutator.lock()->ChangeState(nextState);
+    }
+};

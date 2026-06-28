@@ -1,0 +1,49 @@
+#pragma once
+
+#include <map>
+#include <memory>
+#include <queue>
+#include <type_traits>
+
+#include "ibufferfilehandler.h"
+#include "ieditorstate.h"
+#include "ieditorstatemutator.h"
+
+namespace Editor::States{
+    enum States{
+        Normal = 0,
+        Insert = 1
+    };
+
+    class IStateContextPasskey{
+        protected:
+            IStateContextPasskey(){};
+    };
+
+    class IStateContext : public IStateMutator, public std::enable_shared_from_this<IStateMutator>{
+        public:
+        map<string, std::shared_ptr<IEditorState>> states;
+
+        weak_ptr<Buffers::IBufferFileHandler> fileHandler;
+        weak_ptr<Buffers::Buffer> buffer;
+
+        queue<int>* inputQueue;
+        bool* quitToken;
+
+        IStateContext(IStateContextPasskey passkey, weak_ptr<Buffers::IBufferFileHandler> fileHandler, 
+                    weak_ptr<Buffers::Buffer> buffer, std::queue<int>* inputQueue, bool* quitToken) : 
+        fileHandler(fileHandler), buffer(buffer), inputQueue(inputQueue), quitToken(quitToken){};
+
+        virtual void Initialize(const string& defaultState) = 0;
+        virtual void Update() = 0;
+
+        template<typename T>
+        requires std::is_base_of<IEditorState, T>::value
+        void AddState(){
+            std::shared_ptr<IEditorState> newState = std::make_shared<T>(fileHandler, buffer, GetWeakPointer(), inputQueue, quitToken);
+            states[newState->StateName()] = std::move(newState);
+        }
+
+        virtual std::weak_ptr<IStateMutator> GetWeakPointer() = 0;
+    };
+}

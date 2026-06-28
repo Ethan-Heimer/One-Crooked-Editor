@@ -1,25 +1,22 @@
 #include <memory>
 
 #include <ncurses.h>
+#include <queue>
 
-#include "bufferfilehandler.h"
-#include "bufferfilehandlerfactory.h"
-#include "context.h"
-#include "editor.h"
+#include "editormeta.h"
 #include "editorfactory.h"
-#include "gapbuffer/gapbuffer.h"
-#include "ibufferfilehandlerfactory.h"
-#include "icontext.h"
-#include "istatecontextfactory.h"
-#include "ieditorfactory.h"
+#include "gapbuffer.h"
+#include "insertstate.h"
 #include "iinputmanager.h"
-#include "linkedlist/doublyindexedlinkedlist.h"
+#include "doublyindexedlinkedlist.h"
 
 #include "inputmanager.h"
-#include "statecontextfactory.h"
+#include "normalstate.h"
 
 using namespace std;
 using namespace Systems::Input;
+using namespace Editor;
+using namespace Editor::States;
 
 using Lines = DoublyIndexedLinkedList<GapBuffer>&;
 using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
@@ -34,20 +31,12 @@ int main(int argc, char** argv){
         return 1; 
     }
 
-    std::shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
+    queue<int> inputQueue;
+    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
 
-    std::shared_ptr<Editor::States::IStateContextFactory> stateContextFactory 
-        = std::make_shared<Editor::States::StateContextFactory<Editor::States::StateContext>>();
-
-    std::shared_ptr<Editor::Buffers::IBufferFileHandlerFactory> bufferFileHandlerFactory = 
-        std::make_shared<Editor::Buffers::BufferFileHandlerFactory<BufferFileHandler>>();
-
-    std::shared_ptr<Editor::IEditorFactory> editorFactory 
-        = std::make_shared<Editor::EditorFactory<Editor::Editor>>();
-
-    std::shared_ptr<Editor::IEditor> editor 
-        = editorFactory->Instanciate(bufferFileHandlerFactory, stateContextFactory, inputManager, fileName);
+    constexpr auto editorFactory = Metaprogramming::CreateDefaultEditorFactory<NormalState, InsertState>();
+    shared_ptr<IEditorContext> editor = editorFactory.Instanciate(&inputQueue, fileName);
 
     InitScreen();
 
@@ -55,6 +44,11 @@ int main(int argc, char** argv){
     int colOffset = 0;
 
     while(!editor->quit){
+        int ch = inputManager->GetKeyInput();
+        if(ch != ERR){
+            inputQueue.push(ch);
+        }
+         
         editor->Update();
         UpdateUI(editor->buffer->currentLine, lineOffset, colOffset);
     }
@@ -99,7 +93,6 @@ void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset){
 
         while(currentCursorCol < colOffset)
             colOffset--;
-
 }
 
 void InitScreen(){
@@ -118,3 +111,4 @@ void InitScreen(){
 void KillScreen(){
     endwin();
 }
+
