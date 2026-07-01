@@ -9,6 +9,8 @@ namespace Editor::States{
     class IStateContextFactory{
         public:
             virtual std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
-                    std::weak_ptr<IEditable> buffer, queue<int>* inputQueue, bool* quitToken) = 0;
+                    std::weak_ptr<IEditable> buffer, 
+                    weak_ptr<IEditorCommandManager> commandManager,
+                    queue<int>* inputQueue, bool* quitToken) = 0;
     };
 }

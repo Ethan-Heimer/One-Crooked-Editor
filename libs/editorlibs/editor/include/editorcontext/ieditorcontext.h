@@ -4,6 +4,8 @@
 #include <queue>
 #include <type_traits>
 
+#include "editorcommands/ieditorcommandmanager.h"
+#include "editorcommands/ieditorcommandmanagerfactory.h"
 #include "editorfilehandling/ieditorfilehandler.h"
 #include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "ieditable.h"
@@ -11,6 +13,7 @@
 
 using namespace std;
 using namespace Editor::Files;
+using namespace Editor::Commands;
 
 namespace Editor{
     class IEditorContextPasskey{
@@ -29,10 +32,13 @@ namespace Editor{
             shared_ptr<IEditorFileHandler<T>> fileHandler;
             shared_ptr<T> buffer;
             shared_ptr<States::IStateContext> stateContext; 
+            shared_ptr<Commands::IEditorCommandManager> commandManager;
 
             virtual void Initialize( 
                     shared_ptr<IEditorFileHandlerFactory<T>> fileHandlerFactory,
-                    shared_ptr<States::IStateContextFactory> stateContextFactory, queue<int>* inputQueue, string fileName) = 0;
+                    shared_ptr<States::IStateContextFactory> stateContextFactory, 
+                    shared_ptr<IEditorCommandManagerFactory> commandManager,
+                    queue<int>* inputQueue, string fileName) = 0;
 
             virtual void Update() = 0;
     };

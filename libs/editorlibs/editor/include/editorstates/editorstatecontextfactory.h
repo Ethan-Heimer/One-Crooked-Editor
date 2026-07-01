@@ -23,10 +23,12 @@ namespace Editor::States {
     class StateContextFactory : public IStateContextFactory{
         public:
             std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
-                    std::weak_ptr<IEditable> buffer, queue<int>* inputQueue, bool* quitToken) override{
+                    std::weak_ptr<IEditable> buffer, 
+                    weak_ptr<IEditorCommandManager> commandManager,
+                    queue<int>* inputQueue, bool* quitToken) override{
 
             std::shared_ptr<IStateContext> pointer = std::make_shared<T>
-                (StateContextPasskey<T, U...>{}, fileSaver, buffer, inputQueue, quitToken);
+                (StateContextPasskey<T, U...>{}, fileSaver, buffer, commandManager, inputQueue, quitToken);
 
             (pointer->AddState<U>(), ...);
 

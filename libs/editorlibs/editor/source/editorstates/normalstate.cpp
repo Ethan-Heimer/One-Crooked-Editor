@@ -1,3 +1,4 @@
+#include "editorcommands/editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
 
@@ -28,6 +29,14 @@ void NormalState::OnUpdate(){
     else if(input == KEY_DOWN || input == 'j'){
         buffer.lock()->GotoNextLine();
     } 
+    else if(input == 'T'){
+        commandManager.lock()->Execute<TestCommand>();
+    } else if(input == 'U'){
+        commandManager.lock()->Undo();
+    }
+    else if(input == 'R'){
+        commandManager.lock()->Redo();
+    }
     else if(input == KEY_UP || input == 'k'){
         buffer.lock()->GotoPreviousLine();
     }

@@ -5,8 +5,6 @@
 #include <queue>
 #include <type_traits>
 
-#include "editorfilehandling/ieditorfile.h"
-#include "editorfilehandling/ieditorfilehandler.h"
 #include "filehandling.h"
 #include "ieditable.h"
 #include "ieditorstate.h"
@@ -32,13 +30,17 @@ namespace Editor::States{
 
         weak_ptr<IFileSaver> fileSaver;
         weak_ptr<IEditable> buffer;
+        weak_ptr<IEditorCommandManager> commandManager;
 
         queue<int>* inputQueue;
         bool* quitToken;
 
-        IStateContext(IStateContextPasskey passkey, weak_ptr<IFileSaver> fileSaver, 
-                    weak_ptr<IEditable> buffer, std::queue<int>* inputQueue, bool* quitToken) : 
-        fileSaver(fileSaver), buffer(buffer), inputQueue(inputQueue), quitToken(quitToken){};
+        IStateContext(IStateContextPasskey passkey, 
+                weak_ptr<IFileSaver> fileSaver, 
+                weak_ptr<IEditable> buffer, 
+                weak_ptr<IEditorCommandManager> commandManager,
+                std::queue<int>* inputQueue, bool* quitToken) : 
+        fileSaver(fileSaver), buffer(buffer), commandManager(commandManager), inputQueue(inputQueue), quitToken(quitToken){};
 
         virtual void Initialize(const string& defaultState) = 0;
         virtual void Update() = 0;
@@ -46,7 +48,8 @@ namespace Editor::States{
         template<typename S>
         requires std::is_base_of<IEditorState, S>::value
         void AddState(){
-            std::shared_ptr<IEditorState> newState = std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), inputQueue, quitToken);
+            std::shared_ptr<IEditorState> newState = 
+                std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), commandManager, inputQueue, quitToken);
             states[newState->StateName()] = std::move(newState);
         }
 

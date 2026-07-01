@@ -2,10 +2,12 @@
 
 #include "bufferfilehandler.h"
 #include "bufferfilehandlerfactory.h"
+#include "editorcommandmanager.h"
 #include "editorstatecontext.h"
 #include "editorcontext.h"
 #include "editorcontextfactory.h"
 #include "editorstatecontextfactory.h"
+#include "editorcommandmanagerfactory.h"
 
 using namespace std;
 using namespace Editor;
@@ -17,6 +19,7 @@ namespace Editor::Metaprogramming{
     constexpr auto DefaultEditorFactory(){ 
             return EditorContextFactory<E, EditorContext<E>, 
             StateContextFactory<StateContext, T...>, 
-            BufferFileHandlerFactory<E, BufferFileHandler>>{};
+            BufferFileHandlerFactory<E, BufferFileHandler>,
+            EditorCommandManagerFactory<EditorCommandManager>>{};
     }
 }

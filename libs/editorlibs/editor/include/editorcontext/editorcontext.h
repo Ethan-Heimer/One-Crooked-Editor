@@ -17,12 +17,16 @@ namespace Editor{
 
             virtual void Initialize( 
                     shared_ptr<IEditorFileHandlerFactory<T>> fileHandlerFactory,
-                    shared_ptr<States::IStateContextFactory> stateContextFactory, queue<int>* inputQueue, string fileName) override{
+                    shared_ptr<States::IStateContextFactory> stateContextFactory,
+                    shared_ptr<IEditorCommandManagerFactory> commandManagerFactory,
+                    queue<int>* inputQueue, string fileName) override{
 
                 this->fileHandler = fileHandlerFactory->Instanciate(fileName);
                 this->buffer = this->fileHandler->LoadFromFile();
+                this->commandManager = commandManagerFactory->Instanciate(this->buffer);
 
-                this->stateContext = stateContextFactory->Instanciate(this->fileHandler, this->buffer, inputQueue, &(this->quit));
+                this->stateContext = stateContextFactory->Instanciate
+                    (this->fileHandler, this->buffer, this->commandManager, inputQueue, &(this->quit));
             }
 
             void Update() override{
