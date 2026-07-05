@@ -17,9 +17,16 @@ using namespace Buffers;
 namespace Editor::Metaprogramming{
     template<typename E, typename... T>
     constexpr auto DefaultEditorFactory(){ 
-            return EditorContextFactory<E, EditorContext<E>, 
-            StateContextFactory<StateContext, T...>, 
-            BufferFileHandlerFactory<E, BufferFileHandler>,
-            EditorCommandManagerFactory<EditorCommandManager>>{};
+                shared_ptr<States::IStateContextFactory> stateContextFactory
+                    = make_shared<StateContextFactory<StateContext, T...>>();
+                
+                shared_ptr<IEditorFileHandlerFactory<E>> bufferFileHandlerFactory
+                    = make_shared<BufferFileHandlerFactory<E, BufferFileHandler>>();
+
+                shared_ptr<IEditorCommandManagerFactory> commandManagerFactory
+                    = make_shared<EditorCommandManagerFactory<EditorCommandManager>>();
+
+            return EditorContextFactory<E, EditorContext<E>>(std::move(stateContextFactory),
+                    std::move(bufferFileHandlerFactory), std::move(commandManagerFactory));
     }
 }

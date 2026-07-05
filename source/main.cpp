@@ -36,7 +36,7 @@ int main(int argc, char** argv){
     shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
 
-    constexpr auto editorFactory = DefaultEditorFactory<Buffers::Buffer, NormalState, InsertState>();
+    auto editorFactory = DefaultEditorFactory<Buffers::Buffer, NormalState, InsertState>();
     auto editor = editorFactory.Instanciate(&inputQueue, fileName);
 
     InitScreen();
