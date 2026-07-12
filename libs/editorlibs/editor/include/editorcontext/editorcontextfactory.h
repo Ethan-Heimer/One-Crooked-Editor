@@ -30,7 +30,8 @@ namespace Editor {
                 Instanciate(queue<int>* inputQueue, string fileName) const override {
 
                 shared_ptr<IEditorContext<E>> pointer = make_shared<T>(EditorPasskey<E, T>{});
-                pointer->Initialize(this->bufferFileHandlerFactory, this->stateContextFactory, this->commandManagerFactory, inputQueue, fileName);
+                pointer->Initialize(this->bufferFileHandlerFactory, this->stateContextFactory, 
+                        this->commandManagerFactory, this->undoHandlerFactory, inputQueue, fileName);
 
                 return std::move(pointer);
                 

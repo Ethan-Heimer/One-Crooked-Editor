@@ -4,6 +4,7 @@
 #include "ieditorcommandmanagerfactory.h"
 #include "ieditorcontext.h"
 #include "ieditorstatecontextfactory.h"
+#include "ieditorundohanderfactory.h"
 #include <memory>
 
 namespace Editor {
@@ -14,10 +15,13 @@ namespace Editor {
                 IEditorContextFactory(
                 std::shared_ptr<States::IStateContextFactory> stateContextFactory,
                 std::shared_ptr<IEditorFileHandlerFactory<T>> bufferFileHandlerFactory,
-                std::shared_ptr<IEditorCommandManagerFactory> commandManagerFactory)
+                std::shared_ptr<IEditorCommandManagerFactory> commandManagerFactory,
+                std::shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory)
+
                 : stateContextFactory(stateContextFactory), 
                 bufferFileHandlerFactory(bufferFileHandlerFactory), 
-                commandManagerFactory(commandManagerFactory) {};
+                commandManagerFactory(commandManagerFactory),
+                undoHandlerFactory(undoHandlerFactory){};
 
             virtual std::shared_ptr<IEditorContext<T>> 
                 Instanciate(queue<int>* inputQueue, string fileName) const = 0;
@@ -26,5 +30,6 @@ namespace Editor {
             std::shared_ptr<States::IStateContextFactory> stateContextFactory;
             std::shared_ptr<IEditorFileHandlerFactory<T>> bufferFileHandlerFactory;
             std::shared_ptr<IEditorCommandManagerFactory> commandManagerFactory;
+            std::shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory;
     };
 }

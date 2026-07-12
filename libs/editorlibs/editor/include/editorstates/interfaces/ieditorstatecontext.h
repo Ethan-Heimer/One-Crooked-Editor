@@ -31,6 +31,7 @@ namespace Editor::States{
         weak_ptr<IFileSaver> fileSaver;
         weak_ptr<IEditable> buffer;
         weak_ptr<IEditorCommandManager> commandManager;
+        weak_ptr<IEditorCommandUndoHandler> undoHandler;
 
         queue<int>* inputQueue;
         bool* quitToken;
@@ -39,8 +40,9 @@ namespace Editor::States{
                 weak_ptr<IFileSaver> fileSaver, 
                 weak_ptr<IEditable> buffer, 
                 weak_ptr<IEditorCommandManager> commandManager,
+                weak_ptr<IEditorCommandUndoHandler> undoHandler,
                 std::queue<int>* inputQueue, bool* quitToken) : 
-        fileSaver(fileSaver), buffer(buffer), commandManager(commandManager), inputQueue(inputQueue), quitToken(quitToken){};
+        fileSaver(fileSaver), buffer(buffer), commandManager(commandManager), undoHandler(undoHandler), inputQueue(inputQueue), quitToken(quitToken){};
 
         virtual void Initialize(const string& defaultState) = 0;
         virtual void Update() = 0;
@@ -49,7 +51,7 @@ namespace Editor::States{
         requires std::is_base_of<IEditorState, S>::value
         void AddState(){
             std::shared_ptr<IEditorState> newState = 
-                std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), commandManager, inputQueue, quitToken);
+                std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), commandManager, undoHandler, inputQueue, quitToken);
             states[newState->StateName()] = std::move(newState);
         }
 

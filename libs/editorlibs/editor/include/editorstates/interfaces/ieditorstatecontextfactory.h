@@ -11,6 +11,7 @@ namespace Editor::States{
             virtual std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
                     std::weak_ptr<IEditable> buffer, 
                     weak_ptr<IEditorCommandManager> commandManager,
+                    weak_ptr<IEditorCommandUndoHandler> undoHandler,
                     queue<int>* inputQueue, bool* quitToken) = 0;
     };
 }

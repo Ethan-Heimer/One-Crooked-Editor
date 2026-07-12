@@ -1,6 +1,7 @@
-#include "editorcommands/editorcommands.h"
+#include "editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
+#include "editoractions/editoraction.h"
 
 #include <ncurses.h>
 
@@ -18,6 +19,8 @@ void NormalState::OnUpdate(){
     int input = inputQueue->front();    
     inputQueue->pop();
 
+    TestCommand command = commandManager.lock()->CreateCommand<TestCommand>('T');
+
     if(input == ctrl('x'))
         *quitToken = true;
     else if(input == ctrl('w'))
@@ -30,12 +33,15 @@ void NormalState::OnUpdate(){
         buffer.lock()->GotoNextLine();
     } 
     else if(input == 'T'){
-        commandManager.lock()->Execute<TestCommand>();
+        Actions::Action action{command};
+
+        action.Invoke();
+        
     } else if(input == 'U'){
-        commandManager.lock()->Undo();
+        undoHandler.lock()->UndoCommand();
     }
     else if(input == 'R'){
-        commandManager.lock()->Redo();
+        undoHandler.lock()->RedoCommand();
     }
     else if(input == KEY_UP || input == 'k'){
         buffer.lock()->GotoPreviousLine();

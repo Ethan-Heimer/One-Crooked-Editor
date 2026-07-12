@@ -1,11 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <queue>
 #include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "ieditorcontext.h"
+#include "ieditorundohanderfactory.h"
 
 using namespace std;
+using namespace Editor::States;
 
 namespace Editor{
     template<typename T>
@@ -14,19 +17,20 @@ namespace Editor{
     class EditorContext : public IEditorContext<T>{
         public:
             using IEditorContext<T>::IEditorContext;
-
-            virtual void Initialize( 
+            void Initialize( 
                     shared_ptr<IEditorFileHandlerFactory<T>> fileHandlerFactory,
-                    shared_ptr<States::IStateContextFactory> stateContextFactory,
+                    shared_ptr<IStateContextFactory> stateContextFactory, 
                     shared_ptr<IEditorCommandManagerFactory> commandManagerFactory,
-                    queue<int>* inputQueue, string fileName) override{
+                    shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory,
+                    queue<int>* inputQueue, string fileName) override {
 
                 this->fileHandler = fileHandlerFactory->Instanciate(fileName);
                 this->buffer = this->fileHandler->LoadFromFile();
-                this->commandManager = commandManagerFactory->Instanciate(this->buffer);
+                this->undoHandler = undoHandlerFactory->Instanciate();
+                this->commandManager = commandManagerFactory->Instanciate(this->buffer, this->undoHandler);
 
                 this->stateContext = stateContextFactory->Instanciate
-                    (this->fileHandler, this->buffer, this->commandManager, inputQueue, &(this->quit));
+                    (this->fileHandler, this->buffer, this->commandManager, this->undoHandler, inputQueue, &(this->quit));
             }
 
             void Update() override{

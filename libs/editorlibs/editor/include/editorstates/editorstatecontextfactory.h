@@ -5,6 +5,7 @@
 #include "ieditorstatecontext.h"
 #include "ieditorstate.h"
 #include "ieditorstatecontextfactory.h"
+#include "ieditorundohandler.h"
 
 namespace Editor::States {
     template<typename T, typename... U> 
@@ -25,10 +26,11 @@ namespace Editor::States {
             std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
                     std::weak_ptr<IEditable> buffer, 
                     weak_ptr<IEditorCommandManager> commandManager,
+                    weak_ptr<IEditorCommandUndoHandler> undoHandler,
                     queue<int>* inputQueue, bool* quitToken) override{
 
             std::shared_ptr<IStateContext> pointer = std::make_shared<T>
-                (StateContextPasskey<T, U...>{}, fileSaver, buffer, commandManager, inputQueue, quitToken);
+                (StateContextPasskey<T, U...>{}, fileSaver, buffer, commandManager, undoHandler, inputQueue, quitToken);
 
             (pointer->AddState<U>(), ...);
 

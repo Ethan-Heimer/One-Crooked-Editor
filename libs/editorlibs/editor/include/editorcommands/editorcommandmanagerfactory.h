@@ -10,8 +10,9 @@ namespace Editor::Commands{
     requires std::is_base_of_v<IEditorCommandManager, T>
     class EditorCommandManagerFactory : public IEditorCommandManagerFactory{
         public:
-            std::shared_ptr<IEditorCommandManager> Instanciate(std::weak_ptr<IEditable> buffer) override{
-                return std::make_shared<T>(buffer);
+            std::shared_ptr<IEditorCommandManager> 
+                Instanciate(std::weak_ptr<IEditable> buffer, weak_ptr<IEditorCommandUndoHandler> undoHandler) override{
+                return std::make_shared<T>(buffer, undoHandler);
             };
     };
 }

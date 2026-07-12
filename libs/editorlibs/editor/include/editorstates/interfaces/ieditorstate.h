@@ -6,6 +6,7 @@
 #include "editorcommands/ieditorcommandmanager.h"
 #include "filehandling.h"
 #include "ieditable.h"
+#include "ieditorundohandler.h"
 #include "istate.h"
 #include "ieditorstatemutator.h"
 
@@ -20,9 +21,10 @@ namespace Editor::States{
                     weak_ptr<IEditable> buffer, 
                     weak_ptr<IStateMutator> stateMutator, 
                     weak_ptr<IEditorCommandManager> commandManager,
+                    weak_ptr<IEditorCommandUndoHandler> undoHandler,
                     queue<int>* inputQueue, bool* quitToken)
                 : stateMutator(stateMutator), inputQueue(inputQueue), 
-                commandManager(commandManager), fileSaver(fileSaver), buffer(buffer), quitToken(quitToken){}
+                commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), buffer(buffer), quitToken(quitToken){}
 
             virtual constexpr string StateName() const = 0;
 
@@ -31,6 +33,7 @@ namespace Editor::States{
             weak_ptr<IEditable> buffer;
             weak_ptr<IStateMutator> stateMutator;
             weak_ptr<IEditorCommandManager> commandManager;
+            weak_ptr<IEditorCommandUndoHandler> undoHandler;
 
             queue<int>* inputQueue;
             bool* quitToken;

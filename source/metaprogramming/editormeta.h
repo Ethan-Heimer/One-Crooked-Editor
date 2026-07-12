@@ -8,6 +8,10 @@
 #include "editorcontextfactory.h"
 #include "editorstatecontextfactory.h"
 #include "editorcommandmanagerfactory.h"
+#include "editorundohandler.h"
+#include "editorundohandlerfactory.h"
+#include "ieditorundohanderfactory.h"
+#include <memory>
 
 using namespace std;
 using namespace Editor;
@@ -26,7 +30,10 @@ namespace Editor::Metaprogramming{
                 shared_ptr<IEditorCommandManagerFactory> commandManagerFactory
                     = make_shared<EditorCommandManagerFactory<EditorCommandManager>>();
 
+                shared_ptr<IEditorUndoHandlerFactory> commandUndoHandlerFactory =
+                    make_shared<EditorUndoHandlerFactory<EditorUndoHandler>>();
+
             return EditorContextFactory<E, EditorContext<E>>(std::move(stateContextFactory),
-                    std::move(bufferFileHandlerFactory), std::move(commandManagerFactory));
+                    std::move(bufferFileHandlerFactory), std::move(commandManagerFactory), std::move(commandUndoHandlerFactory));
     }
 }

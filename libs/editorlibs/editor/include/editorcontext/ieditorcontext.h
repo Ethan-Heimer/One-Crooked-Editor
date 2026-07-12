@@ -10,10 +10,13 @@
 #include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "ieditable.h"
 #include "ieditorstatecontextfactory.h"
+#include "ieditorundohanderfactory.h"
+#include "ieditorundohandler.h"
 
 using namespace std;
 using namespace Editor::Files;
 using namespace Editor::Commands;
+using namespace Editor::States;
 
 namespace Editor{
     class IEditorContextPasskey{
@@ -31,13 +34,15 @@ namespace Editor{
 
             shared_ptr<IEditorFileHandler<T>> fileHandler;
             shared_ptr<T> buffer;
-            shared_ptr<States::IStateContext> stateContext; 
-            shared_ptr<Commands::IEditorCommandManager> commandManager;
+            shared_ptr<IStateContext> stateContext; 
+            shared_ptr<IEditorCommandManager> commandManager;
+            shared_ptr<IEditorCommandUndoHandler> undoHandler;
 
             virtual void Initialize( 
                     shared_ptr<IEditorFileHandlerFactory<T>> fileHandlerFactory,
-                    shared_ptr<States::IStateContextFactory> stateContextFactory, 
+                    shared_ptr<IStateContextFactory> stateContextFactory, 
                     shared_ptr<IEditorCommandManagerFactory> commandManager,
+                    shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory,
                     queue<int>* inputQueue, string fileName) = 0;
 
             virtual void Update() = 0;
