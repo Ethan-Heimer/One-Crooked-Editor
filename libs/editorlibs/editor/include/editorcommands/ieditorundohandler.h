@@ -3,7 +3,7 @@
 #include "ieditorcommandscontainer.h"
 
 namespace Editor::Commands {
-    class IEditorCommandUndoHandler : public IEditorCommandContainer{
+    class IUndoHandler : public ICommandContainer{
         public:
             virtual void UndoCommand() = 0;
             virtual void RedoCommand() = 0; 

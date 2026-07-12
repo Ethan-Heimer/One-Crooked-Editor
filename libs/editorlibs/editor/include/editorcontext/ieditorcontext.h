@@ -32,17 +32,17 @@ namespace Editor{
 
             bool quit;
 
-            shared_ptr<IEditorFileHandler<T>> fileHandler;
             shared_ptr<T> buffer;
+            shared_ptr<IFileHandler<T>> fileHandler;
             shared_ptr<IStateContext> stateContext; 
-            shared_ptr<IEditorCommandManager> commandManager;
-            shared_ptr<IEditorCommandUndoHandler> undoHandler;
+            shared_ptr<ICommandManager> commandManager;
+            shared_ptr<IUndoHandler> undoHandler;
 
             virtual void Initialize( 
-                    shared_ptr<IEditorFileHandlerFactory<T>> fileHandlerFactory,
+                    shared_ptr<IFileHandlerFactory<T>> fileHandlerFactory,
                     shared_ptr<IStateContextFactory> stateContextFactory, 
-                    shared_ptr<IEditorCommandManagerFactory> commandManager,
-                    shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory,
+                    shared_ptr<ICommandManagerFactory> commandManager,
+                    shared_ptr<IUndoHandlerFactory> undoHandlerFactory,
                     queue<int>* inputQueue, string fileName) = 0;
 
             virtual void Update() = 0;

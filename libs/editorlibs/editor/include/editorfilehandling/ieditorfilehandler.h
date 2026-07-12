@@ -9,5 +9,5 @@ using namespace FileHandling;
 namespace Editor::Files {
     template <typename T>
     requires std::is_base_of_v<IEditable, T>
-    class IEditorFileHandler : public IFileSaver, public IFileLoader<T>{};
+    class IFileHandler : public IFileSaver, public IFileLoader<T>{};
 }

@@ -3,7 +3,7 @@
 #include "ieditorcommandmanager.h"
 
 namespace Editor::Commands {
-    class EditorCommandManager : public IEditorCommandManager{
-        using IEditorCommandManager::IEditorCommandManager;
+    class EditorCommandManager : public ICommandManager{
+        using ICommandManager::ICommandManager;
     };
 }

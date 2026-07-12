@@ -12,9 +12,9 @@
     }; \
 
 namespace Editor::States{
-    class EditorState : public IEditorState{
+    class EditorState : public IState{
         public:
-            using IEditorState::IEditorState;
+            using IState::IState;
             string nextState;
 
     };

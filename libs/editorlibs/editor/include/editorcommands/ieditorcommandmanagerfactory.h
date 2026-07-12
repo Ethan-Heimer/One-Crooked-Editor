@@ -4,10 +4,11 @@
 #include "ieditable.h"
 #include "ieditorundohanderfactory.h"
 #include <memory>
+
 namespace Editor::Commands {
-    class IEditorCommandManagerFactory{
+    class ICommandManagerFactory{
         public:
-            virtual std::shared_ptr<IEditorCommandManager> Instanciate
-                (std::weak_ptr<IEditable> editable, std::weak_ptr<IEditorCommandUndoHandler> undoHandler) = 0;
+            virtual std::shared_ptr<ICommandManager> Instanciate
+                (std::weak_ptr<IEditable> editable, std::weak_ptr<IUndoHandler> undoHandler) = 0;
     };
 }

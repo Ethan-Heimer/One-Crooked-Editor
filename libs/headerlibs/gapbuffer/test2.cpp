@@ -6,6 +6,7 @@ int main(){
     std::cout << gapBuffer.RawContents() << std::endl;
     std::cout << gapBuffer.BufferSize() << std::endl;
 
-    string subString = gapBuffer.Substring(0, 100);
-    std::cout << subString << std::endl;
+    gapBuffer.MoveGapTo(3);
+    std::cout << gapBuffer.RawContents() << std::endl;
+    std::cout << gapBuffer.GetGapIndex() << std::endl;
 }

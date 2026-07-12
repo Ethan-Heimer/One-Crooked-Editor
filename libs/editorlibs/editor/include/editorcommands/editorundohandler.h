@@ -4,12 +4,12 @@
 #include <memory>
 
 namespace Editor::Commands {
-    class EditorUndoHandler final : public IEditorCommandUndoHandler{
+    class UndoHandler final : public IUndoHandler{
         public: 
-            EditorUndoHandler();
-            ~EditorUndoHandler();
+            UndoHandler();
+            ~UndoHandler();
 
-            void AddCommand(std::unique_ptr<IEditorCommand> command) override;
+            void AddCommand(std::unique_ptr<ICommand> command) override;
 
             void UndoCommand() override;
             void RedoCommand() override; 

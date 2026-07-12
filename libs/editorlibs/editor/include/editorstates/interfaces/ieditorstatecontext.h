@@ -26,12 +26,12 @@ namespace Editor::States{
 
     class IStateContext : public IStateMutator, public std::enable_shared_from_this<IStateMutator>{
         public:
-        map<string, std::shared_ptr<IEditorState>> states;
+        map<string, std::shared_ptr<IState>> states;
 
         weak_ptr<IFileSaver> fileSaver;
         weak_ptr<IEditable> buffer;
-        weak_ptr<IEditorCommandManager> commandManager;
-        weak_ptr<IEditorCommandUndoHandler> undoHandler;
+        weak_ptr<ICommandManager> commandManager;
+        weak_ptr<IUndoHandler> undoHandler;
 
         queue<int>* inputQueue;
         bool* quitToken;
@@ -39,8 +39,8 @@ namespace Editor::States{
         IStateContext(IStateContextPasskey passkey, 
                 weak_ptr<IFileSaver> fileSaver, 
                 weak_ptr<IEditable> buffer, 
-                weak_ptr<IEditorCommandManager> commandManager,
-                weak_ptr<IEditorCommandUndoHandler> undoHandler,
+                weak_ptr<ICommandManager> commandManager,
+                weak_ptr<IUndoHandler> undoHandler,
                 std::queue<int>* inputQueue, bool* quitToken) : 
         fileSaver(fileSaver), buffer(buffer), commandManager(commandManager), undoHandler(undoHandler), inputQueue(inputQueue), quitToken(quitToken){};
 
@@ -48,9 +48,9 @@ namespace Editor::States{
         virtual void Update() = 0;
 
         template<typename S>
-        requires std::is_base_of<IEditorState, S>::value
+        requires std::is_base_of<IState, S>::value
         void AddState(){
-            std::shared_ptr<IEditorState> newState = 
+            std::shared_ptr<IState> newState = 
                 std::make_shared<S>(fileSaver, buffer, GetWeakPointer(), commandManager, undoHandler, inputQueue, quitToken);
             states[newState->StateName()] = std::move(newState);
         }

@@ -15,13 +15,13 @@ using namespace std;
 using namespace Editor::Commands;
 
 namespace Editor::States{
-    class IEditorState : public IState{
+    class IState : public StateMachines::IState{
         public:
-            IEditorState(weak_ptr<IFileSaver> fileSaver, 
+            IState(weak_ptr<IFileSaver> fileSaver, 
                     weak_ptr<IEditable> buffer, 
                     weak_ptr<IStateMutator> stateMutator, 
-                    weak_ptr<IEditorCommandManager> commandManager,
-                    weak_ptr<IEditorCommandUndoHandler> undoHandler,
+                    weak_ptr<ICommandManager> commandManager,
+                    weak_ptr<IUndoHandler> undoHandler,
                     queue<int>* inputQueue, bool* quitToken)
                 : stateMutator(stateMutator), inputQueue(inputQueue), 
                 commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), buffer(buffer), quitToken(quitToken){}
@@ -32,8 +32,8 @@ namespace Editor::States{
             weak_ptr<IFileSaver> fileSaver;
             weak_ptr<IEditable> buffer;
             weak_ptr<IStateMutator> stateMutator;
-            weak_ptr<IEditorCommandManager> commandManager;
-            weak_ptr<IEditorCommandUndoHandler> undoHandler;
+            weak_ptr<ICommandManager> commandManager;
+            weak_ptr<IUndoHandler> undoHandler;
 
             queue<int>* inputQueue;
             bool* quitToken;

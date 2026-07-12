@@ -35,16 +35,20 @@ namespace Buffers{
             bool IsCursorAtBeginningOfLine() noexcept override;
             
             void InsertCharacter(char character) noexcept override;
+            void InsertCharacterAt(unsigned index, char character) noexcept override;
+
             void InsertString(string character) noexcept override;
             
-            void DeleteCharacter() noexcept override;
-            
             void InsertLine() noexcept override;
+
+            void DeleteCharacterAt(unsigned int index) noexcept override;
+            void DeleteCharacter() noexcept override; 
             
             void DeleteLine() noexcept override;
 
             void AppendTextToNextLine() noexcept override;
 
             void MoveToHead() noexcept override;
+            unsigned int GetCursorX() noexcept override;
     };
 }

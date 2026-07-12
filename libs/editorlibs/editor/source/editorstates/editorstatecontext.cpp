@@ -11,9 +11,9 @@ using namespace Editor;
 
 void StateContext::Initialize(const string& defaultState){
 
-    std::shared_ptr<IEditorState> startingState = states[defaultState];
+    std::shared_ptr<IState> startingState = states[defaultState];
 
-    stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
+    stateMachine = std::make_unique<StateMachine<IState>>(startingState);
 }
 
 

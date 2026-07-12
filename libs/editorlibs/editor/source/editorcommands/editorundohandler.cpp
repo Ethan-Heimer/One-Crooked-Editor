@@ -7,19 +7,19 @@
 using namespace Editor::Commands;
 using namespace std;
 
-struct EditorUndoHandler::Impl{
+struct UndoHandler::Impl{
     /*
      * Todo: Make undo Tree one day
      */
 
-    stack<unique_ptr<IEditorCommand>> undoStack;
-    stack<unique_ptr<IEditorCommand>> redoStack;
+    stack<unique_ptr<ICommand>> undoStack;
+    stack<unique_ptr<ICommand>> redoStack;
 
     void Undo(){
         if(undoStack.empty())
             return;
 
-        unique_ptr<IEditorCommand> command = std::move(undoStack.top());
+        unique_ptr<ICommand> command = std::move(undoStack.top());
         undoStack.pop();
 
         command->Undo();
@@ -30,30 +30,30 @@ struct EditorUndoHandler::Impl{
         if(redoStack.empty())
             return;
 
-        unique_ptr<IEditorCommand> command = std::move(redoStack.top());
+        unique_ptr<ICommand> command = std::move(redoStack.top());
         redoStack.pop();
 
         command->Do();
         undoStack.push(std::move(command)); 
     }
 
-    void AddCommand(std::unique_ptr<IEditorCommand> command){
+    void AddCommand(std::unique_ptr<ICommand> command){
         undoStack.push(std::move(command));
         redoStack = {};
     }
 };
 
-EditorUndoHandler::EditorUndoHandler() : pImpl(std::make_unique<Impl>()){};
-EditorUndoHandler::~EditorUndoHandler() = default;
+UndoHandler::UndoHandler() : pImpl(std::make_unique<Impl>()){};
+UndoHandler::~UndoHandler() = default;
 
-void EditorUndoHandler::UndoCommand(){
+void UndoHandler::UndoCommand(){
     pImpl->Undo();
 }
 
-void EditorUndoHandler::RedoCommand(){
+void UndoHandler::RedoCommand(){
     pImpl->Redo();
 }
 
-void EditorUndoHandler::AddCommand(std::unique_ptr<IEditorCommand> command){
+void UndoHandler::AddCommand(std::unique_ptr<ICommand> command){
     pImpl->AddCommand(std::move(command));
 }

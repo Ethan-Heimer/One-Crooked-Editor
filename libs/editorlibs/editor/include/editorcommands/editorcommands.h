@@ -15,19 +15,21 @@
     }; 
 
 namespace Editor::Commands {
-    class TestCommand : public IEditorCommand {
+    class TestCommand : public ICommand {
         public:
             TestCommand(std::weak_ptr<IEditable>editable, 
-                    std::weak_ptr<IEditorCommandContainer> undoHandler, char character);
+                    std::weak_ptr<ICommandContainer> undoHandler, char character);
 
+            void Initialize() override;
             void Execute() override;
             
             void Do() override;
             void Undo() override;
 
-            std::unique_ptr<IEditorCommand> Clone() override;
+            std::unique_ptr<ICommand> Clone() override;
 
         private:
-            char character;
+            unsigned int cursorPos{};
+            char character{};
     }; 
 }

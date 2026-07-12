@@ -4,8 +4,8 @@
 #include <memory>
 
 namespace Editor::Commands{
-    class IEditorUndoHandlerFactory{
+    class IUndoHandlerFactory{
         public:
-            virtual std::shared_ptr<IEditorCommandUndoHandler> Instanciate() = 0;
+            virtual std::shared_ptr<IUndoHandler> Instanciate() = 0;
     };
 }

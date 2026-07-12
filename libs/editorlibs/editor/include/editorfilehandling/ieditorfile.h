@@ -5,5 +5,5 @@
 using namespace FileHandling;
 
 namespace Editor::Files {
-    class IEditorFile : public IFileSaveable, public IFileLoadable{};
+    class IFile : public IFileSaveable, public IFileLoadable{};
 }

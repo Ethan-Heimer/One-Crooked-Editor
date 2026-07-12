@@ -101,12 +101,22 @@ class GapBuffer{
             }
         }
 
+        void InsertAt(unsigned int index, const char byte){
+            MoveGapTo(index);
+            Insert(byte);
+        }
+
+        void InsertAt(unsigned int index, const string string){
+            MoveGapTo(index);
+            Insert(string);
+        }
+
         void Delete(){
             if(gapStart == 0)
                 return;
             
-            buffer[gapStart] = '_';
             gapStart--;
+            buffer[gapStart] = '_';
         }
 
         void DeleteBetween(unsigned int pointerOne, unsigned int pointerTwo){
@@ -114,6 +124,11 @@ class GapBuffer{
             while(GetGapIndex() != pointerOne){
                 Delete();
             }
+        }
+
+        void DeleteAt(unsigned int index){
+            MoveGapTo(index);
+            Delete();
         }
 
         string RawContents(){

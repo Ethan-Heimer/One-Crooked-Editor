@@ -124,15 +124,22 @@ int main(){
     buffer.DeleteBetween(12, endIndex);
     std::cout << buffer << std::endl;        
 
-    string substring = buffer.GetSubstring(2, buffer.EndIndex());
+    string substring = buffer.Substring(2, buffer.EndIndex());
     std::cout << substring << std::endl;
 
     buffer << "More Content Now Please!!!";
     std::cout << buffer << std::endl;        
 
-    substring = buffer.GetSubstring(10, 24);
+    substring = buffer.Substring(10, 24);
     buffer.DeleteBetween(10, 24);
 
+    std::cout << buffer.RawContents() << endl;
     std::cout << buffer << endl;
-    std::cout << substring << endl;
+    
+    buffer.MoveGapBy(3);
+    buffer.Delete();
+    buffer.Insert('l');
+
+    std::cout << buffer.RawContents() << endl;
+    std::cout << buffer << endl;
 }

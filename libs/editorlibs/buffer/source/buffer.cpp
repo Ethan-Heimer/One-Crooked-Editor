@@ -93,3 +93,15 @@ void Buffer::AppendTextToNextLine() noexcept{
 void Buffer::MoveToHead() noexcept{
     currentLine = buffer.head;
 }
+
+unsigned int Buffer::GetCursorX() noexcept{
+    return currentLine->data->GetGapIndex();
+}
+
+void Buffer::InsertCharacterAt(unsigned index, char character) noexcept{
+    currentLine->data->InsertAt(index, character);
+}
+
+void Buffer::DeleteCharacterAt(unsigned int index) noexcept{
+    currentLine->data->DeleteAt(index);
+}

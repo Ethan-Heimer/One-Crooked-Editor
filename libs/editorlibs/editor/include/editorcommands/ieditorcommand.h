@@ -6,25 +6,26 @@
 #include "ieditorcommandscontainer.h"
 
 namespace Editor::Commands {
-    class IEditorCommand {
+    class ICommand {
         public:
-            IEditorCommand(std::weak_ptr<IEditable> buffer, 
-                    std::weak_ptr<IEditorCommandContainer> undoHandler) : buffer(buffer), undoHandler(undoHandler){}
-            virtual ~IEditorCommand() = default;
+            ICommand(std::weak_ptr<IEditable> buffer, 
+                    std::weak_ptr<ICommandContainer> undoHandler) : buffer(buffer), undoHandler(undoHandler){}
+            virtual ~ICommand() = default;
  
-            virtual void Execute() = 0;
-
             virtual void Do() = 0;
             virtual void Undo() = 0;
-
-            virtual std::unique_ptr<IEditorCommand> Clone() = 0;
 
             void operator() (){
                 Execute();   
             };
 
         protected:
-            std::weak_ptr<IEditorCommandContainer> undoHandler;
+            std::weak_ptr<ICommandContainer> undoHandler;
             std::weak_ptr<IEditable> buffer;
+
+            virtual void Initialize() = 0;
+            virtual void Execute() = 0;
+
+            virtual std::unique_ptr<ICommand> Clone() = 0;
     };
 }

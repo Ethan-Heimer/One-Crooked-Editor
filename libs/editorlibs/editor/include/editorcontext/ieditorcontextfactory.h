@@ -13,10 +13,10 @@ namespace Editor {
     class IEditorContextFactory{
         public:
                 IEditorContextFactory(
-                std::shared_ptr<States::IStateContextFactory> stateContextFactory,
-                std::shared_ptr<IEditorFileHandlerFactory<T>> bufferFileHandlerFactory,
-                std::shared_ptr<IEditorCommandManagerFactory> commandManagerFactory,
-                std::shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory)
+                std::shared_ptr<IStateContextFactory> stateContextFactory,
+                std::shared_ptr<IFileHandlerFactory<T>> bufferFileHandlerFactory,
+                std::shared_ptr<ICommandManagerFactory> commandManagerFactory,
+                std::shared_ptr<IUndoHandlerFactory> undoHandlerFactory)
 
                 : stateContextFactory(stateContextFactory), 
                 bufferFileHandlerFactory(bufferFileHandlerFactory), 
@@ -27,9 +27,9 @@ namespace Editor {
                 Instanciate(queue<int>* inputQueue, string fileName) const = 0;
 
         protected:
-            std::shared_ptr<States::IStateContextFactory> stateContextFactory;
-            std::shared_ptr<IEditorFileHandlerFactory<T>> bufferFileHandlerFactory;
-            std::shared_ptr<IEditorCommandManagerFactory> commandManagerFactory;
-            std::shared_ptr<IEditorUndoHandlerFactory> undoHandlerFactory;
+            std::shared_ptr<IStateContextFactory> stateContextFactory;
+            std::shared_ptr<IFileHandlerFactory<T>> bufferFileHandlerFactory;
+            std::shared_ptr<ICommandManagerFactory> commandManagerFactory;
+            std::shared_ptr<IUndoHandlerFactory> undoHandlerFactory;
     };
 }

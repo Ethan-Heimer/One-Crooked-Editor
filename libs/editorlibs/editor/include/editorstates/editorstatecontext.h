@@ -20,6 +20,6 @@ namespace Editor::States{
             std::weak_ptr<IStateMutator> GetWeakPointer() override;
 
         private:
-            std::unique_ptr<StateMachines::StateMachine<IEditorState>> stateMachine;
+            std::unique_ptr<StateMachines::StateMachine<IState>> stateMachine;
     };
 }

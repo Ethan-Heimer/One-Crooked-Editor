@@ -9,7 +9,7 @@
 
 namespace Editor::States {
     template<typename T, typename... U> 
-    requires std::is_base_of_v<IStateContext, T> && (std::is_base_of_v<IEditorState, U> && ...)
+    requires std::is_base_of_v<IStateContext, T> && (std::is_base_of_v<IState, U> && ...)
     class StateContextFactory;
 
     template<typename T, typename... U>
@@ -20,13 +20,13 @@ namespace Editor::States {
     };
     
     template<typename T, typename... U> 
-    requires std::is_base_of_v<IStateContext, T> && (std::is_base_of_v<IEditorState, U> && ...)
+    requires std::is_base_of_v<IStateContext, T> && (std::is_base_of_v<IState, U> && ...)
     class StateContextFactory : public IStateContextFactory{
         public:
             std::shared_ptr<IStateContext> Instanciate(std::weak_ptr<IFileSaver> fileSaver,
                     std::weak_ptr<IEditable> buffer, 
-                    weak_ptr<IEditorCommandManager> commandManager,
-                    weak_ptr<IEditorCommandUndoHandler> undoHandler,
+                    weak_ptr<ICommandManager> commandManager,
+                    weak_ptr<IUndoHandler> undoHandler,
                     queue<int>* inputQueue, bool* quitToken) override{
 
             std::shared_ptr<IStateContext> pointer = std::make_shared<T>

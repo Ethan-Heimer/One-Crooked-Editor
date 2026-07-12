@@ -7,9 +7,9 @@
 
 namespace Editor::Files {
     template<typename T>
-    requires std::is_base_of_v<IEditorFile, T>
-    class IEditorFileHandlerFactory{
+    requires std::is_base_of_v<IFile, T>
+    class IFileHandlerFactory{
         public:
-            virtual std::shared_ptr<IEditorFileHandler<T>> Instanciate(const string fileName) = 0;
+            virtual std::shared_ptr<IFileHandler<T>> Instanciate(const string fileName) = 0;
     };
 }
