@@ -8,6 +8,7 @@ namespace Editor::Actions{
 
     struct ActionBase{
         virtual void Invoke() = 0;
+        virtual ~ActionBase(){};
     };
 
     template<Is_Actionable_Function Func>
