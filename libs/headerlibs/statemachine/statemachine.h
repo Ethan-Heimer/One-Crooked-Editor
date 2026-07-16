@@ -11,7 +11,9 @@ namespace StateMachines{
     requires std::derived_from<T, IState>
     class StateMachine{
         public:
-            StateMachine(std::shared_ptr<T> defaultState) : currentState(defaultState){}
+            StateMachine(std::shared_ptr<T> defaultState) : currentState(defaultState){
+                currentState->OnEnter();
+            }
 
             void SwitchState(std::shared_ptr<T> newState){
                 currentState->OnExit();

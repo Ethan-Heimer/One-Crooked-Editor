@@ -3,20 +3,25 @@
 #include "editoraction.h"
 #include <string>
 #include <memory>
+#include <type_traits>
 
 using namespace std;
 
 namespace Editor::Actions{
-    class ActionTree{
+    class ActionTree final{
         public:
-            template<typename T>
-            requires Is_Actionable_Function<T>
-            void AddAction(string strokes, T action){
-                AddAction(strokes, make_unique<T>(action));
-            }
+            ActionTree();
+            ~ActionTree();
 
-            void AddAction(string strokes, unique_ptr<ActionBase> action);
-            void DoAction(string strokes);
+            template<typename T>
+            requires std::is_base_of_v<ActionBase, T>
+            ActionTree& AddAction(string strokes, T action){
+                AppendAction(strokes, make_unique<T>(action));
+                return *this;
+            }
+            
+            ActionTree& AppendAction(string strokes, unique_ptr<ActionBase> action);
+            void TraverseToNextAction(char key);
 
         private:
             struct Impl;

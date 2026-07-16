@@ -1,4 +1,3 @@
-#include "editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
 #include "editoractions/editoraction.h"
@@ -11,6 +10,41 @@ constexpr string NormalState::StateName() const{
     return Constants::NormalState;
 }
 
+void NormalState::OnEnter(){
+    actions
+    .AddAction("j", Action{[this](){ 
+        buffer.lock()->GotoNextLine();
+    }})
+    .AddAction("k", Action{[this](){ 
+        buffer.lock()->GotoPreviousLine();
+    }})
+    .AddAction("h", Action{[this](){ 
+        buffer.lock()->MoveCursorLeft();
+    }})
+    .AddAction("l", Action{[this](){ 
+        buffer.lock()->MoveCursorRight();
+    }})
+    .AddAction("i", Action{[this](){ 
+        nextState = Constants::InsertState;
+    }})
+    .AddAction("u", Action{[this](){ 
+        undoHandler.lock()->UndoCommand();
+    }})
+    .AddAction("r", Action{[this](){ 
+        undoHandler.lock()->RedoCommand();
+    }})
+    .AddAction(":w", Action{[this](){ 
+        fileSaver.lock()->SaveToFile(buffer.lock());
+    }})
+    .AddAction(":q", Action{[this](){ 
+        *quitToken = true;
+    }})
+    .AddAction(":wq", Action{[this](){ 
+        *quitToken = true;
+        fileSaver.lock()->SaveToFile(buffer.lock());
+    }});
+}
+
 void NormalState::OnUpdate(){
     nextState = StateName();
     if(inputQueue->empty())
@@ -19,41 +53,7 @@ void NormalState::OnUpdate(){
     int input = inputQueue->front();    
     inputQueue->pop();
 
-    TestCommand command = commandManager.lock()->CreateCommand<TestCommand>('T');
-
-    if(input == ctrl('x'))
-        *quitToken = true;
-    else if(input == ctrl('w'))
-        fileSaver.lock()->SaveToFile(buffer.lock());
-    else if(input == ctrl('X')){
-        *quitToken = true;
-        fileSaver.lock()->SaveToFile(buffer.lock());
-    }
-    else if(input == KEY_DOWN || input == 'j'){
-        buffer.lock()->GotoNextLine();
-    } 
-    else if(input == 'T'){
-        Actions::Action action{command};
-
-        action.Invoke();
-        
-    } else if(input == 'U'){
-        undoHandler.lock()->UndoCommand();
-    }
-    else if(input == 'R'){
-        undoHandler.lock()->RedoCommand();
-    }
-    else if(input == KEY_UP || input == 'k'){
-        buffer.lock()->GotoPreviousLine();
-    }
-    else if(input == KEY_LEFT || input == 'h'){
-        buffer.lock()->MoveCursorLeft();
-    }
-    else if(input == KEY_RIGHT || input == 'l'){
-        buffer.lock()->MoveCursorRight();
-    } else if(input == 'i'){
-        nextState = Constants::InsertState;
-    }
+    actions.TraverseToNextAction(static_cast<char>(input));
 }
 
 void NormalState::Transition(){

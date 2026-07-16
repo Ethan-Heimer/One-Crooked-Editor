@@ -10,6 +10,7 @@
 #include "gapbuffer.h"
 #include "iinputmanager.h"
 #include "doublyindexedlinkedlist.h"
+#include <iostream>
 
 #include "inputmanager.h"
 
@@ -47,7 +48,10 @@ int main(int argc, char** argv){
     while(!editor->quit){
         int ch = inputManager->GetKeyInput();
         if(ch != ERR){
-            inputQueue.push(ch);
+            if(ch == KEY_BACKSPACE)
+                inputQueue.push('\b');
+            else
+                inputQueue.push(ch);
         }
          
         editor->Update();
@@ -112,4 +116,5 @@ void InitScreen(){
 void KillScreen(){
     endwin();
 }
+
 

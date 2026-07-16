@@ -1,3 +1,4 @@
+#include <cctype>
 #include <ncurses.h>
 
 #include "editorstates.h"
@@ -9,6 +10,34 @@ constexpr string InsertState::StateName() const{
     return Constants::InsertState;
 }
 
+void InsertState::OnEnter(){
+    actions
+    .AddAction("\b", Action{[this](){
+        if(buffer.lock()->IsCursorAtBeginningOfLine()){
+            buffer.lock()->DeleteLine();
+        }
+        else
+            buffer.lock()->DeleteCharacter();
+    }})
+    .AddAction("\n", Action{[this](){
+        buffer.lock()->InsertLine();
+        buffer.lock()->AppendTextToNextLine();
+    }})
+    .AddAction("\r", Action{[this](){
+        buffer.lock()->InsertLine();
+        buffer.lock()->AppendTextToNextLine();
+    }})
+    .AddAction("\x1b", Action{[this](){
+        nextState = Constants::NormalState;
+    }})
+    .AddAction("\t", Action{[this](){
+        for(int i = 0; i < 4; i++){
+            buffer.lock()->InsertCharacter(' ');
+        }
+    }});
+
+}
+
 void InsertState::OnUpdate(){
     nextState = StateName();
 
@@ -18,27 +47,10 @@ void InsertState::OnUpdate(){
     int input = inputQueue->front();
     inputQueue->pop();
 
-    if(input == KEY_BACKSPACE){
-        if(buffer.lock()->IsCursorAtBeginningOfLine()){
-            buffer.lock()->DeleteLine();
-        }
-        else
-            buffer.lock()->DeleteCharacter();
-    } 
-    else if(input == '\n' || input == '\r'){
-        buffer.lock()->InsertLine();
-        buffer.lock()->AppendTextToNextLine();
-    } else if(input == 27){
-        nextState = Constants::NormalState;
-    }
-    else if(input == 9){
-        for(int i = 0; i < 4; i++){
-            buffer.lock()->InsertCharacter(' ');
-        }
-    }
-    else
-        buffer.lock()->InsertCharacter(input);
+    actions.TraverseToNextAction(static_cast<char>(input));
 
+    if(std::isprint(static_cast<unsigned char>(input)))
+        buffer.lock()->InsertCharacter(input);
 }
 
 void InsertState::Transition(){

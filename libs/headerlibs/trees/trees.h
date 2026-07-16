@@ -43,8 +43,8 @@ namespace Trees{
             T value{};
             array<shared_ptr<TreeNode>, Degree> branches{nullptr};
 
-            TreeNode(T value) : value(value){};
-            TreeNode(T value, weak_ptr<TreeNode> parent) : value(value), parent(parent){};
+            TreeNode(T&& value) : value(std::move(value)){};
+            TreeNode(T&& value, weak_ptr<TreeNode> parent) : value(std::move(value)), parent(parent){};
 
             template <int Index>
             std::shared_ptr<TreeNode> SetBranch(T value){
@@ -74,8 +74,8 @@ namespace Trees{
             shared_ptr<TreeNode>& left = branches[0];
             shared_ptr<TreeNode>& right = branches[1];
 
-            TreeNode(T value) : value(value){};
-            TreeNode(T value, weak_ptr<TreeNode> parent) : value(value), parent(parent){};
+            TreeNode(T&& value) : value(std::move(value)){};
+            TreeNode(T&& value, weak_ptr<TreeNode> parent) : value(std::move(value)), parent(parent){};
 
             shared_ptr<TreeNode> SetLeftBranch(T value){
                 shared_ptr<TreeNode> newNode = make_shared<TreeNode>(move(value), this->weak_from_this());
@@ -99,8 +99,8 @@ namespace Trees{
             weak_ptr<TreeNode> parent{};
             vector<shared_ptr<TreeNode>> branches{};
 
-            TreeNode(T value) : value(value){};
-            TreeNode(T value, weak_ptr<TreeNode> parent) : value(value), parent(parent){};
+            TreeNode(T&& value) : value(std::move(value)){};
+            TreeNode(T&& value, weak_ptr<TreeNode> parent) : value(std::move(value)), parent(parent){};
 
             shared_ptr<TreeNode> AddBranch(T value){
                 shared_ptr<TreeNode> newNode = make_shared<TreeNode>(move(value), this->weak_from_this());
@@ -116,8 +116,9 @@ namespace Trees{
             using NodePtr = shared_ptr<Node>;
 
             NodePtr rootNode;
-            explicit Tree(T defaultValue){
-                rootNode = make_shared<Node>(defaultValue);
+
+            explicit Tree(T&& defaultValue) noexcept{
+                rootNode = make_shared<Node>(std::move(defaultValue));
             }
     };
 
