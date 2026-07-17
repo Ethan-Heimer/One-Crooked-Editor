@@ -27,6 +27,11 @@ void NormalState::OnEnter(){
     .AddAction("i", Action{[this](){ 
         nextState = Constants::InsertState;
     }})
+    .AddAction("o", Action{[this](){ 
+        nextState = Constants::InsertState;
+        buffer.lock()->InsertLine();
+        buffer.lock()->GotoNextLine();
+    }})
     .AddAction("u", Action{[this](){ 
         undoHandler.lock()->UndoCommand();
     }})

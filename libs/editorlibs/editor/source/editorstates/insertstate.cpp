@@ -35,7 +35,6 @@ void InsertState::OnEnter(){
             buffer.lock()->InsertCharacter(' ');
         }
     }});
-
 }
 
 void InsertState::OnUpdate(){

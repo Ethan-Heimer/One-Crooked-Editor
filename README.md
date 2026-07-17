@@ -6,6 +6,25 @@ From this commit forward- the code for this project will be written with this ed
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 07/15/2026 - libeditor
+v0.005 is a huge archetectural update, and lays the foundations for undo/redo and complex keybindings.
+I've intrduced a new internal library called **libeditor** in this version. libeditors job is to provide an 
+abstraction and interface over text editing, and will be improved in future versions. Long term, I would like libeditor
+to be designed well enough to where it could be used as a general purpose text editing library so other text 
+editors can build off of it as well (this is good library design anyway so...). Currently, libeditor is NOT that, so 
+v0.006 will hopefully improve it. As libeditor will change a lot from this update to v0.006, I'll save the new features it brings
+for that update log.
+
+## New Commands
+[Normal Mode]
+ - o to insert a new line and go into insert mode in one command
+ - :w to save
+ - :q to quit
+ - :wq to save and quit
+
+you might notice that im emulating vim keybings- this will not be perminate. I plan to embed a scripting language to allow for 
+user configable keybindings.
+
 ## 06/23/2026 - Dependency Injection
 v0.004 Doesn't offer any new features, it instead focuses on archetecture changes. 
 v0.003 Had some underlying issues with how relationships between objects were represented,
@@ -75,4 +94,7 @@ The goal for the next 'phase' of this project is to turn it into a modal editor.
 
 ### Known bugs
  - The cursor can 'desync' from its real position in the editor, meaning the visual cursor may be in one place but the physical place is in another. 
+
+
+
 
