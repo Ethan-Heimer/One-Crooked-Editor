@@ -5,10 +5,13 @@
 #include <memory>
 
 using namespace Editor::Commands;
+using namespace std;
 
-TestCommand::TestCommand(weak_ptr<IEditable> editable, 
+
+TestCommand::TestCommand(weak_ptr<Editor::IEditable> editable, 
         weak_ptr<ICommandContainer> undoHandler, char character) 
     : ICommand(editable, undoHandler), character(character){};
+
 
 void TestCommand::Initialize(){
     cursorPos = buffer.lock()->GetCursorX();

@@ -9,8 +9,8 @@
 namespace Editor::Commands {
     class ICommandManager{
         public:
-            ICommandManager(weak_ptr<IEditable> buffer, 
-                    weak_ptr<IUndoHandler> undoHandler) : buffer(buffer), undoHandler(undoHandler){};
+            ICommandManager(std::weak_ptr<IEditable> buffer, 
+                    std::weak_ptr<IUndoHandler> undoHandler) : buffer(buffer), undoHandler(undoHandler){};
 
             template<typename T, typename... U>
             requires std::is_base_of_v<ICommand, T> 
@@ -19,7 +19,7 @@ namespace Editor::Commands {
             }
 
         protected:
-            weak_ptr<IUndoHandler> undoHandler;
-            weak_ptr<IEditable> buffer;
+            std::weak_ptr<IUndoHandler> undoHandler;
+            std::weak_ptr<IEditable> buffer;
     };
 }

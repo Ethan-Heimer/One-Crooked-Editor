@@ -4,6 +4,7 @@
 #include <queue>
 
 #include "buffer.h"
+#include "ieditable.h"
 #include "metaprogramming/editormeta.h"
 
 #include "editorstates.h"
@@ -26,7 +27,7 @@ using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
 void InitScreen();
 void KillScreen();
 
-void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset);
+void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset);
 
 int main(int argc, char** argv){
     if(argc < 2){
@@ -55,35 +56,34 @@ int main(int argc, char** argv){
         }
          
         editor->Update();
-        UpdateUI(editor->buffer->currentLine, lineOffset, colOffset);
+        UpdateUI(editor->buffer, lineOffset, colOffset);
     }
 
     KillScreen();
 }
 
-void UpdateUI(Line& currentLine, int& lineOffset, int& colOffset){ 
+// --- should the client know about type line?
+void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
-        int currentLineNumber = currentLine->index;
-        int currentCursorCol = currentLine->data->GetGapIndex();
+        int currentLineNumber = buffer->GetCurrentLineNumber();
+        int currentCursorCol = buffer->GetCursorX();
         int row, col;
 
         getmaxyx(stdscr, row, col);
 
         erase();        
-        Line currentNode = currentLine;
-        while(currentNode && currentNode->index != lineOffset){
-            currentNode = currentNode->previous.lock();   
-        }
 
-        for(int i = 0; i < row && currentNode; i++){
+        auto start = buffer->BeginAtCurrentLine();
+        auto end = buffer->EndStepsFromCurrentLine(row-1);
+
+        for(auto line = start ; line != end; ++line){
             printw(" %*d| %s \n", 
                     lineColWidth,
-                    currentNode->index+1,
-                    currentNode->data->Substring(colOffset, colOffset + col - 6 - lineColWidth).c_str());
-
-            currentNode = currentNode->next;
+                    0,
+                    (*line).substr(colOffset, colOffset + col - 6 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
         }
-        move(currentLineNumber - lineOffset, currentCursorCol - colOffset + lineColWidth+3);
+
+        move(0, currentCursorCol - colOffset + lineColWidth+3);
         refresh();
         
         while(currentLineNumber - lineOffset >= row - 5)

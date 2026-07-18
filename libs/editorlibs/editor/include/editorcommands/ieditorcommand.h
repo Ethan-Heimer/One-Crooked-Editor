@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ieditable.h"
-#include <algorithm>
 #include <memory>
 #include "ieditorcommandscontainer.h"
 

@@ -19,20 +19,15 @@ using namespace Editor::Commands;
 using namespace Editor::States;
 
 namespace Editor{
-    class IEditorContextPasskey{
-        protected:
-            IEditorContextPasskey(){};
-    };
-
     template<typename T>
     requires std::is_base_of_v<IEditable, T>
     class IEditorContext{
         public:
-            IEditorContext(IEditorContextPasskey passkey){};
+            IEditorContext(){};
 
             bool quit;
 
-            shared_ptr<T> buffer;
+            shared_ptr<IEditable> buffer;
             shared_ptr<IFileHandler<T>> fileHandler;
             shared_ptr<IStateContext> stateContext; 
             shared_ptr<ICommandManager> commandManager;
