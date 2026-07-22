@@ -1,11 +1,8 @@
 #pragma once
 
-#include <expected>
-#include <generator>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <type_traits>
 
 namespace FileHandling{
     class IFileLoadable{
@@ -18,11 +15,9 @@ namespace FileHandling{
             virtual std::stringstream WriteLinesToFile() = 0;
     };
 
-    template<typename T>
-    requires std::is_base_of<IFileLoadable, T>::value
     class IFileLoader{
         public:
-            virtual std::shared_ptr<T> LoadFromFile() = 0;
+            virtual std::shared_ptr<IFileLoadable> LoadFromFile() = 0;
     };
 
     class IFileSaver{

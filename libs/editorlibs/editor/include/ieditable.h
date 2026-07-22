@@ -1,6 +1,5 @@
 #pragma once
 
-#include "editorfilehandling/ieditorfile.h"
 #include <memory>
 #include <string_view>
 
@@ -56,8 +55,11 @@ namespace Editor{
             virtual LineIterator EndStepsFromCurrentLine(unsigned int steps) = 0;
     };
 
-    class IEditable : public Files::IFile{
+    class IEditable{
         public:
+            virtual void ReadLineFromFile(const std::string& line) = 0;
+            virtual std::stringstream WriteLinesToFile() = 0 ; 
+
             virtual void GotoNextLine() noexcept = 0;            
             virtual void GotoPreviousLine() noexcept = 0;
             

@@ -33,10 +33,10 @@ void NormalState::OnEnter(){
         buffer.lock()->GotoNextLine();
     }})
     .AddAction("u", Action{[this](){ 
-        undoHandler.lock()->UndoCommand();
+        undoHandler.UndoCommand();
     }})
     .AddAction("r", Action{[this](){ 
-        undoHandler.lock()->RedoCommand();
+        undoHandler.RedoCommand();
     }})
     .AddAction(":w", Action{[this](){ 
         fileSaver.lock()->SaveToFile(buffer.lock());

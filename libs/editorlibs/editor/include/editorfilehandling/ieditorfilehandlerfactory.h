@@ -1,15 +1,11 @@
 #pragma once
 
-#include "editorfilehandling/ieditorfile.h"
 #include "editorfilehandling/ieditorfilehandler.h"
 #include <memory>
-#include <type_traits>
 
-namespace Editor::Files {
-    template<typename T>
-    requires std::is_base_of_v<IFile, T>
+namespace Editor::FileHandling {
     class IFileHandlerFactory{
         public:
-            virtual std::shared_ptr<IFileHandler<T>> Instanciate(const string fileName) = 0;
+            virtual std::shared_ptr<IFileHandler> Instanciate(const std::string fileName) = 0;
     };
 }

@@ -4,8 +4,6 @@
 #include <memory>
 #include <sstream>
 
-#define END_OF_BUFFER 0
-
 using namespace Buffers;
 using namespace Editor;
 
@@ -23,7 +21,7 @@ void Buffer::ReadLineFromFile(const std::string& line){
 std::stringstream Buffer::WriteLinesToFile() {
     std::stringstream stream;
     for(auto line : buffer){
-        stream << line.data << std::endl;
+        stream << line.data->ToString() << std::endl;
     }
 
     return stream;

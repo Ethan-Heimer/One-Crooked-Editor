@@ -1,6 +1,5 @@
 #pragma once
 
-#include "editorfilehandling/ieditorfile.h"
 #include "editorfilehandling/ieditorfilehandler.h"
 #include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "ibufferfilehandler.h"
@@ -8,12 +7,11 @@
 #include <type_traits>
 
 namespace Buffers {
-    template<typename E, typename T>
-    requires std::is_base_of_v<IFile, E>
-    && std::is_base_of_v<IBufferFileHandler, T>
-    class BufferFileHandlerFactory : public Editor::Files::IFileHandlerFactory<E>{
+    template<typename T>
+    requires std::is_base_of_v<IBufferFileHandler, T>
+    class BufferFileHandlerFactory : public Editor::FileHandling::IFileHandlerFactory{
         public:
-            virtual std::shared_ptr<IFileHandler<E>> Instanciate(const string fileName){
+            std::shared_ptr<IFileHandler> Instanciate(const string fileName) override{
                 return std::make_shared<T>(fileName);
             };
     };

@@ -11,7 +11,6 @@ target_link_libraries(buffers PRIVATE editor)
 
 message("${CMAKE_SOURCE_DIR}")
 
-target_include_directories(buffers PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/filehandling/")
 target_include_directories(buffers PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/gapbuffer/")
 target_include_directories(buffers PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/linkedlist/")
 

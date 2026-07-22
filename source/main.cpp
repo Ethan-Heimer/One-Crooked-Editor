@@ -3,15 +3,12 @@
 #include <ncurses.h>
 #include <queue>
 
-#include "buffer.h"
+#include "bufferfilehandler.h"
+#include "bufferfilehandlerfactory.h"
+#include "editorcontext.h"
 #include "ieditable.h"
-#include "metaprogramming/editormeta.h"
 
-#include "editorstates.h"
-#include "gapbuffer.h"
 #include "iinputmanager.h"
-#include "doublyindexedlinkedlist.h"
-#include <iostream>
 
 #include "inputmanager.h"
 
@@ -19,10 +16,6 @@ using namespace std;
 using namespace Systems::Input;
 using namespace Editor;
 using namespace Editor::States;
-using namespace Metaprogramming;
-
-using Lines = DoublyIndexedLinkedList<GapBuffer>&;
-using Line = shared_ptr<DoublyIndexedLinkedList<GapBuffer>::Node>;
 
 void InitScreen();
 void KillScreen();
@@ -37,16 +30,18 @@ int main(int argc, char** argv){
     queue<int> inputQueue;
     shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
+ 
+    shared_ptr<IFileHandlerFactory> bufferFileHandlerFactory
+        = make_shared<Buffers::BufferFileHandlerFactory<Buffers::BufferFileHandler>>();
 
-    auto editorFactory = DefaultEditorFactory<Buffers::Buffer, NormalState, InsertState>();
-    auto editor = editorFactory.Instanciate(&inputQueue, fileName);
+    EditorContext context{bufferFileHandlerFactory, &inputQueue, fileName};
 
     InitScreen();
 
     int lineOffset = 0;
     int colOffset = 0;
 
-    while(!editor->quit){
+    while(!context.quit){
         int ch = inputManager->GetKeyInput();
         if(ch != ERR){
             if(ch == KEY_BACKSPACE)
@@ -55,8 +50,8 @@ int main(int argc, char** argv){
                 inputQueue.push(ch);
         }
          
-        editor->Update();
-        UpdateUI(editor->buffer, lineOffset, colOffset);
+        context.Update();
+        UpdateUI(context.buffer, lineOffset, colOffset);
     }
 
     KillScreen();

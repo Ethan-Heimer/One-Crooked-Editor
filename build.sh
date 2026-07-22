@@ -6,5 +6,5 @@ make
 
 if (( $? == 0)); then  
     cd bin
-    ./CrookedEditor ../../source/main.cpp
+    ./CrookedEditor ../../test.txt
 fi

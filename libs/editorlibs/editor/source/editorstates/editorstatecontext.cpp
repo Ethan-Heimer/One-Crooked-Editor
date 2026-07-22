@@ -1,4 +1,5 @@
 #include "editorstatecontext.h"
+#include "editorstates.h"
 #include "ieditorstate.h"
 #include "statemachine.h"
 
@@ -9,13 +10,19 @@ using namespace StateMachines;
 using namespace std;
 using namespace Editor;
 
-void StateContext::Initialize(const string& defaultState){
+void StateContext::Initialize(std::weak_ptr<IEditable> buffer, std::weak_ptr<FileHandling::IFileHandler> fileSaver, const string& defaultState, std::queue<int>* inputQueue, bool* quitToken){
+    this->buffer = buffer;
+    this->fileSaver = fileSaver;
+
+    this->inputQueue = inputQueue;
+    this->quitToken = quitToken;
+
+    this->AddState<NormalState>();
+    this->AddState<InsertState>();
 
     std::shared_ptr<IState> startingState = states[defaultState];
-
     stateMachine = std::make_unique<StateMachine<IState>>(startingState);
 }
-
 
 void StateContext::Update(){
     stateMachine->Update();

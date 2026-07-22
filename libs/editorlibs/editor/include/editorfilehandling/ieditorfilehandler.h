@@ -1,13 +1,12 @@
 #pragma once
 
-#include "filehandling.h"
 #include "ieditable.h"
-#include <type_traits>
+#include <memory>
 
-using namespace FileHandling;
-
-namespace Editor::Files {
-    template <typename T>
-    requires std::is_base_of_v<IEditable, T>
-    class IFileHandler : public IFileSaver, public IFileLoader<T>{};
+namespace Editor::FileHandling {
+    class IFileHandler{
+        public:
+            virtual std::shared_ptr<Editor::IEditable> LoadFromFile() = 0;
+            virtual void SaveToFile(const std::shared_ptr<IEditable> fileSaver)  = 0;
+    };
 }

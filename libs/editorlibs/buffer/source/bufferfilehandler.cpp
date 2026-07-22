@@ -13,7 +13,7 @@ Buffers::BufferFileHandler::BufferFileHandler(const string fileName)
     : IBufferFileHandler(fileName), fileName(fileName){}
 
 
-std::shared_ptr<Buffers::Buffer> Buffers::BufferFileHandler::LoadFromFile(){
+std::shared_ptr<IEditable> Buffers::BufferFileHandler::LoadFromFile(){
     ifstream inputFile{fileName};
     std::shared_ptr<Buffers::Buffer> buffer = std::make_shared<Buffers::Buffer>();
 
@@ -31,7 +31,7 @@ std::shared_ptr<Buffers::Buffer> Buffers::BufferFileHandler::LoadFromFile(){
     return std::move(buffer);
 }
 
-void Buffers::BufferFileHandler::SaveToFile(const std::shared_ptr<IFileSaveable> fileSaver){
+void Buffers::BufferFileHandler::SaveToFile(const std::shared_ptr<IEditable> fileSaver){
     ofstream saveFile{fileName};
     if(saveFile.is_open()){
         stringstream stream = fileSaver->WriteLinesToFile();
