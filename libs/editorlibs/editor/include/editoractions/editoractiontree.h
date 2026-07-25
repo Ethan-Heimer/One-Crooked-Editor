@@ -3,7 +3,6 @@
 #include "editoraction.h"
 #include <string>
 #include <memory>
-#include <type_traits>
 
 using namespace std;
 
@@ -13,14 +12,7 @@ namespace Editor::Actions{
             ActionTree();
             ~ActionTree();
 
-            template<typename T>
-            requires std::is_base_of_v<ActionBase, T>
-            ActionTree& AddAction(string strokes, T action){
-                AppendAction(strokes, make_unique<T>(action));
-                return *this;
-            }
-            
-            ActionTree& AppendAction(string strokes, unique_ptr<ActionBase> action);
+            ActionTree& AddAction(string strokes, Action action);
             void TraverseToNextAction(char key);
 
         private:
