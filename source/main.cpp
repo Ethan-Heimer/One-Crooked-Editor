@@ -4,8 +4,8 @@
 #include <queue>
 
 #include "bufferfilehandler.h"
-#include "bufferfilehandlerfactory.h"
 #include "editorcontext.h"
+#include "editorfilehandling/ieditorfilehandler.h"
 #include "ieditable.h"
 
 #include "iinputmanager.h"
@@ -16,6 +16,7 @@ using namespace std;
 using namespace Systems::Input;
 using namespace Editor;
 using namespace Editor::States;
+using namespace Buffers;
 
 void InitScreen();
 void KillScreen();
@@ -28,14 +29,11 @@ int main(int argc, char** argv){
     }
 
     queue<int> inputQueue;
-    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     string fileName{argv[1]};
  
-    shared_ptr<IFileHandlerFactory> bufferFileHandlerFactory
-        = make_shared<Buffers::BufferFileHandlerFactory<Buffers::BufferFileHandler>>();
+    EditorContext context{BufferFileInterpreter{}, &inputQueue, fileName};
 
-    EditorContext context{bufferFileHandlerFactory, &inputQueue, fileName};
-
+    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     InitScreen();
 
     int lineOffset = 0;
@@ -57,7 +55,6 @@ int main(int argc, char** argv){
     KillScreen();
 }
 
-// --- should the client know about type line?
 void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
         int currentLineNumber = buffer->GetCurrentLineNumber();
@@ -72,6 +69,9 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
         auto end = buffer->EndStepsFromCurrentLine(row-1);
 
         for(auto line = start ; line != end; ++line){
+            if((*line).length() == 0)
+                continue;
+
             printw(" %*d| %s \n", 
                     lineColWidth,
                     0,

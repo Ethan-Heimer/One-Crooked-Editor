@@ -2,19 +2,16 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 #include "bufferfilehandler.h"
 #include "buffer.h"
-#include "ibufferfilehandler.h"
 
 using namespace Editor;
+using namespace std;
 
-Buffers::BufferFileHandler::BufferFileHandler(const string fileName)
-    : IBufferFileHandler(fileName), fileName(fileName){}
-
-
-std::shared_ptr<IEditable> Buffers::BufferFileHandler::LoadFromFile(){
-    ifstream inputFile{fileName};
+std::shared_ptr<IEditable> Buffers::BufferFileInterpreter::LoadFromFile(std::string_view fileName){
+    ifstream inputFile{fileName.data()};
     std::shared_ptr<Buffers::Buffer> buffer = std::make_shared<Buffers::Buffer>();
 
     string line;
@@ -31,8 +28,8 @@ std::shared_ptr<IEditable> Buffers::BufferFileHandler::LoadFromFile(){
     return std::move(buffer);
 }
 
-void Buffers::BufferFileHandler::SaveToFile(const std::shared_ptr<IEditable> fileSaver){
-    ofstream saveFile{fileName};
+void Buffers::BufferFileInterpreter::SaveToFile(std::string_view fileName, const std::shared_ptr<IEditable>& fileSaver){
+    ofstream saveFile{fileName.data()};
     if(saveFile.is_open()){
         stringstream stream = fileSaver->WriteLinesToFile();
         string line;

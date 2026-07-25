@@ -5,6 +5,7 @@
 #include "editorconstants.h"
 
 using namespace Editor::States;
+using namespace Editor::Actions;
 
 constexpr string InsertState::StateName() const{
     return Constants::InsertState;
@@ -54,6 +55,6 @@ void InsertState::OnUpdate(){
 
 void InsertState::Transition(){
     if(nextState != StateName()){
-        stateMutator.lock()->ChangeState(nextState);
+        stateContext.ChangeState(nextState);
     }
 }

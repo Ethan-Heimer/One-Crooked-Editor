@@ -13,15 +13,13 @@
             void OnEnter() override; \
     }; \
 
-using namespace Editor::Actions;
-
 namespace Editor::States{
-    class EditorState : public IState{
+    class EditorState : public IEditorState{
         public:
-            using IState::IState;
+            using IEditorState::IEditorState;
 
             string nextState{};
-            ActionTree actions{};
+            Actions::ActionTree actions{};
     };
 
     EditorState(NormalState);

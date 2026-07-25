@@ -5,6 +5,7 @@
 #include <ncurses.h>
 
 using namespace Editor::States;
+using namespace Editor::Actions;
 
 constexpr string NormalState::StateName() const{
     return Constants::NormalState;
@@ -39,14 +40,14 @@ void NormalState::OnEnter(){
         undoHandler.RedoCommand();
     }})
     .AddAction(":w", Action{[this](){ 
-        fileSaver.lock()->SaveToFile(buffer.lock());
+        fileSaver.SaveToFile(buffer.lock());
     }})
     .AddAction(":q", Action{[this](){ 
         *quitToken = true;
     }})
     .AddAction(":wq", Action{[this](){ 
         *quitToken = true;
-        fileSaver.lock()->SaveToFile(buffer.lock());
+        fileSaver.SaveToFile(buffer.lock());
     }});
 }
 
@@ -63,6 +64,6 @@ void NormalState::OnUpdate(){
 
 void NormalState::Transition(){
     if(nextState != StateName()){
-        stateMutator.lock()->ChangeState(nextState);
+        stateContext.ChangeState(nextState);
     }
 };

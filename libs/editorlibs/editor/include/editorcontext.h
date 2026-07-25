@@ -3,11 +3,9 @@
 #include <memory>
 #include <queue>
 #include <string>
-#include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "editorstatecontext.h"
 #include "editorundohandler.h"
 #include "ieditable.h"
-#include "editorfilehandling/ieditorfilehandlerfactory.h"
 #include "editorcommandmanager.h"
 
 namespace Editor{
@@ -15,22 +13,25 @@ namespace Editor{
         public:
             Commands::UndoHandler undoHandler{};
             Commands::CommandManager commandManager{undoHandler};
-            States::StateContext stateContext{commandManager, undoHandler};
+
+            FileHandling::FileHandler fileHandler;
+
+            States::StateContext stateContext{commandManager, fileHandler, undoHandler};
 
             std::shared_ptr<IEditable> buffer;
 
-            std::shared_ptr<FileHandling::IFileHandler> fileHandler;
             bool quit;
 
             EditorContext( 
-                    shared_ptr<FileHandling::IFileHandlerFactory> fileHandlerFactory,
-                    queue<int>* inputQueue, string fileName){
+                    FileHandling::FileHandler fileHandler,
+                    std::queue<int>* inputQueue, std::string fileName) : fileHandler(std::move(fileHandler)){
 
-                this->fileHandler = fileHandlerFactory->Instanciate(fileName);
-                this->buffer = this->fileHandler->LoadFromFile();
+                this->fileHandler.fileName = fileName;
+
+                this->buffer = this->fileHandler.LoadFromFile();
 
                 this->commandManager.Initialize(this->buffer);
-                this->stateContext.Initialize(buffer, fileHandler, "Normal", inputQueue, &quit);
+                this->stateContext.Initialize(buffer, "Normal", inputQueue, &quit);
             }
 
             void Update(){
