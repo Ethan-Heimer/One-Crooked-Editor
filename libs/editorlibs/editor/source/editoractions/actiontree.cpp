@@ -2,6 +2,7 @@
 #include "trees.h"
 #include "treealgorithms.h"
 #include <memory>
+#include <optional>
 #include <utility>
 
 using namespace Editor::Actions;
@@ -10,15 +11,15 @@ using namespace Trees::Algorithms;
 
 struct KeyStroke{
     char stroke{};
-    std::unique_ptr<ActionBase> action{};
+    std::optional<Action> action{};
 
-    KeyStroke(char stroke, std::unique_ptr<ActionBase> action) : 
+    KeyStroke(char stroke) : stroke(stroke){};
+    KeyStroke(char stroke, Action action) : 
         stroke(stroke), action(std::move(action)){}
 
     KeyStroke(const KeyStroke& other) = delete;
-    KeyStroke(KeyStroke&& other){
+    KeyStroke(KeyStroke&& other) : action(std::move(other.action)){
         stroke = other.stroke;
-        action = std::move(action);
 
         other.stroke = '\0';
     }
@@ -40,26 +41,24 @@ struct KeyStroke{
     };
 
     void Invoke(){
-        if(action == nullptr)
-            return;
-
-        action->Invoke();
+        if(action.has_value())
+            action->Invoke();
     }
 };
 
 struct ActionTree::Impl{
     using StrokeTree = Tree<KeyStroke, NDegree>;
 
-    KeyStroke rootValue{' ', nullptr};
+    KeyStroke rootValue{' '};
     StrokeTree actionTree{std::move(rootValue)};
 
     StrokeTree::NodePtr currentKeyStroke{actionTree.rootNode};
 
-    void AppendAction(string strokes, unique_ptr<ActionBase> action){
+    void AppendAction(string strokes, Action action){
         AddAction(actionTree.rootNode, strokes, std::move(action));
     };
 
-    void AddAction(StrokeTree::NodePtr currentNode, string strokes, unique_ptr<ActionBase> action){
+    void AddAction(StrokeTree::NodePtr currentNode, string strokes, Action action){
         if(strokes.empty()){
             currentNode->value.action = std::move(action);
             return;
@@ -72,7 +71,7 @@ struct ActionTree::Impl{
             nextNode = FindInChildren(currentNode, stroke);
 
         if(nextNode == nullptr){
-            KeyStroke node{stroke, nullptr};
+            KeyStroke node{stroke};
             nextNode = currentNode->AddBranch(std::move(node));
         }
 
@@ -103,7 +102,7 @@ struct ActionTree::Impl{
 ActionTree::ActionTree() : pImpl(std::make_unique<ActionTree::Impl>()){};
 ActionTree::~ActionTree(){}
 
-ActionTree& ActionTree::AppendAction(string strokes, unique_ptr<ActionBase> action){
+ActionTree& ActionTree::AddAction(string strokes, Action action){
     pImpl->AppendAction(strokes, std::move(action));
     return *this;
 }

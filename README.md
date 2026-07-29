@@ -6,6 +6,11 @@ From this commit forward- the code for this project will be written with this ed
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 07/28/2026 - libeditor 2 and breaking things
+v0.006 is yet another archetectural update, but i finally feel like its at a place i like. v0.007 will be a feature update.
+v0.006 also breaks the rendering loop and things to not look as good as they did in v0.005. use v0.005 if you actually would
+like to edit text with this editor for now :).
+
 ## 07/15/2026 - libeditor
 v0.005 is a huge archetectural update, and lays the foundations for undo/redo and complex keybindings.
 I've intrduced a new internal library called **libeditor** in this version. libeditors job is to provide an 

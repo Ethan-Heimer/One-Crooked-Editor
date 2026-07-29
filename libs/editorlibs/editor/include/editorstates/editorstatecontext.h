@@ -1,25 +1,33 @@
 #pragma once
-#include "ieditorstatecontext.h"
 
 #include <memory>
-#include "ieditorstate.h"
-#include "statemachine.h"
+#include <queue>
+#include <string_view>
 
-using namespace std;
+#include "editorfilehandler.h"
+#include "ieditable.h"
+#include "editorcommandmanager.h"
+#include "editorstatetype.h"
+#include "editorstateparameters.h"
 
 namespace Editor::States{
-    class StateContext : public IStateContext{
+    class StateContext final{
         public:
-            using IStateContext::IStateContext;
+            StateContext(Commands::CommandManager& commandManager, 
+                    FileHandling::FileHandler& fileHandler, Commands::UndoHandler& undoHandler);
+            ~StateContext();
 
-            void Initialize(const string& defaultState) override;
+            void AddState(StateTypeValue stateType, std::string* stateName);
+            void ChangeState(std::string_view name);
 
-            void Update() override;
-            void ChangeState(const string state) override;            
+            void Initialize(std::weak_ptr<IEditable> buffer, StateParameters states, 
+                    std::queue<int>* inputQueue, bool* quitToken);
 
-            std::weak_ptr<IStateMutator> GetWeakPointer() override;
+            void Start();
+            void Update();
 
-        private:
-            std::unique_ptr<StateMachines::StateMachine<IState>> stateMachine;
+            private:
+                struct Impl;
+                std::unique_ptr<Impl> pImpl;
     };
 }

@@ -1,18 +1,18 @@
 #pragma once
 
-#include "ieditorundohandler.h"
 #include <memory>
+#include "editorcommandtype.h"
 
 namespace Editor::Commands {
-    class UndoHandler final : public IUndoHandler{
+    class UndoHandler final{
         public: 
             UndoHandler();
             ~UndoHandler();
 
-            void AddCommand(std::unique_ptr<ICommand> command) override;
+            void AddCommand(Command command);
 
-            void UndoCommand() override;
-            void RedoCommand() override; 
+            void UndoCommand();
+            void RedoCommand(); 
 
         private:
             struct Impl;

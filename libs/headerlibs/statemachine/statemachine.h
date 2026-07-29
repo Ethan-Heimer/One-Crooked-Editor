@@ -29,6 +29,7 @@ namespace StateMachines{
                 currentState->Transition();
             }
         private:
+
             std::shared_ptr<T> currentState;
     };
 

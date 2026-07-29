@@ -1,24 +1,39 @@
 #pragma once
 
+#include <memory>
 namespace Editor::Actions{
     template<typename T>
     concept Is_Actionable_Function = requires (T action) {
         action();    
     };
 
-    struct ActionBase{
-        virtual void Invoke() = 0;
-        virtual ~ActionBase(){};
-    };
+    class Action final{
+        public:
+            template<typename T>
+            Action(T action) : impl(std::make_unique<Model<T>>(std::move(action))){}
 
-    template<Is_Actionable_Function Func>
-    struct Action final : ActionBase{
-        Func action; 
+            void Invoke(){
+                impl->Invoke();
+            }
 
-        explicit Action(Func action) : action(action){}
+        private:
+            struct Contract{
+                virtual ~Contract() = default;
+                
+                virtual void Invoke() = 0;
+            };
 
-        void Invoke() override{
-            action();
-        };
+            template <typename T>
+            requires Is_Actionable_Function<T>
+            struct Model : Contract{
+                T value;
+                Model(T value) : value(std::move(value)){};
+
+                void Invoke() override{
+                    value();
+                }
+            };
+
+            std::unique_ptr<Contract> impl;
     };
 }
