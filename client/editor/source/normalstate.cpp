@@ -1,11 +1,12 @@
+#include "editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
 #include "editoractions/editoraction.h"
 
 #include <ncurses.h>
 
-using namespace Editor::States;
-using namespace Editor::Actions;
+using namespace CrookedEditor::States;
+using namespace CrookedEditor::Commands;
 
 constexpr string NormalState::StateName() const{
     return Constants::NormalState;
@@ -13,42 +14,43 @@ constexpr string NormalState::StateName() const{
 
 void NormalState::OnEnter(){
     actions
-    .AddAction("j", Action{[this](){ 
+    .AddAction("j", [this](){ 
         buffer.lock()->GotoNextLine();
-    }})
-    .AddAction("k", Action{[this](){ 
+    })
+    .AddAction("k", [this](){ 
         buffer.lock()->GotoPreviousLine();
-    }})
-    .AddAction("h", Action{[this](){ 
+    })
+    .AddAction("h", [this](){ 
         buffer.lock()->MoveCursorLeft();
-    }})
-    .AddAction("l", Action{[this](){ 
+    })
+    .AddAction("l", [this](){ 
         buffer.lock()->MoveCursorRight();
-    }})
-    .AddAction("i", Action{[this](){ 
+    })
+    .AddAction("i", [this](){ 
         nextState = Constants::InsertState;
-    }})
-    .AddAction("o", Action{[this](){ 
+    })
+    .AddAction("o", [this](){ 
         nextState = Constants::InsertState;
         buffer.lock()->InsertLine();
         buffer.lock()->GotoNextLine();
-    }})
-    .AddAction("u", Action{[this](){ 
+    })
+    .AddAction("u", [this](){ 
         undoHandler.UndoCommand();
-    }})
-    .AddAction("r", Action{[this](){ 
+    })
+    .AddAction("r", [this](){ 
         undoHandler.RedoCommand();
-    }})
-    .AddAction(":w", Action{[this](){ 
+    })
+    .AddAction(":w", [this](){ 
         fileSaver.SaveToFile(buffer.lock());
-    }})
-    .AddAction(":q", Action{[this](){ 
+    })
+    .AddAction(":q", [this](){ 
         *quitToken = true;
-    }})
-    .AddAction(":wq", Action{[this](){ 
+    })
+    .AddAction(":wq", [this](){ 
         *quitToken = true;
         fileSaver.SaveToFile(buffer.lock());
-    }});
+    })
+    .AddAction("t", commandManager.CreateCommand<TestCommand>('t'));
 }
 
 void NormalState::OnUpdate(){
@@ -64,6 +66,6 @@ void NormalState::OnUpdate(){
 
 void NormalState::Transition(){
     if(nextState != StateName()){
-        stateContext.ChangeState(nextState);
+        SwitchState(nextState);
     }
 };

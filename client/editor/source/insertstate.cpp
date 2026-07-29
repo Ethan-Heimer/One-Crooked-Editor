@@ -6,6 +6,7 @@
 
 using namespace Editor::States;
 using namespace Editor::Actions;
+using namespace CrookedEditor::States;
 
 constexpr string InsertState::StateName() const{
     return Constants::InsertState;
@@ -55,6 +56,6 @@ void InsertState::OnUpdate(){
 
 void InsertState::Transition(){
     if(nextState != StateName()){
-        stateContext.ChangeState(nextState);
+        SwitchState(nextState);
     }
 }

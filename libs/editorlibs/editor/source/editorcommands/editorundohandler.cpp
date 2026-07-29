@@ -12,17 +12,17 @@ struct UndoHandler::Impl{
      * Todo: Make undo Tree one day
      */
 
-    stack<unique_ptr<ICommand>> undoStack;
-    stack<unique_ptr<ICommand>> redoStack;
+    stack<Command> undoStack;
+    stack<Command> redoStack;
 
     void Undo(){
         if(undoStack.empty())
             return;
 
-        unique_ptr<ICommand> command = std::move(undoStack.top());
+        Command command = std::move(undoStack.top());
         undoStack.pop();
 
-        command->Undo();
+        command.Undo();
         redoStack.push(std::move(command));
     }
 
@@ -30,14 +30,14 @@ struct UndoHandler::Impl{
         if(redoStack.empty())
             return;
 
-        unique_ptr<ICommand> command = std::move(redoStack.top());
+        Command command = std::move(redoStack.top());
         redoStack.pop();
 
-        command->Do();
+        command.Do();
         undoStack.push(std::move(command)); 
     }
 
-    void AddCommand(std::unique_ptr<ICommand> command){
+    void AddCommand(Command command){
         undoStack.push(std::move(command));
         redoStack = {};
     }
@@ -54,6 +54,6 @@ void UndoHandler::RedoCommand(){
     pImpl->Redo();
 }
 
-void UndoHandler::AddCommand(std::unique_ptr<ICommand> command){
+void UndoHandler::AddCommand(Command command){
     pImpl->AddCommand(std::move(command));
 }

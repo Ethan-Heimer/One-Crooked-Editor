@@ -13,13 +13,13 @@
             void OnEnter() override; \
     }; \
 
-namespace Editor::States{
-    class EditorState : public IEditorState{
+namespace CrookedEditor::States{
+    class EditorState : public Editor::States::IEditorState{
         public:
             using IEditorState::IEditorState;
 
             string nextState{};
-            Actions::ActionTree actions{};
+            Editor::Actions::ActionTree actions{};
     };
 
     EditorState(NormalState);

@@ -1,10 +1,8 @@
 #pragma once
 
-#include "editorcommands/ieditorcommand.h"
+#include "ieditorcommand.h"
 #include "ieditable.h"
-#include "ieditorcommandscontainer.h"
 #include <memory>
-
 
 #define Command(Name) \
     class Name : public IEditorCommand { \
@@ -14,20 +12,17 @@
             void Undo() override; \
     }; 
 
-namespace Editor::Commands {
-    class TestCommand : public ICommand {
+namespace CrookedEditor::Commands {
+    class TestCommand : public Editor::Commands::ICommandBehavior {
         public:
-            TestCommand(std::weak_ptr<IEditable>editable, 
-                    std::weak_ptr<ICommandContainer> undoHandler, char character);
+            TestCommand(std::weak_ptr<Editor::IEditable>editable, char character);
+            TestCommand(const TestCommand& other);
+            TestCommand(TestCommand&& other);
 
             void Initialize() override;
-            void Execute() override;
             
             void Do() override;
             void Undo() override;
-
-            std::unique_ptr<ICommand> Clone() override;
-
         private:
             unsigned int cursorPos{};
             char character{};

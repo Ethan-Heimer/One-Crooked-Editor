@@ -1,14 +1,15 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <queue>
+#include <string_view>
 
 #include "editorcommandmanager.h"
-#include "editorfilehandling/ieditorfilehandler.h"
+#include "editorfilehandler.h"
 #include "ieditable.h"
 #include "editorundohandler.h"
 #include "istate.h"
-#include "statecontextbase.h"
 
 using namespace Editor::Commands;
 
@@ -17,11 +18,11 @@ namespace Editor::States{
         public:
             IEditorState(FileHandling::FileHandler& fileSaver, 
                     std::weak_ptr<IEditable> buffer, 
-                    StateMachines::BaseStateContext& stateContext, 
+                    std::function<void(std::string_view)> switchState,
                     CommandManager& commandManager,
                     UndoHandler& undoHandler,
                     std::queue<int>* inputQueue, bool* quitToken)
-                : StateMachines::IState(stateContext), inputQueue(inputQueue), 
+                : StateMachines::IState(switchState), inputQueue(inputQueue), 
                 commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), buffer(buffer), quitToken(quitToken){}
 
         protected:

@@ -6,7 +6,7 @@ using namespace std;
 
 #define ctrl(x) ((x) & 0x1f)
 
-namespace Editor::Constants {
+namespace CrookedEditor::Constants {
     constexpr const string NormalState = "Normal";
     constexpr const string InsertState = "Insert";
 }

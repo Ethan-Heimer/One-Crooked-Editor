@@ -23,15 +23,14 @@ namespace Editor{
             bool quit;
 
             EditorContext( 
-                    FileHandling::FileHandler fileHandler,
+                    FileHandling::FileHandler fileHandler, States::StateParameters stateParams,
                     std::queue<int>* inputQueue, std::string fileName) : fileHandler(std::move(fileHandler)){
 
                 this->fileHandler.fileName = fileName;
-
                 this->buffer = this->fileHandler.LoadFromFile();
 
                 this->commandManager.Initialize(this->buffer);
-                this->stateContext.Initialize(buffer, "Normal", inputQueue, &quit);
+                this->stateContext.Initialize(buffer, std::move(stateParams), inputQueue, &quit);
             }
 
             void Update(){

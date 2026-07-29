@@ -10,7 +10,7 @@ namespace Editor::Actions{
     class Action final{
         public:
             template<typename T>
-            Action(T action) : impl(std::make_unique<Model<T>>(std::move(action))){}
+            Action(T&& action) : impl(std::make_unique<Model<T>>(std::move(action))){}
 
             void Invoke(){
                 impl->Invoke();
@@ -27,7 +27,7 @@ namespace Editor::Actions{
             requires Is_Actionable_Function<T>
             struct Model : Contract{
                 T value;
-                Model(T value) : value(value){};
+                Model(T value) : value(std::move(value)){};
 
                 void Invoke() override{
                     value();
@@ -36,26 +36,4 @@ namespace Editor::Actions{
 
             std::unique_ptr<Contract> impl;
     };
-    /*
-
-    struct ActionBase
-    template<typename T>
-    concept Is_Actionable_Function = requires (T action) {
-        action();    
-    };
-       virtual void Invoke() = 0;
-        virtual ~ActionBase(){};
-    };
-
-    template<Is_Actionable_Function Func>
-    struct Action final : ActionBase{
-        Func action; 
-
-        explicit Action(Func action) : action(action){}
-
-        void Invoke() override{
-            action();
-        };
-    };
-    */
 }

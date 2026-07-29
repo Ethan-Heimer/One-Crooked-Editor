@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "ieditorcommand.h"
+#include "editorcommandtype.h"
 
 namespace Editor::Commands {
     class UndoHandler final{
@@ -9,7 +9,7 @@ namespace Editor::Commands {
             UndoHandler();
             ~UndoHandler();
 
-            void AddCommand(std::unique_ptr<ICommand> command);
+            void AddCommand(Command command);
 
             void UndoCommand();
             void RedoCommand(); 

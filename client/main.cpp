@@ -5,7 +5,7 @@
 
 #include "bufferfilehandler.h"
 #include "editorcontext.h"
-#include "editorfilehandling/ieditorfilehandler.h"
+#include "editorstates.h"
 #include "ieditable.h"
 
 #include "iinputmanager.h"
@@ -17,6 +17,7 @@ using namespace Systems::Input;
 using namespace Editor;
 using namespace Editor::States;
 using namespace Buffers;
+using namespace CrookedEditor::States;
 
 void InitScreen();
 void KillScreen();
@@ -31,7 +32,9 @@ int main(int argc, char** argv){
     queue<int> inputQueue;
     string fileName{argv[1]};
  
-    EditorContext context{BufferFileInterpreter{}, &inputQueue, fileName};
+    EditorContext context{BufferFileInterpreter{}, 
+        DefaultStates<NormalState, InsertState>{},
+        &inputQueue, fileName};
 
     shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
     InitScreen();

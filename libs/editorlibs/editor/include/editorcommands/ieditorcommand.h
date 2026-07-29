@@ -1,30 +1,29 @@
 #pragma once
 
 #include "ieditable.h"
+#include "editorcommandtype.h"
 #include <memory>
-#include "ieditorcommandscontainer.h"
 
 namespace Editor::Commands {
-    class ICommand {
+    class ICommandBehavior {
         public:
-            ICommand(std::weak_ptr<IEditable> buffer, 
-                    std::weak_ptr<ICommandContainer> undoHandler) : buffer(buffer), undoHandler(undoHandler){}
-            virtual ~ICommand() = default;
+            ICommandBehavior(std::weak_ptr<IEditable> buffer) : buffer(buffer){}
+            ICommandBehavior(const ICommandBehavior& other){
+                buffer = other.buffer;
+            }
+            ICommandBehavior(ICommandBehavior&& other){
+                buffer = other.buffer;
+                other.buffer.reset();
+            }
+
+            virtual ~ICommandBehavior() = default;
  
+            virtual void Initialize() = 0;
             virtual void Do() = 0;
             virtual void Undo() = 0;
 
-            void operator() (){
-                Execute();   
-            };
-
         protected:
-            std::weak_ptr<ICommandContainer> undoHandler;
             std::weak_ptr<IEditable> buffer;
 
-            virtual void Initialize() = 0;
-            virtual void Execute() = 0;
-
-            virtual std::unique_ptr<ICommand> Clone() = 0;
     };
 }

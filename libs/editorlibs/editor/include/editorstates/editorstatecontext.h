@@ -1,47 +1,33 @@
 #pragma once
 
-#include <map>
 #include <memory>
 #include <queue>
 #include <string_view>
 
-#include "editorfilehandling/ieditorfilehandler.h"
+#include "editorfilehandler.h"
 #include "ieditable.h"
 #include "editorcommandmanager.h"
-#include "ieditorstate.h"
-#include "statemachine.h"
+#include "editorstatetype.h"
+#include "editorstateparameters.h"
 
 namespace Editor::States{
-    class StateContext final : public StateMachines::BaseStateContext{
+    class StateContext final{
         public:
-            std::map<std::string, std::shared_ptr<IEditorState>> states;
+            StateContext(Commands::CommandManager& commandManager, 
+                    FileHandling::FileHandler& fileHandler, Commands::UndoHandler& undoHandler);
+            ~StateContext();
 
-            FileHandling::FileHandler& fileSaver;
-            std::weak_ptr<IEditable> buffer;
-            Commands::CommandManager& commandManager;
-            Commands::UndoHandler& undoHandler;
+            void AddState(StateTypeValue stateType, std::string* stateName);
+            void ChangeState(std::string_view name);
 
-            std::queue<int>* inputQueue;
-            bool* quitToken;
-
-            StateContext(Commands::CommandManager& commandManager, FileHandling::FileHandler& fileHandler, Commands::UndoHandler& undoHandler) :
-            commandManager(commandManager), fileSaver(fileHandler), undoHandler(undoHandler){};
-
-            template<typename S>
-            requires std::is_base_of_v<IEditorState, S>
-            void AddState(){
-                std::shared_ptr<IEditorState> newState = 
-                    std::make_shared<S>(fileSaver, buffer, *this, commandManager, undoHandler, inputQueue, quitToken);
-                states[newState->StateName()] = std::move(newState);
-            }
-
-            void ChangeState(std::string_view name) override;
-            void Initialize(std::weak_ptr<IEditable> buffer, 
-                    const std::string& defaultState, 
+            void Initialize(std::weak_ptr<IEditable> buffer, StateParameters states, 
                     std::queue<int>* inputQueue, bool* quitToken);
+
+            void Start();
             void Update();
 
             private:
-                std::unique_ptr<StateMachines::StateMachine<IEditorState>> stateMachine;
+                struct Impl;
+                std::unique_ptr<Impl> pImpl;
     };
 }

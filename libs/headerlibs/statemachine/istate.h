@@ -1,10 +1,13 @@
 #pragma once
 
-#include "statecontextbase.h"
+#include <functional>
+#include <string>
+#include <string_view>
+
 namespace StateMachines{
     class IState{
         public:
-            IState(BaseStateContext& stateContext) : stateContext(stateContext){};
+            IState(std::function<void(std::string_view)> switchState) : SwitchState(switchState){};
 
             virtual constexpr std::string StateName() const = 0;
 
@@ -15,6 +18,6 @@ namespace StateMachines{
             virtual void Transition() = 0;
 
         protected:
-            BaseStateContext& stateContext;
+            std::function<void(std::string_view)> SwitchState;
     };
 }
