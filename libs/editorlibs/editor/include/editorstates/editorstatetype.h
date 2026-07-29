@@ -29,7 +29,7 @@ namespace Editor::States{
     struct StateTypeValue{
         public:
             template <typename T>
-            StateTypeValue(T&& value) : impl(std::make_unique<Model<T>>(std::move(value))){}
+            StateTypeValue(T value) : impl(std::make_unique<Model<T>>(std::move(value))){}
 
             std::shared_ptr<IEditorState> Instanciate(StateConstructorArgs args){
                 return impl->Instanciate(args);

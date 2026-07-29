@@ -34,7 +34,7 @@ namespace Editor::States{
             template <typename T>
             struct Model : public Contract{
                 T params; 
-                Model(T&& params) : params(params){}
+                Model(T&& params) : params(std::move(params)){}
 
                 void AddDefaultStates(std::string& defaultStateName,
                      std::function<void(StateTypeValue stateType, std::string* stateName)> addState){

@@ -10,7 +10,7 @@ namespace Editor::Actions{
     class Action final{
         public:
             template<typename T>
-            Action(T&& action) : impl(std::make_unique<Model<T>>(std::move(action))){}
+            Action(T action) : impl(std::make_unique<Model<T>>(std::move(action))){}
 
             void Invoke(){
                 impl->Invoke();

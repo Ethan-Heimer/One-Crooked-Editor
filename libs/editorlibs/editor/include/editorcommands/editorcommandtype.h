@@ -7,7 +7,7 @@ namespace Editor::Commands{
     class Command final{
         public:
             template<typename T>
-            Command(std::function<void(Command)> addToUndo, T&& value) 
+            Command(std::function<void(Command)> addToUndo, T value) 
             : addToUndo(addToUndo), impl(std::make_unique<Model<T>>(std::move(value))){}
 
             Command(Command&& other){

@@ -13,10 +13,11 @@
 #include "inputmanager.h"
 
 using namespace std;
-using namespace Systems::Input;
-using namespace Editor;
-using namespace Editor::States;
 using namespace Buffers;
+using namespace Editor;
+
+using namespace Systems::Input;
+using namespace Editor::States;
 using namespace CrookedEditor::States;
 
 void InitScreen();
