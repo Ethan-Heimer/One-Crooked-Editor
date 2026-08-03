@@ -7,10 +7,11 @@
 #include "bufferfilehandler.h"
 #include "buffer.h"
 
+using namespace CrookedEditor::Buffers;
 using namespace Editor;
 using namespace std;
 
-std::shared_ptr<IEditable> Buffers::BufferFileInterpreter::LoadFromFile(std::string_view fileName){
+std::shared_ptr<IEditable> BufferFileInterpreter::LoadFromFile(std::string_view fileName){
     ifstream inputFile{fileName.data()};
     std::shared_ptr<Buffers::Buffer> buffer = std::make_shared<Buffers::Buffer>();
 
@@ -28,7 +29,9 @@ std::shared_ptr<IEditable> Buffers::BufferFileInterpreter::LoadFromFile(std::str
     return std::move(buffer);
 }
 
-void Buffers::BufferFileInterpreter::SaveToFile(std::string_view fileName, const std::shared_ptr<IEditable>& fileSaver){
+void BufferFileInterpreter::SaveToFile(std::string_view fileName, 
+        const std::shared_ptr<const IEditableFileCommands>& fileSaver){
+
     ofstream saveFile{fileName.data()};
     if(saveFile.is_open()){
         stringstream stream = fileSaver->WriteLinesToFile();
@@ -39,7 +42,6 @@ void Buffers::BufferFileInterpreter::SaveToFile(std::string_view fileName, const
 
         saveFile.close();
     }
-
 }
 
 

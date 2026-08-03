@@ -1,18 +1,18 @@
 #pragma once
 
 #include <memory>
-#include "editorcommandtype.h"
+#include "editormutatortype.h"
 
-namespace Editor::Commands {
+namespace Editor::Mutators {
     class UndoHandler final{
         public: 
             UndoHandler();
             ~UndoHandler();
 
-            void AddCommand(Command command);
+            void AddMutator(Mutator command);
 
-            void UndoCommand();
-            void RedoCommand(); 
+            void UndoMutator();
+            void RedoMutator(); 
 
         private:
             struct Impl;

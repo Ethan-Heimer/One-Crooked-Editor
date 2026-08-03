@@ -1,15 +1,14 @@
-THis is a saving test I hope this works this is a this is a testthius si athis is a test
-this is attttt even coolerttttt
-this is a cooler tets 
-thi sis a steta tes t
-0x5585ebe77a90
-0x5585ebe77b40
+this is a testthis s a test does this save? yes it did
+hello worlds
+partition pattern
+complex undo operations seems to mess up the document
+ - this could be because backspaces do not record commands
+ - the FIRST undo does not delete the line
+
+when writting a file- a new line seems to be added
 
 
-
-
-
-
+end
 
 
 

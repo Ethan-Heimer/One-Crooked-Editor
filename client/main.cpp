@@ -13,11 +13,12 @@
 #include "inputmanager.h"
 
 using namespace std;
-using namespace Buffers;
 using namespace Editor;
 
 using namespace Systems::Input;
 using namespace Editor::States;
+
+using namespace CrookedEditor::Buffers;
 using namespace CrookedEditor::States;
 
 void InitScreen();
@@ -72,14 +73,19 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
         auto start = buffer->BeginAtCurrentLine();
         auto end = buffer->EndStepsFromCurrentLine(row-1);
 
+        int linenum = buffer->GetCurrentLineNumber();
         for(auto line = start ; line != end; ++line){
-            if((*line).length() == 0)
+            if((*line).length() == 0){ 
+                printw(" %*d| %s \n", lineColWidth, linenum, "");
+                linenum++;
                 continue;
+            }
 
             printw(" %*d| %s \n", 
                     lineColWidth,
                     0,
                     (*line).substr(colOffset, colOffset + col - 6 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
+                linenum++;
         }
 
         move(0, currentCursorCol - colOffset + lineColWidth+3);

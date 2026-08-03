@@ -6,15 +6,15 @@
 
 #include "editorfilehandler.h"
 #include "ieditable.h"
-#include "editorcommandmanager.h"
+#include "editormutations/editormutatormanager.h"
 #include "editorstatetype.h"
 #include "editorstateparameters.h"
 
 namespace Editor::States{
     class StateContext final{
         public:
-            StateContext(Commands::CommandManager& commandManager, 
-                    FileHandling::FileHandler& fileHandler, Commands::UndoHandler& undoHandler);
+            StateContext(Mutators::MutatorManager& commandManager, 
+                    FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler);
             ~StateContext();
 
             void AddState(StateTypeValue stateType, std::string* stateName);

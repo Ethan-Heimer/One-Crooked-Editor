@@ -1,10 +1,9 @@
 #include "buffer.h"
-#include "ieditable.h"
 #include <iostream>
 #include <memory>
 #include <sstream>
 
-using namespace Buffers;
+using namespace CrookedEditor::Buffers;
 using namespace Editor;
 
 Buffer::Buffer(){
@@ -18,7 +17,7 @@ void Buffer::ReadLineFromFile(const std::string& line){
     GotoNextLine();
 }
 
-std::stringstream Buffer::WriteLinesToFile() {
+std::stringstream Buffer::WriteLinesToFile() const {
     std::stringstream stream;
     for(auto line : buffer){
         stream << line.data->ToString() << std::endl;
@@ -36,6 +35,21 @@ void Buffer::GotoPreviousLine() noexcept{
     if(buffer.currentLine->previous.lock())
         buffer.currentLine = buffer.currentLine->previous.lock();
 }
+
+void Buffer::GotoLine(unsigned int lineNumber) noexcept{
+    int currentLineNumber = GetCurrentLineNumber();
+
+    if(bool traverseUp = currentLineNumber > lineNumber; traverseUp){
+        while(buffer.currentLine->previous.lock() && buffer.currentLine->index != lineNumber){
+            GotoPreviousLine();
+        }
+    }
+    else if(bool traverseDown = currentLineNumber < lineNumber; traverseDown){
+        while(buffer.currentLine->next && buffer.currentLine->index != lineNumber){
+            GotoNextLine();
+        }
+    }
+};
             
 void Buffer::MoveCursorLeft() noexcept{
     buffer.currentLine->data->MoveGapLeft();
@@ -45,7 +59,7 @@ void Buffer::MoveCursorRight() noexcept{
     buffer.currentLine->data->MoveGapRight();
 }
             
-bool Buffer::IsCursorAtBeginningOfLine() noexcept{
+bool Buffer::IsCursorAtBeginningOfLine() const noexcept{
     return buffer.currentLine->data->IsGapAtBeginning();
 }
             
@@ -54,13 +68,15 @@ void Buffer::InsertCharacter(char character) noexcept{
 }
 
 void Buffer::InsertString(string_view string) noexcept{
-    for(int i = 0; i < string.length(); i++){
-        buffer.currentLine->data->Insert(string[i]);
-    }
+    buffer.currentLine->data->Insert(string.data());
+}
+
+void Buffer::InsertStringAt(unsigned int index, std::string_view string) noexcept{
+    buffer.currentLine->data->InsertAt(index, string.data());
 }
             
-void Buffer::DeleteCharacter() noexcept{
-    buffer.currentLine->data->Delete();
+char Buffer::DeleteCharacter() noexcept{
+    return buffer.currentLine->data->Delete();
 }
             
 void Buffer::InsertLine() noexcept{
@@ -80,27 +96,45 @@ void Buffer::DeleteLine() noexcept{
 }
             
 void Buffer::AppendTextToNextLine() noexcept{
+    if(buffer.currentLine->next == nullptr)
+        return;
+
     int gapIndex = buffer.currentLine->data->GetGapIndex();
     int endIndex = buffer.currentLine->data->BufferSize();
     string substring = buffer.currentLine->data->Substring(gapIndex, endIndex);
     buffer.currentLine->data->DeleteBetween(gapIndex, endIndex);
             
-    if(buffer.currentLine->next){
-        buffer.currentLine = buffer.currentLine->next;
-        buffer.currentLine->data->Insert(substring);
-        buffer.currentLine->data->MoveGapTo(0);
-    }
+    buffer.currentLine = buffer.currentLine->next;
+    buffer.currentLine->data->Insert(substring);
+    buffer.currentLine->data->MoveGapTo(0);
+}
+
+void Buffer::AppendTextToPreviousLine() noexcept{
+    if(buffer.currentLine->previous.lock() == nullptr)
+        return;
+
+    int gapIndex = buffer.currentLine->data->GetGapIndex();
+    int endIndex = buffer.currentLine->data->BufferSize();
+    string substring = buffer.currentLine->data->Substring(gapIndex, endIndex);
+    buffer.currentLine->data->DeleteBetween(gapIndex, endIndex);
+            
+    buffer.currentLine = buffer.currentLine->previous.lock();
+    buffer.currentLine->data->Insert(substring);
+}
+
+std::string Buffer::SubstringBetween(unsigned int start, unsigned int end) noexcept{
+    return buffer.currentLine->data->Substring(start, end);
 }
 
 void Buffer::MoveToHead() noexcept{
     buffer.currentLine = buffer.head;
 }
 
-unsigned int Buffer::GetCursorX() noexcept{
+unsigned int Buffer::GetCursorX() const noexcept{
     return buffer.currentLine->data->GetGapIndex();
 }
 
-unsigned int Buffer::GetCurrentLineNumber() noexcept{
+unsigned int Buffer::GetCurrentLineNumber() const noexcept{
     return buffer.currentLine->index;
 }
 
@@ -108,26 +142,26 @@ void Buffer::InsertCharacterAt(unsigned index, char character) noexcept{
     buffer.currentLine->data->InsertAt(index, character);
 }
 
-void Buffer::DeleteCharacterAt(unsigned int index) noexcept{
-    buffer.currentLine->data->DeleteAt(index);
+char Buffer::DeleteCharacterAt(unsigned int index) noexcept{
+    return buffer.currentLine->data->DeleteAt(index);
 }
 
-LineIterator Buffer::Begin(){
+LineIterator Buffer::Begin() const{
     return buffer.Begin();
 }
 
-LineIterator Buffer::BeginAtCurrentLine(){
+LineIterator Buffer::BeginAtCurrentLine() const{
     return buffer.BeginAtCurrentLine();
 }
 
-LineIterator Buffer::BeginStepsFromCurrentLine(int steps){
+LineIterator Buffer::BeginStepsFromCurrentLine(int steps) const{
     return buffer.BeginStepsFromCurrentLine(steps);
 }
 
-LineIterator Buffer::End(){
+LineIterator Buffer::End() const{
     return buffer.End();
 }
 
-LineIterator Buffer::EndStepsFromCurrentLine(unsigned int steps){
+LineIterator Buffer::EndStepsFromCurrentLine(unsigned int steps) const{
     return buffer.EndStepsFromCurrentLine(steps);
 }

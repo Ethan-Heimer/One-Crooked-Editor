@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editoractiontree.h"
+#include "editorcommands.h"
 #include "ieditorstate.h"
 
 #define EditorState(Name) \
@@ -23,5 +24,17 @@ namespace CrookedEditor::States{
     };
 
     EditorState(NormalState);
-    EditorState(InsertState);
+
+    class InsertState : public EditorState{
+        public: 
+            using EditorState::EditorState;
+            constexpr string StateName() const override;
+            void OnUpdate() override;
+            void Transition() override;
+            void OnEnter() override;
+            void OnExit() override;
+
+        private:
+            Mutators::InsertModeMutator* insertModeMutator{};
+    };
 }

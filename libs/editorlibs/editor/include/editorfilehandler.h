@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ieditable.h"
-#include <iostream>
 #include <memory>
 #include <utility>
 
@@ -18,7 +17,7 @@ namespace Editor::FileHandling {
                 return impl->LoadFromFile(fileName);
             };
             
-            void SaveToFile(const std::shared_ptr<IEditable>& fileSaver){
+            void SaveToFile(const std::shared_ptr<const IEditableFileCommands>& fileSaver){
                 return impl->SaveToFile(fileName, fileSaver);
             };
 
@@ -27,7 +26,7 @@ namespace Editor::FileHandling {
                virtual ~Contract() = default; 
 
                 virtual std::shared_ptr<Editor::IEditable> LoadFromFile(std::string_view fileName) = 0;
-                virtual void SaveToFile(std::string_view fileName, const std::shared_ptr<IEditable>& fileSaver) = 0;
+                virtual void SaveToFile(std::string_view fileName, const std::shared_ptr<const IEditableFileCommands>& fileSaver) = 0;
             };
 
             template <typename T>
@@ -39,7 +38,7 @@ namespace Editor::FileHandling {
                     return interpreter.LoadFromFile(fileName);
                 };
 
-                void SaveToFile(std::string_view fileName, const std::shared_ptr<IEditable>& fileSaver) override{
+                void SaveToFile(std::string_view fileName, const std::shared_ptr<const IEditableFileCommands>& fileSaver) override{
                     return interpreter.SaveToFile(fileName, fileSaver);
                 }
             };

@@ -4,15 +4,15 @@
 #include <queue>
 #include <string>
 #include "editorstatecontext.h"
-#include "editorundohandler.h"
+#include "editormutations/editorundohandler.h"
 #include "ieditable.h"
-#include "editorcommandmanager.h"
+#include "editormutations/editormutatormanager.h"
 
 namespace Editor{
     class EditorContext{
         public:
-            Commands::UndoHandler undoHandler{};
-            Commands::CommandManager commandManager{undoHandler};
+            Mutators::UndoHandler undoHandler{};
+            Mutators::MutatorManager commandManager{undoHandler};
 
             FileHandling::FileHandler fileHandler;
 

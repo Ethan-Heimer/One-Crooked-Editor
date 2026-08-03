@@ -2,10 +2,10 @@
 
 #include "ieditable.h"
 
-namespace Buffers {
+namespace CrookedEditor::Buffers {
     class BufferFileInterpreter{
         public:
             std::shared_ptr<Editor::IEditable> LoadFromFile(std::string_view fileName);
-            void SaveToFile(std::string_view fileName, const std::shared_ptr<Editor::IEditable>& fileSaver);
+            void SaveToFile(std::string_view fileName, const std::shared_ptr<const Editor::IEditableFileCommands>& fileSaver);
     };
 }

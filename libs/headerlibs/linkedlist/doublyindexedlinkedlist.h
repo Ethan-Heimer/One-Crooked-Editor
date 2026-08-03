@@ -235,8 +235,8 @@ class DoublyIndexedLinkedList{
             }
         }
 
-        Iterator begin() { return Iterator(head); };
-        Iterator end(){
+        Iterator begin() const { return Iterator(head); };
+        Iterator end() const {
             if(!tail)
                 return Iterator(tail);
 

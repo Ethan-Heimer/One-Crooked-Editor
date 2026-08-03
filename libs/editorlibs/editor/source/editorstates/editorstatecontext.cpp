@@ -7,12 +7,12 @@ using namespace Editor::States;
 using namespace StateMachines;
 using namespace std;
 using namespace Editor;
-using namespace Commands;
+using namespace Mutators;
 using namespace FileHandling;
 
 struct StateContext::Impl{
     public:
-        Impl(FileHandler& fileHandler, CommandManager& commandManager, UndoHandler& undoHandler) 
+        Impl(FileHandler& fileHandler, MutatorManager& commandManager, UndoHandler& undoHandler) 
             : fileHandler(fileHandler), commandManager(commandManager), undoHandler(undoHandler){}; 
 
         void Initialize(std::weak_ptr<IEditable> buffer, StateParameters defaultStates,
@@ -57,14 +57,14 @@ struct StateContext::Impl{
         unique_ptr<StateMachine<IEditorState>> stateMachine;
 
         FileHandler& fileHandler;
-        CommandManager& commandManager;
+        MutatorManager& commandManager;
         UndoHandler& undoHandler;
         weak_ptr<IEditable> buffer;
         queue<int>* inputQueue;
         bool* quitToken;
 };
 
-StateContext::StateContext(Commands::CommandManager& commandManager, FileHandling::FileHandler& fileHandler, Commands::UndoHandler& undoHandler) 
+StateContext::StateContext(Mutators::MutatorManager& commandManager, FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler) 
     : pImpl(std::make_unique<Impl>(fileHandler, commandManager, undoHandler)){}
 
 StateContext::~StateContext() = default;

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "editorcommandmanager.h"
-#include "editorfilehandler.h"
-#include "editorundohandler.h"
+#include "editormutations/editormutatormanager.h"
+#include "editormutations/editorundohandler.h"
 #include "ieditorstate.h"
 #include <memory>
 #include <string_view>
@@ -12,8 +11,8 @@ namespace Editor::States{
         FileHandling::FileHandler& fileHandler;
         std::weak_ptr<IEditable> buffer;
         std::function<void(std::string_view)> switchState;
-        Commands::CommandManager& commandManager;
-        Commands::UndoHandler& undoHandler;
+        Mutators::MutatorManager& commandManager;
+        Mutators::UndoHandler& undoHandler;
         std::queue<int>* inputQueue;
         bool* quitToken;
     };
@@ -21,7 +20,7 @@ namespace Editor::States{
     template<typename T>
     struct StateType{
         std::shared_ptr<IEditorState> Instanciate(StateConstructorArgs args){
-            return std::make_shared<T>(args.fileHandler, args.buffer, args.switchState,
+            return std::make_shared<T>(args.fileHandler, args.buffer, args.buffer, args.switchState,
                     args.commandManager, args.undoHandler, args.inputQueue, args.quitToken);
         };
     };
