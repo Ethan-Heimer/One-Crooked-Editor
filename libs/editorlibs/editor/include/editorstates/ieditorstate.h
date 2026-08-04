@@ -15,8 +15,8 @@ namespace Editor::States{
     class IEditorState : public StateMachines::IState{
         public:
             IEditorState(FileHandling::FileHandler& fileSaver, 
-                    std::weak_ptr<IEditableCursorCommands> cursor, 
-                    std::weak_ptr<const IEditableFileCommands> buffer, 
+                    IEditableCursorCommands& cursor, 
+                    const IEditableFileCommands& buffer, 
                     std::function<void(std::string_view)> switchState,
                     Mutators::MutatorManager& commandManager,
                     Mutators::UndoHandler& undoHandler,
@@ -25,8 +25,9 @@ namespace Editor::States{
                 commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), cursor(cursor), buffer(buffer), quitToken(quitToken){}
 
         protected:
-            std::weak_ptr<IEditableCursorCommands> cursor;
-            std::weak_ptr<const IEditableFileCommands> buffer;
+            IEditableCursorCommands& cursor;
+            const IEditableFileCommands& buffer;
+
             FileHandling::FileHandler& fileSaver;
             Mutators::MutatorManager& commandManager;
             Mutators::UndoHandler& undoHandler;

@@ -1,4 +1,7 @@
 this is a testthis s a test does this save? yes it did
+
+
+this s a test
 hello worlds
 partition pattern
 complex undo operations seems to mess up the document
@@ -9,6 +12,9 @@ when writting a file- a new line seems to be added
 
 
 end
+
+
+
 
 
 

@@ -15,16 +15,16 @@ constexpr string NormalState::StateName() const{
 void NormalState::OnEnter(){
     actions
     .AddAction("j", [this](){ 
-        cursor.lock()->GotoNextLine();
+        cursor.GotoNextLine();
     })
     .AddAction("k", [this](){ 
-        cursor.lock()->GotoPreviousLine();
+        cursor.GotoPreviousLine();
     })
     .AddAction("h", [this](){ 
-        cursor.lock()->MoveCursorLeft();
+        cursor.MoveCursorLeft();
     })
     .AddAction("l", [this](){ 
-        cursor.lock()->MoveCursorRight();
+        cursor.MoveCursorRight();
     })
     .AddAction("i", [this](){ 
         nextState = Constants::InsertState;
@@ -36,14 +36,14 @@ void NormalState::OnEnter(){
         undoHandler.RedoMutator();
     })
     .AddAction(":w", [this](){ 
-        fileSaver.SaveToFile(buffer.lock());
+        fileSaver.SaveToFile(buffer);
     })
     .AddAction(":q", [this](){ 
         *quitToken = true;
     })
     .AddAction(":wq", [this](){ 
         *quitToken = true;
-        fileSaver.SaveToFile(buffer.lock());
+        fileSaver.SaveToFile(buffer);
     });
 }
 

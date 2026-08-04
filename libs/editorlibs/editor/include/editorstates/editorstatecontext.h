@@ -13,15 +13,13 @@
 namespace Editor::States{
     class StateContext final{
         public:
-            StateContext(Mutators::MutatorManager& commandManager, 
-                    FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler);
+            StateContext(StateParameters states, IEditable& buffer, Mutators::MutatorManager& commandManager, 
+                    FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler,
+                    std::queue<int>* inputQueue, bool* quitToken);
             ~StateContext();
 
             void AddState(StateTypeValue stateType, std::string* stateName);
             void ChangeState(std::string_view name);
-
-            void Initialize(std::weak_ptr<IEditable> buffer, StateParameters states, 
-                    std::queue<int>* inputQueue, bool* quitToken);
 
             void Start();
             void Update();

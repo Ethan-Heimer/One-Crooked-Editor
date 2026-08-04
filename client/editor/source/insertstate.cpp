@@ -21,7 +21,7 @@ void InsertState::OnEnter(){
         nextState = Constants::NormalState;
     })
     .AddAction("\b", [this](){
-        if(cursor.lock()->IsCursorAtBeginningOfLine()){
+        if(cursor.IsCursorAtBeginningOfLine()){
             insertModeMutator->DoAction<InsertModeMutator::DeleteLineAction>();
         }
         else

@@ -9,8 +9,8 @@ namespace CrookedEditor::Mutators {
     class InsertModeMutator : public Editor::Mutators::IMutatorBehavior {
         public:
             struct ActionToken{
-                std::weak_ptr<Editor::IEditable> buffer{};
-                ActionToken(std::weak_ptr<Editor::IEditable> buffer) : buffer(buffer){}
+                Editor::IEditable& buffer;
+                ActionToken(Editor::IEditable& buffer) : buffer(buffer){}
                 virtual ~ActionToken(){};
 
                 virtual void RedoSelf() = 0;
@@ -25,26 +25,26 @@ namespace CrookedEditor::Mutators {
                 int cursorRow{};
                 int cursorCol{};
 
-                InsertCharacterAction(std::weak_ptr<Editor::IEditable> buffer, char character) 
+                InsertCharacterAction(Editor::IEditable& buffer, char character) 
                     : ActionToken(buffer), addedCharacter(character) {
 
-                    cursorRow = buffer.lock()->GetCurrentLineNumber(); 
-                    cursorCol = buffer.lock()->GetCursorX();
+                    cursorRow = buffer.GetCurrentLineNumber(); 
+                    cursorCol = buffer.GetCursorX();
 
-                    buffer.lock()->InsertCharacter(character);
+                    buffer.InsertCharacter(character);
                 };
 
                 InsertCharacterAction(const InsertCharacterAction& other) = default;
                 InsertCharacterAction(InsertCharacterAction&& other) = default;
 
                 void UndoSelf() override {
-                    buffer.lock()->GotoLine(cursorRow);
-                    buffer.lock()->DeleteCharacterAt(cursorCol+1);
+                    buffer.GotoLine(cursorRow);
+                    buffer.DeleteCharacterAt(cursorCol+1);
                 }
 
                 void RedoSelf() override {
-                    buffer.lock()->GotoLine(cursorRow);
-                    buffer.lock()->InsertCharacterAt(cursorCol, addedCharacter);
+                    buffer.GotoLine(cursorRow);
+                    buffer.InsertCharacterAt(cursorCol, addedCharacter);
                 }
 
                 std::unique_ptr<ActionToken> Clone() const override{
@@ -58,26 +58,26 @@ namespace CrookedEditor::Mutators {
                 int cursorRow{};
                 int cursorCol{};
 
-                DeleteCharacterAction(std::weak_ptr<Editor::IEditable> buffer) 
+                DeleteCharacterAction(Editor::IEditable& buffer) 
                     : ActionToken(buffer){
 
-                    cursorRow = buffer.lock()->GetCurrentLineNumber(); 
-                    cursorCol = buffer.lock()->GetCursorX();
+                    cursorRow = buffer.GetCurrentLineNumber(); 
+                    cursorCol = buffer.GetCursorX();
 
-                    removedCharacter = buffer.lock()->DeleteCharacter();
+                    removedCharacter = buffer.DeleteCharacter();
                 };
 
                 DeleteCharacterAction(const DeleteCharacterAction& other) = default;
                 DeleteCharacterAction(DeleteCharacterAction&& other) = default;
 
                 void UndoSelf(){
-                    buffer.lock()->GotoLine(cursorRow);
-                    buffer.lock()->InsertCharacterAt(cursorCol, removedCharacter);
+                    buffer.GotoLine(cursorRow);
+                    buffer.InsertCharacterAt(cursorCol, removedCharacter);
                 }
 
                 void RedoSelf(){
-                    buffer.lock()->GotoLine(cursorRow);
-                    buffer.lock()->DeleteCharacterAt(cursorCol);
+                    buffer.GotoLine(cursorRow);
+                    buffer.DeleteCharacterAt(cursorCol);
                 }
 
                 virtual std::unique_ptr<ActionToken> Clone() const{
@@ -88,28 +88,28 @@ namespace CrookedEditor::Mutators {
             struct NewLineAction : public ActionToken{
                 int cursorRow{};
 
-                NewLineAction(std::weak_ptr<Editor::IEditable> buffer) 
+                NewLineAction(Editor::IEditable& buffer) 
                     : ActionToken(buffer){
 
-                    cursorRow = buffer.lock()->GetCurrentLineNumber();
+                    cursorRow = buffer.GetCurrentLineNumber();
 
-                    buffer.lock()->InsertLine();
-                    buffer.lock()->AppendTextToNextLine();
+                    buffer.InsertLine();
+                    buffer.AppendTextToNextLine();
                 };
 
                 NewLineAction(const NewLineAction& other) = default;
                 NewLineAction(NewLineAction&& other) = default;
 
                 void UndoSelf(){
-                    buffer.lock()->GotoLine(cursorRow + 1);
-                    buffer.lock()->DeleteLine();
+                    buffer.GotoLine(cursorRow + 1);
+                    buffer.DeleteLine();
                 }
 
                 void RedoSelf(){
-                    buffer.lock()->GotoLine(cursorRow);
+                    buffer.GotoLine(cursorRow);
 
-                    buffer.lock()->InsertLine();
-                    buffer.lock()->AppendTextToNextLine();
+                    buffer.InsertLine();
+                    buffer.AppendTextToNextLine();
                 }
 
                 virtual std::unique_ptr<ActionToken> Clone() const{
@@ -120,26 +120,26 @@ namespace CrookedEditor::Mutators {
             struct DeleteLineAction : public ActionToken{
                 int cursorRow{};
 
-                DeleteLineAction(std::weak_ptr<Editor::IEditable> buffer) 
+                DeleteLineAction(Editor::IEditable& buffer) 
                     : ActionToken(buffer){
 
-                    cursorRow = buffer.lock()->GetCurrentLineNumber();
-                    buffer.lock()->DeleteLine();
+                    cursorRow = buffer.GetCurrentLineNumber();
+                    buffer.DeleteLine();
                 };
 
                 DeleteLineAction(const DeleteLineAction& other) = default;
                 DeleteLineAction(DeleteLineAction&& other) = default;
 
                 void UndoSelf(){
-                    buffer.lock()->GotoLine(cursorRow - 1);
+                    buffer.GotoLine(cursorRow - 1);
 
-                    buffer.lock()->InsertLine();
-                    buffer.lock()->AppendTextToNextLine();
+                    buffer.InsertLine();
+                    buffer.AppendTextToNextLine();
                 }
 
                 void RedoSelf(){
-                    buffer.lock()->GotoLine(cursorRow);
-                    buffer.lock()->DeleteLine();
+                    buffer.GotoLine(cursorRow);
+                    buffer.DeleteLine();
                 }
 
                 virtual std::unique_ptr<ActionToken> Clone() const{
@@ -147,7 +147,7 @@ namespace CrookedEditor::Mutators {
                 }
             };
 
-            InsertModeMutator(std::weak_ptr<Editor::IEditable>editable);
+            InsertModeMutator(Editor::IEditable& editable);
             InsertModeMutator(const InsertModeMutator& other);
             InsertModeMutator(InsertModeMutator&& other);
  

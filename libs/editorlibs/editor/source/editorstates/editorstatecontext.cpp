@@ -1,4 +1,6 @@
 #include "editorstatecontext.h"
+#include "editorstateparameters.h"
+#include "ieditable.h"
 #include "statemachine.h"
 
 #include <map>
@@ -12,24 +14,18 @@ using namespace FileHandling;
 
 struct StateContext::Impl{
     public:
-        Impl(FileHandler& fileHandler, MutatorManager& commandManager, UndoHandler& undoHandler) 
-            : fileHandler(fileHandler), commandManager(commandManager), undoHandler(undoHandler){}; 
+        Impl(StateParameters defaultStates, IEditable& buffer, FileHandler& fileHandler, 
+                MutatorManager& commandManager, UndoHandler& undoHandler, std::queue<int>* inputQueue, bool* quitToken) 
+            : buffer(buffer), fileHandler(fileHandler), commandManager(commandManager), 
+            undoHandler(undoHandler), inputQueue(inputQueue), quitToken(quitToken){
+                std::string defaultStateName{};
+                defaultStates.AddDefaultStates(defaultStateName, [this](StateTypeValue stateType, string* stateName){
+                    this->AddState(std::move(stateType), stateName);
+                });
 
-        void Initialize(std::weak_ptr<IEditable> buffer, StateParameters defaultStates,
-            std::queue<int>* inputQueue, bool* quitToken){
-            this->buffer = buffer;
-
-            this->inputQueue = inputQueue;
-            this->quitToken = quitToken;
-    
-            std::string defaultStateName{};
-            defaultStates.AddDefaultStates(defaultStateName, [this](StateTypeValue stateType, string* stateName){
-                this->AddState(std::move(stateType), stateName);
-            });
-
-            std::shared_ptr<IEditorState> startingState = states[defaultStateName];
-            stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
-        }
+                std::shared_ptr<IEditorState> startingState = states[defaultStateName];
+                stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
+            }; 
 
         void AddState(StateTypeValue stateType, std::string* stateName){
             std::shared_ptr<IEditorState> newState 
@@ -59,20 +55,19 @@ struct StateContext::Impl{
         FileHandler& fileHandler;
         MutatorManager& commandManager;
         UndoHandler& undoHandler;
-        weak_ptr<IEditable> buffer;
+        IEditable& buffer;
         queue<int>* inputQueue;
         bool* quitToken;
 };
 
-StateContext::StateContext(Mutators::MutatorManager& commandManager, FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler) 
-    : pImpl(std::make_unique<Impl>(fileHandler, commandManager, undoHandler)){}
+StateContext::StateContext(StateParameters startingStates, IEditable& buffer, 
+        Mutators::MutatorManager& commandManager, FileHandling::FileHandler& fileHandler, 
+        Mutators::UndoHandler& undoHandler, std::queue<int>* inputQueue, bool* quitToken) 
+
+    : pImpl(std::make_unique<Impl>(std::move(startingStates), buffer, fileHandler, commandManager, 
+                undoHandler, inputQueue, quitToken)){}
 
 StateContext::~StateContext() = default;
-
-void StateContext::Initialize(std::weak_ptr<IEditable> buffer, StateParameters defaultStates,
-        std::queue<int>* inputQueue, bool* quitToken){
-    pImpl->Initialize(buffer, std::move(defaultStates), inputQueue, quitToken);
-}
 
 void StateContext::Update(){
     pImpl->Update();

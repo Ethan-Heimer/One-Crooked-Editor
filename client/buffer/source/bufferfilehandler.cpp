@@ -30,11 +30,10 @@ std::shared_ptr<IEditable> BufferFileInterpreter::LoadFromFile(std::string_view 
 }
 
 void BufferFileInterpreter::SaveToFile(std::string_view fileName, 
-        const std::shared_ptr<const IEditableFileCommands>& fileSaver){
-
+        const IEditableFileCommands& fileSaver){
     ofstream saveFile{fileName.data()};
     if(saveFile.is_open()){
-        stringstream stream = fileSaver->WriteLinesToFile();
+        stringstream stream = fileSaver.WriteLinesToFile();
         string line;
         while(std::getline(stream, line)){
             saveFile << line << endl;;

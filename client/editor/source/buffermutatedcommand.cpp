@@ -1,12 +1,10 @@
 #include "editorcommands.h"
-#include <exception>
 #include <memory>
-#include <iostream>
 
 using namespace CrookedEditor::Mutators;
 using namespace std;
 
-InsertModeMutator::InsertModeMutator(weak_ptr<Editor::IEditable> editable) 
+InsertModeMutator::InsertModeMutator(Editor::IEditable& editable) 
     : IMutatorBehavior(editable){};
 
 // this is copied twice: I think this is because of the type erosion

@@ -9,7 +9,7 @@
 namespace Editor::States{
     struct StateConstructorArgs{
         FileHandling::FileHandler& fileHandler;
-        std::weak_ptr<IEditable> buffer;
+        IEditable& buffer;
         std::function<void(std::string_view)> switchState;
         Mutators::MutatorManager& commandManager;
         Mutators::UndoHandler& undoHandler;

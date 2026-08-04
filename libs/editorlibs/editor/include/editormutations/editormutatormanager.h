@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <ieditable.h>
 #include "editormutatortype.h"
 #include "editorundohandler.h"
@@ -9,12 +8,8 @@
 namespace Editor::Mutators {
     class MutatorManager {
         public:
-            MutatorManager(UndoHandler& undoHandler) : undoHandler(undoHandler){};
-
-            void Initialize(std::weak_ptr<IEditable> buffer){
-                this->buffer = buffer;
-            };
-
+            MutatorManager(IEditable& buffer, UndoHandler& undoHandler) 
+                : buffer(buffer), undoHandler(undoHandler){};
 
             template<typename T, typename... U>
             requires std::is_base_of_v<IMutatorBehavior, T> 
@@ -32,6 +27,6 @@ namespace Editor::Mutators {
 
         private:
             UndoHandler& undoHandler;
-            std::weak_ptr<IEditable> buffer;
+            IEditable& buffer;
     };
 }
