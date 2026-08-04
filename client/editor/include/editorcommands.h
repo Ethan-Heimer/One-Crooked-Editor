@@ -72,7 +72,7 @@ namespace CrookedEditor::Mutators {
 
                 void UndoSelf(){
                     buffer.GotoLine(cursorRow);
-                    buffer.InsertCharacterAt(cursorCol, removedCharacter);
+                    buffer.InsertCharacterAt(cursorCol-1, removedCharacter);
                 }
 
                 void RedoSelf(){
@@ -119,21 +119,24 @@ namespace CrookedEditor::Mutators {
 
             struct DeleteLineAction : public ActionToken{
                 int cursorRow{};
+                int textInsertedCol{};
 
                 DeleteLineAction(Editor::IEditable& buffer) 
                     : ActionToken(buffer){
 
                     cursorRow = buffer.GetCurrentLineNumber();
                     buffer.DeleteLine();
+                    textInsertedCol = buffer.GetCursorX();
                 };
 
                 DeleteLineAction(const DeleteLineAction& other) = default;
                 DeleteLineAction(DeleteLineAction&& other) = default;
 
                 void UndoSelf(){
-                    buffer.GotoLine(cursorRow - 1);
+                    buffer.GotoLine(cursorRow-1);
 
                     buffer.InsertLine();
+                    buffer.MoveCursorToCol(textInsertedCol);
                     buffer.AppendTextToNextLine();
                 }
 

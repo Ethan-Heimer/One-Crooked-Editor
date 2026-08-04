@@ -17,8 +17,8 @@ namespace Editor::FileHandling {
                 return impl->LoadFromFile(fileName);
             };
             
-            void SaveToFile(const IEditableFileCommands& fileSaver){
-                return impl->SaveToFile(fileName, fileSaver);
+            void SaveToFile(const IEditable& buffer){
+                return impl->SaveToFile(fileName, buffer);
             };
 
         private:
@@ -26,7 +26,7 @@ namespace Editor::FileHandling {
                virtual ~Contract() = default; 
 
                 virtual std::shared_ptr<Editor::IEditable> LoadFromFile(std::string_view fileName) = 0;
-                virtual void SaveToFile(std::string_view fileName, const IEditableFileCommands& fileSaver) = 0;
+                virtual void SaveToFile(std::string_view fileName, const IEditable& fileSaver) = 0;
             };
 
             template <typename T>
@@ -38,7 +38,7 @@ namespace Editor::FileHandling {
                     return interpreter.LoadFromFile(fileName);
                 };
 
-                void SaveToFile(std::string_view fileName, const IEditableFileCommands& fileSaver) override{
+                void SaveToFile(std::string_view fileName, const IEditable& fileSaver) override{
                     return interpreter.SaveToFile(fileName, fileSaver);
                 }
             };

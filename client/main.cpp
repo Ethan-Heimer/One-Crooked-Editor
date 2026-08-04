@@ -83,7 +83,7 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
 
             printw(" %*d| %s \n", 
                     lineColWidth,
-                    0,
+                    linenum,
                     (*line).substr(colOffset, colOffset + col - 6 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
                 linenum++;
         }

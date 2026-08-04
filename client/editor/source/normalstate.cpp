@@ -36,14 +36,14 @@ void NormalState::OnEnter(){
         undoHandler.RedoMutator();
     })
     .AddAction(":w", [this](){ 
-        fileSaver.SaveToFile(buffer);
+        SaveBuffer();
     })
     .AddAction(":q", [this](){ 
         *quitToken = true;
     })
     .AddAction(":wq", [this](){ 
         *quitToken = true;
-        fileSaver.SaveToFile(buffer);
+        SaveBuffer();
     });
 }
 

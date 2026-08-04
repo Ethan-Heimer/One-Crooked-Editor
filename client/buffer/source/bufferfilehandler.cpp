@@ -1,6 +1,5 @@
 #include <memory>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <string_view>
 
@@ -17,8 +16,16 @@ std::shared_ptr<IEditable> BufferFileInterpreter::LoadFromFile(std::string_view 
 
     string line;
     if(inputFile.is_open()){
+        bool afterFirstLine = false;
         while(getline(inputFile, line)){
-            buffer->ReadLineFromFile(line);
+            if(afterFirstLine){
+                buffer->InsertLine();
+                buffer->GotoNextLine();
+            }
+
+            buffer->InsertString(line);
+            if(!afterFirstLine)
+                afterFirstLine=true;
         }
 
         inputFile.close();
@@ -30,13 +37,14 @@ std::shared_ptr<IEditable> BufferFileInterpreter::LoadFromFile(std::string_view 
 }
 
 void BufferFileInterpreter::SaveToFile(std::string_view fileName, 
-        const IEditableFileCommands& fileSaver){
+        const IEditable& buffer){
     ofstream saveFile{fileName.data()};
     if(saveFile.is_open()){
-        stringstream stream = fileSaver.WriteLinesToFile();
-        string line;
-        while(std::getline(stream, line)){
-            saveFile << line << endl;;
+        auto start = buffer.Begin();
+        auto end = buffer.End();
+
+        for(auto line = start; line != end; ++line){
+            saveFile << *line << endl;;
         }
 
         saveFile.close();

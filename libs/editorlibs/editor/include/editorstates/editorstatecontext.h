@@ -4,7 +4,6 @@
 #include <queue>
 #include <string_view>
 
-#include "editorfilehandler.h"
 #include "ieditable.h"
 #include "editormutations/editormutatormanager.h"
 #include "editorstatetype.h"
@@ -14,7 +13,7 @@ namespace Editor::States{
     class StateContext final{
         public:
             StateContext(StateParameters states, IEditable& buffer, Mutators::MutatorManager& commandManager, 
-                    FileHandling::FileHandler& fileHandler, Mutators::UndoHandler& undoHandler,
+                    std::function<void()> saveBuffer, Mutators::UndoHandler& undoHandler,
                     std::queue<int>* inputQueue, bool* quitToken);
             ~StateContext();
 

@@ -11,16 +11,13 @@ namespace CrookedEditor::Buffers{
             BufferData buffer; 
             Buffer();
 
-            void ReadLineFromFile(const std::string& line) override;
-            std::stringstream WriteLinesToFile() const override;
-
             void GotoNextLine() noexcept override; 
             void GotoPreviousLine() noexcept override;
             void GotoLine(unsigned int lineNumber) noexcept override;
             
-            void MoveCursorLeft() noexcept override;
-            
+            void MoveCursorLeft() noexcept override;            
             void MoveCursorRight() noexcept override;
+            void MoveCursorToCol(unsigned int col) noexcept override;
             
             bool IsCursorAtBeginningOfLine() const noexcept override;
             

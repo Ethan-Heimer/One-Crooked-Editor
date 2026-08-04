@@ -9,6 +9,7 @@ namespace Editor{
             
             virtual void MoveCursorLeft() noexcept = 0;  
             virtual void MoveCursorRight() noexcept = 0;
+            virtual void MoveCursorToCol(unsigned int col) noexcept = 0;
 
             virtual unsigned int GetCursorX() const noexcept = 0;
             virtual unsigned int GetCurrentLineNumber() const noexcept = 0;

@@ -1,7 +1,5 @@
 #include "buffer.h"
-#include <iostream>
 #include <memory>
-#include <sstream>
 
 using namespace CrookedEditor::Buffers;
 using namespace Editor;
@@ -9,21 +7,6 @@ using namespace Editor;
 Buffer::Buffer(){
     buffer.Append("", 5);    
     buffer.currentLine = buffer.head;
-}
-
-void Buffer::ReadLineFromFile(const std::string& line){
-    InsertString(line);
-    InsertLine();
-    GotoNextLine();
-}
-
-std::stringstream Buffer::WriteLinesToFile() const {
-    std::stringstream stream;
-    for(auto line : buffer){
-        stream << line.data->ToString() << std::endl;
-    }
-
-    return stream;
 }
 
 void Buffer::GotoNextLine() noexcept{
@@ -58,6 +41,10 @@ void Buffer::MoveCursorLeft() noexcept{
 void Buffer::MoveCursorRight() noexcept{
     buffer.currentLine->data->MoveGapRight();
 }
+
+void Buffer::MoveCursorToCol(unsigned int col) noexcept{
+    buffer.currentLine->data->MoveGapTo(col);
+}
             
 bool Buffer::IsCursorAtBeginningOfLine() const noexcept{
     return buffer.currentLine->data->IsGapAtBeginning();
@@ -87,11 +74,13 @@ void Buffer::DeleteLine() noexcept{
     auto previousLine = buffer.currentLine->previous.lock();
     if(previousLine){
         string data = buffer.currentLine->data->ToString();
+        int endCursorPos = previousLine->data->EndIndex();
+
         previousLine->data->Insert(data);
 
         buffer.Remove(buffer.currentLine);
-        if(buffer.currentLine->previous.lock())
-            buffer.currentLine = buffer.currentLine->previous.lock();
+        buffer.currentLine = buffer.currentLine->previous.lock();
+        buffer.currentLine->data->MoveGapTo(endCursorPos);
     }
 }
             

@@ -3,6 +3,7 @@
 #include "ieditable.h"
 #include "statemachine.h"
 
+#include <functional>
 #include <map>
 
 using namespace Editor::States;
@@ -10,28 +11,21 @@ using namespace StateMachines;
 using namespace std;
 using namespace Editor;
 using namespace Mutators;
-using namespace FileHandling;
 
 struct StateContext::Impl{
     public:
-        Impl(StateParameters defaultStates, IEditable& buffer, FileHandler& fileHandler, 
+        Impl(StateParameters defaultStates, IEditable& buffer, function<void()> saveBuffer, 
                 MutatorManager& commandManager, UndoHandler& undoHandler, std::queue<int>* inputQueue, bool* quitToken) 
-            : buffer(buffer), fileHandler(fileHandler), commandManager(commandManager), 
+            : buffer(buffer), saveBuffer(saveBuffer), commandManager(commandManager), 
             undoHandler(undoHandler), inputQueue(inputQueue), quitToken(quitToken){
-                std::string defaultStateName{};
-                defaultStates.AddDefaultStates(defaultStateName, [this](StateTypeValue stateType, string* stateName){
-                    this->AddState(std::move(stateType), stateName);
-                });
-
-                std::shared_ptr<IEditorState> startingState = states[defaultStateName];
-                stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
+                InitializeStates(defaultStates);
             }; 
 
         void AddState(StateTypeValue stateType, std::string* stateName){
             std::shared_ptr<IEditorState> newState 
-                = stateType.Instanciate({fileHandler, buffer, 
+                = stateType.Instanciate({buffer,
                         [this](string_view stateName){this->ChangeState(stateName);}, 
-                        commandManager, undoHandler, inputQueue, quitToken});
+                        saveBuffer, commandManager, undoHandler, inputQueue, quitToken});
 
             std::string name = newState->StateName();
             states[newState->StateName()] = std::move(newState);
@@ -48,11 +42,21 @@ struct StateContext::Impl{
             stateMachine->SwitchState(states[state.data()]);
         }
 
+        void InitializeStates(StateParameters& defaultStates){
+            std::string defaultStateName{};
+            defaultStates.AddDefaultStates(defaultStateName, [this](StateTypeValue stateType, string* stateName){
+                this->AddState(std::move(stateType), stateName);
+            });
+
+            std::shared_ptr<IEditorState> startingState = states[defaultStateName];
+            stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
+        }
+
     private:
         map<string, shared_ptr<IEditorState>> states;
         unique_ptr<StateMachine<IEditorState>> stateMachine;
 
-        FileHandler& fileHandler;
+        function<void()> saveBuffer;
         MutatorManager& commandManager;
         UndoHandler& undoHandler;
         IEditable& buffer;
@@ -61,10 +65,10 @@ struct StateContext::Impl{
 };
 
 StateContext::StateContext(StateParameters startingStates, IEditable& buffer, 
-        Mutators::MutatorManager& commandManager, FileHandling::FileHandler& fileHandler, 
+        Mutators::MutatorManager& commandManager, std::function<void()> saveBuffer, 
         Mutators::UndoHandler& undoHandler, std::queue<int>* inputQueue, bool* quitToken) 
 
-    : pImpl(std::make_unique<Impl>(std::move(startingStates), buffer, fileHandler, commandManager, 
+    : pImpl(std::make_unique<Impl>(std::move(startingStates), buffer, saveBuffer, commandManager, 
                 undoHandler, inputQueue, quitToken)){}
 
 StateContext::~StateContext() = default;

@@ -1,12 +1,10 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <queue>
 #include <string_view>
 
 #include "editormutations/editormutatormanager.h"
-#include "editorfilehandler.h"
 #include "ieditablecursorcommands.h"
 #include "editormutations/editorundohandler.h"
 #include "istate.h"
@@ -14,21 +12,18 @@
 namespace Editor::States{
     class IEditorState : public StateMachines::IState{
         public:
-            IEditorState(FileHandling::FileHandler& fileSaver, 
-                    IEditableCursorCommands& cursor, 
-                    const IEditableFileCommands& buffer, 
+            IEditorState(IEditableCursorCommands& cursor, 
+                    std::function<void()> saveBuffer,
                     std::function<void(std::string_view)> switchState,
                     Mutators::MutatorManager& commandManager,
                     Mutators::UndoHandler& undoHandler,
                     std::queue<int>* inputQueue, bool* quitToken)
                 : StateMachines::IState(switchState), inputQueue(inputQueue), 
-                commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), cursor(cursor), buffer(buffer), quitToken(quitToken){}
+                commandManager(commandManager), undoHandler(undoHandler), SaveBuffer(saveBuffer), cursor(cursor), quitToken(quitToken){}
 
         protected:
             IEditableCursorCommands& cursor;
-            const IEditableFileCommands& buffer;
-
-            FileHandling::FileHandler& fileSaver;
+            std::function<void()> SaveBuffer;
             Mutators::MutatorManager& commandManager;
             Mutators::UndoHandler& undoHandler;
 

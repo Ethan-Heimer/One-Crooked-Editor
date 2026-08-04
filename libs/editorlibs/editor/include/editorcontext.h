@@ -3,6 +3,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include "editorfilehandler.h"
 #include "editorstatecontext.h"
 #include "editorundohandler.h"
 #include "ieditable.h"
