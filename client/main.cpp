@@ -24,7 +24,7 @@ using namespace CrookedEditor::States;
 void InitScreen();
 void KillScreen();
 
-void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset);
+void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, int& colOffset);
 
 int main(int argc, char** argv){
     if(argc < 2){
@@ -54,13 +54,13 @@ int main(int argc, char** argv){
         }
          
         context.Update();
-        UpdateUI(context.buffer, lineOffset, colOffset);
+        UpdateUI(context.buffer, context.CurrentModeName(), lineOffset, colOffset);
     }
 
     KillScreen();
 }
 
-void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){ 
+void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
         int currentLineNumber = buffer->GetCurrentLineNumber();
         int currentCursorCol = buffer->GetCursorX();
@@ -70,10 +70,10 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
 
         erase();        
 
-        auto start = buffer->BeginAtCurrentLine();
+        auto start = buffer->BeginStepsFromCurrentLine(-5);
         auto end = buffer->EndStepsFromCurrentLine(row-1);
 
-        int linenum = buffer->GetCurrentLineNumber();
+        int linenum = start.LineNumber();
         for(auto line = start ; line != end; ++line){
             if((*line).length() == 0){ 
                 printw(" %*d| %s \n", lineColWidth, linenum, "");
@@ -88,7 +88,12 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
                 linenum++;
         }
 
-        move(0, currentCursorCol - colOffset + lineColWidth+3);
+        int offset = currentLineNumber <= 5 ? currentLineNumber : 5;
+        move(row-1, 0);
+        clrtoeol();
+        printw("mode: [%s]", mode.c_str());
+
+        move(offset, currentCursorCol - colOffset + lineColWidth+3);
         refresh();
         
         while(currentLineNumber - lineOffset >= row - 5)
@@ -116,6 +121,7 @@ void InitScreen(){
     nonl();
     scrollok(stdscr, FALSE);
     idlok(stdscr, FALSE);
+    set_escdelay(0);
 }
 
 void KillScreen(){

@@ -32,14 +32,12 @@ void InsertState::OnEnter(){
     })
     .AddAction("\r", [this](){
         insertModeMutator->DoAction<InsertModeMutator::NewLineAction>();
-    });
-    /*
+    })
     .AddAction("\t", [this](){
         for(int i = 0; i < 4; i++){
-            buffer.lock()->InsertCharacter(' ');
+            insertModeMutator->DoAction<InsertModeMutator::InsertCharacterAction>(static_cast<char>(' '));
         }
     });
-    */
     
 }
 

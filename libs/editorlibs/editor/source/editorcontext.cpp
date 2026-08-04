@@ -18,3 +18,7 @@ EditorContext::EditorContext(
 void EditorContext::Update(){
     this->stateContext->Update();
 }
+
+std::string EditorContext::CurrentModeName(){
+    return this->stateContext->CurrentStateName();
+}

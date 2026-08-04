@@ -10,6 +10,7 @@ namespace Editor {
 
         virtual std::string ToString() const = 0;
         virtual void* GetLineAddress() const = 0;
+        virtual int LineNumber() const = 0;
     };
 
     class LineIterator{
@@ -38,6 +39,10 @@ namespace Editor {
 
                return currentLine->ToString();
             };
+
+            int LineNumber(){
+                return currentLine->LineNumber();
+            }
 
         private:
             std::shared_ptr<ILineData> currentLine;

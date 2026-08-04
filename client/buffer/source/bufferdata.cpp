@@ -30,6 +30,10 @@ void* BufferData::LineData::GetLineAddress() const{
     return line.get();
 }
 
+int BufferData::LineData::LineNumber() const{
+    return line->index;
+}
+
 Editor::LineIterator BufferData::Begin() const {
     return Editor::LineIterator{make_shared<LineData>(head)};
 };
@@ -43,7 +47,7 @@ Editor::LineIterator BufferData::BeginStepsFromCurrentLine(int steps) const{
 
     int i = 0;
     if(steps < 0){
-        while(currentNode->previous.lock() && i < steps) {
+        while(currentNode->previous.lock() && i < steps * -1) {
             currentNode = currentNode->previous.lock(); 
             i++;
         }

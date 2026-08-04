@@ -52,6 +52,10 @@ struct StateContext::Impl{
             stateMachine = std::make_unique<StateMachine<IEditorState>>(startingState);
         }
 
+        std::string CurrentStateName(){
+            return stateMachine->CurrentState()->StateName();
+        }
+
     private:
         map<string, shared_ptr<IEditorState>> states;
         unique_ptr<StateMachine<IEditorState>> stateMachine;
@@ -79,4 +83,8 @@ void StateContext::Update(){
 
 void StateContext::ChangeState(const std::string_view state){
     pImpl->ChangeState(state);
+}
+
+std::string StateContext::CurrentStateName(){
+    return pImpl->CurrentStateName();
 }

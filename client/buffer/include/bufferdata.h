@@ -18,6 +18,7 @@ namespace CrookedEditor::Buffers {
 
                 std::string ToString() const override;
                 void* GetLineAddress() const override;
+                int LineNumber() const override;
             };
 
             Editor::LineIterator Begin() const override;

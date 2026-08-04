@@ -26,6 +26,7 @@ namespace Editor{
                     std::queue<int>* inputQueue, std::string fileName);
 
             void Update();
+            std::string CurrentModeName();
     };
 }
 

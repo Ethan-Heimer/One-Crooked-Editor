@@ -23,6 +23,8 @@ namespace Editor::States{
             void Start();
             void Update();
 
+            std::string CurrentStateName(); 
+
             private:
                 struct Impl;
                 std::unique_ptr<Impl> pImpl;
