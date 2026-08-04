@@ -87,14 +87,20 @@ namespace CrookedEditor::Mutators {
 
             struct NewLineAction : public ActionToken{
                 int cursorRow{};
+                int cursorCol{};
 
                 NewLineAction(Editor::IEditable& buffer) 
                     : ActionToken(buffer){
 
                     cursorRow = buffer.GetCurrentLineNumber();
+                    cursorCol = buffer.GetCursorX();
 
                     buffer.InsertLine();
-                    buffer.AppendTextToNextLine();
+
+                    std::string textToAppend{};
+                    buffer.DeleteFromCol(cursorCol, &textToAppend);
+                    buffer.GotoNextLine();
+                    buffer.InsertString(textToAppend);
                 };
 
                 NewLineAction(const NewLineAction& other) = default;
@@ -102,14 +108,21 @@ namespace CrookedEditor::Mutators {
 
                 void UndoSelf(){
                     buffer.GotoLine(cursorRow + 1);
-                    buffer.DeleteLine();
+
+                    std::string remainingText{};
+                    buffer.DeleteLine(&remainingText);
+                    buffer.InsertString(remainingText);
                 }
 
                 void RedoSelf(){
                     buffer.GotoLine(cursorRow);
 
                     buffer.InsertLine();
-                    buffer.AppendTextToNextLine();
+
+                    std::string textToAppend{};
+                    buffer.DeleteFromCol(cursorCol, &textToAppend);
+                    buffer.GotoNextLine();
+                    buffer.InsertString(textToAppend);
                 }
 
                 virtual std::unique_ptr<ActionToken> Clone() const{
@@ -125,8 +138,12 @@ namespace CrookedEditor::Mutators {
                     : ActionToken(buffer){
 
                     cursorRow = buffer.GetCurrentLineNumber();
-                    buffer.DeleteLine();
+                    std::string remainingText{};
+                    buffer.DeleteLine(&remainingText);
+
                     textInsertedCol = buffer.GetCursorX();
+                    buffer.InsertString(remainingText);
+                    buffer.MoveCursorToCol(textInsertedCol);
                 };
 
                 DeleteLineAction(const DeleteLineAction& other) = default;
@@ -136,13 +153,19 @@ namespace CrookedEditor::Mutators {
                     buffer.GotoLine(cursorRow-1);
 
                     buffer.InsertLine();
-                    buffer.MoveCursorToCol(textInsertedCol);
-                    buffer.AppendTextToNextLine();
+
+                    std::string textToAppend{};
+                    buffer.DeleteFromCol(textInsertedCol, &textToAppend);
+                    buffer.GotoNextLine();
+                    buffer.InsertString(textToAppend);
                 }
 
                 void RedoSelf(){
                     buffer.GotoLine(cursorRow);
-                    buffer.DeleteLine();
+
+                    std::string remainingText{};
+                    buffer.DeleteLine(&remainingText);
+                    buffer.InsertString(remainingText);
                 }
 
                 virtual std::unique_ptr<ActionToken> Clone() const{

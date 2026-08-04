@@ -70,45 +70,25 @@ void Buffer::InsertLine() noexcept{
     buffer.AppendAfter(buffer.currentLine, "", 5);
 }
             
-void Buffer::DeleteLine() noexcept{
-    auto previousLine = buffer.currentLine->previous.lock();
-    if(previousLine){
-        string data = buffer.currentLine->data->ToString();
-        int endCursorPos = previousLine->data->EndIndex();
-
-        previousLine->data->Insert(data);
-
-        buffer.Remove(buffer.currentLine);
-        buffer.currentLine = buffer.currentLine->previous.lock();
-        buffer.currentLine->data->MoveGapTo(endCursorPos);
-    }
-}
-            
-void Buffer::AppendTextToNextLine() noexcept{
-    if(buffer.currentLine->next == nullptr)
+void Buffer::DeleteLine(std::string* remainingText) noexcept{
+    bool hasPreviousLine = buffer.currentLine->previous.lock() != nullptr;
+    if(!hasPreviousLine)
         return;
 
-    int gapIndex = buffer.currentLine->data->GetGapIndex();
-    int endIndex = buffer.currentLine->data->BufferSize();
-    string substring = buffer.currentLine->data->Substring(gapIndex, endIndex);
-    buffer.currentLine->data->DeleteBetween(gapIndex, endIndex);
-            
-    buffer.currentLine = buffer.currentLine->next;
-    buffer.currentLine->data->Insert(substring);
-    buffer.currentLine->data->MoveGapTo(0);
-}
+    if(remainingText)
+        *remainingText = buffer.currentLine->data->ToString();
 
-void Buffer::AppendTextToPreviousLine() noexcept{
-    if(buffer.currentLine->previous.lock() == nullptr)
-        return;
-
-    int gapIndex = buffer.currentLine->data->GetGapIndex();
-    int endIndex = buffer.currentLine->data->BufferSize();
-    string substring = buffer.currentLine->data->Substring(gapIndex, endIndex);
-    buffer.currentLine->data->DeleteBetween(gapIndex, endIndex);
-            
+    buffer.Remove(buffer.currentLine);
     buffer.currentLine = buffer.currentLine->previous.lock();
-    buffer.currentLine->data->Insert(substring);
+}
+
+void Buffer::DeleteFromCol(unsigned int col, std::string* subString) noexcept{
+    int gapIndex = col;
+    int endIndex = buffer.currentLine->data->EndIndex();
+
+    if(subString)
+        *subString = buffer.currentLine->data->Substring(gapIndex, endIndex);
+    buffer.currentLine->data->DeleteBetween(gapIndex, endIndex); 
 }
 
 std::string Buffer::SubstringBetween(unsigned int start, unsigned int end) noexcept{

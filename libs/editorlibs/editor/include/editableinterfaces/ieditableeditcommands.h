@@ -16,10 +16,8 @@ namespace Editor{
             
             virtual char DeleteCharacterAt(unsigned int index) noexcept = 0;
             virtual char DeleteCharacter() noexcept = 0;
-            virtual void DeleteLine() noexcept = 0;
-
-            virtual void AppendTextToNextLine() noexcept = 0;
-            virtual void AppendTextToPreviousLine() noexcept = 0;
+            virtual void DeleteLine(std::string* remainingText) noexcept = 0;
+            virtual void DeleteFromCol(unsigned int col, std::string* subString) noexcept = 0;
 
             virtual std::string SubstringBetween(unsigned int start, unsigned int end) noexcept = 0;
 

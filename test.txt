@@ -1,7 +1,10 @@
 this is a testthis s a test does this save? yes it did
 this is a file saving test
 
-aaabbb
+aaabbb this
+
+int 
+main(){
 
 this s a test
 hello worlds
@@ -15,3 +18,12 @@ trhis is a test
 
 end
 end 2
+
+int main(){
+    int i = 0;
+
+    while(i < 20){
+        std::cout << "hello world" << std::endl;
+        i++;
+    }
+}

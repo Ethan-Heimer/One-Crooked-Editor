@@ -32,10 +32,8 @@ namespace CrookedEditor::Buffers{
             char DeleteCharacterAt(unsigned int index) noexcept override;
             char DeleteCharacter() noexcept override; 
             
-            void DeleteLine() noexcept override;
-
-            void AppendTextToNextLine() noexcept override;
-            void AppendTextToPreviousLine() noexcept override;
+            void DeleteLine(std::string* remainingText) noexcept override;
+            void DeleteFromCol(unsigned int col, std::string* subString) noexcept override;
 
             std::string SubstringBetween(unsigned int start, unsigned int end) noexcept override;
 
