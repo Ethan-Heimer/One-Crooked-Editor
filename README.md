@@ -6,6 +6,46 @@ From this commit forward- the code for this project will be written with this ed
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 08/4/2026 - undo/redo
+I pushed all of the updates into v0.006... whoops. thats alright as v0.006 was very broken to begin with
+BUT, Crooked editor has never worked better! v0.006(.2, i guess) Introduces Undo and Redo. But before I talk about
+that, I want to hightlight what 'libeditor' is, keywords found inside the library.
+
+### Libeditor concepts
+One Crooked Editor uses libeditor to better handle SOC. libeditor provides the general concept behind what a *Model* 
+editor should do, and gives the client interfaces and contracts to implement apon that. libeditor does not provide default
+implementations for its concepts as it shouldn't do the clients job, it should just tell the client how
+to get the job done. libeditor contains the following concepts for the client to expand apon:
+
+ - states [modes]
+ - actions
+ - mutators
+ - editables [files, documents, buffers...]
+
+States are simple, they are simply the possable modes that the editor can be in. Crooked Editor implements a 'Normal' mode and a Insert Mode.
+Actions are instructions that execute on key presses. These usually take the form of lambdas but if an object overrides the () operator it can
+be an action. libeditor defines a tree structure for each state that handles executing keyboard shortcuts.
+'Mutators' is the concept that text can only be edited through some object that understand how to do an initial mutation, how to
+undo that mutation, and how to redo a mutation. this ensures that every edit is undoable, as well as customizable. All mutations are tracked
+throughout the editors uptime, and can be undid and redid. editable materials are immutable outside of mutators. 
+editables are more self explanitary, these files, buffers, whatever that the editor can edit. The client implements possable editables,
+and provieds the implementation on how to load and save an editable, and how to edit and navigate it.
+
+### features
+
+anyway, new features:
+
+ - u to undo in normal mode
+ - r to redo in normal mode
+
+undo undoes the entire edit made in insert mode.
+
+### removed features
+ - o, i just have to add a mutator for this and itll come back eventually.
+
+### whats in the future?
+v0.007 will focus on miltithreaded rendering.
+
 ## 07/28/2026 - libeditor 2 and breaking things
 v0.006 is yet another archetectural update, but i finally feel like its at a place i like. v0.007 will be a feature update.
 v0.006 also breaks the rendering loop and things to not look as good as they did in v0.005. use v0.005 if you actually would

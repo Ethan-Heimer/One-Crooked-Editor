@@ -74,8 +74,14 @@ void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, i
         auto end = buffer->EndStepsFromCurrentLine(row-1);
 
         int linenum = start.LineNumber();
+        int termLine = 0;
         for(auto line = start ; line != end; ++line){
-            if((*line).length() == 0){ 
+            /* throw away to stop overline wrapping */
+            move(termLine, 0);
+            clrtoeol();
+            termLine ++;
+
+            if((*line).length() == 0 || colOffset > (*line).length()){ 
                 printw(" %*d| %s \n", lineColWidth, linenum, "");
                 linenum++;
                 continue;
@@ -84,8 +90,9 @@ void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, i
             printw(" %*d| %s \n", 
                     lineColWidth,
                     linenum,
-                    (*line).substr(colOffset, colOffset + col - 6 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
+                    (*line).substr(colOffset, colOffset + col - 5 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
                 linenum++;
+
         }
 
         int offset = currentLineNumber <= 5 ? currentLineNumber : 5;
