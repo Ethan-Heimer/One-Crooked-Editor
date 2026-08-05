@@ -1,35 +1,31 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <queue>
 #include <string_view>
 
-#include "editorcommandmanager.h"
-#include "editorfilehandler.h"
-#include "ieditable.h"
-#include "editorundohandler.h"
+#include "editormutations/editormutatormanager.h"
+#include "ieditablecursorcommands.h"
+#include "editormutations/editorundohandler.h"
 #include "istate.h"
-
-using namespace Editor::Commands;
 
 namespace Editor::States{
     class IEditorState : public StateMachines::IState{
         public:
-            IEditorState(FileHandling::FileHandler& fileSaver, 
-                    std::weak_ptr<IEditable> buffer, 
+            IEditorState(IEditableCursorCommands& cursor, 
+                    std::function<void()> saveBuffer,
                     std::function<void(std::string_view)> switchState,
-                    CommandManager& commandManager,
-                    UndoHandler& undoHandler,
+                    Mutators::MutatorManager& commandManager,
+                    Mutators::UndoHandler& undoHandler,
                     std::queue<int>* inputQueue, bool* quitToken)
                 : StateMachines::IState(switchState), inputQueue(inputQueue), 
-                commandManager(commandManager), undoHandler(undoHandler), fileSaver(fileSaver), buffer(buffer), quitToken(quitToken){}
+                commandManager(commandManager), undoHandler(undoHandler), SaveBuffer(saveBuffer), cursor(cursor), quitToken(quitToken){}
 
         protected:
-            std::weak_ptr<IEditable> buffer;
-            FileHandling::FileHandler& fileSaver;
-            CommandManager& commandManager;
-            UndoHandler& undoHandler;
+            IEditableCursorCommands& cursor;
+            std::function<void()> SaveBuffer;
+            Mutators::MutatorManager& commandManager;
+            Mutators::UndoHandler& undoHandler;
 
             std::queue<int>* inputQueue;
             bool* quitToken;

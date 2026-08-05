@@ -13,17 +13,18 @@
 #include "inputmanager.h"
 
 using namespace std;
-using namespace Buffers;
 using namespace Editor;
 
 using namespace Systems::Input;
 using namespace Editor::States;
+
+using namespace CrookedEditor::Buffers;
 using namespace CrookedEditor::States;
 
 void InitScreen();
 void KillScreen();
 
-void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset);
+void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, int& colOffset);
 
 int main(int argc, char** argv){
     if(argc < 2){
@@ -53,13 +54,13 @@ int main(int argc, char** argv){
         }
          
         context.Update();
-        UpdateUI(context.buffer, lineOffset, colOffset);
+        UpdateUI(context.buffer, context.CurrentModeName(), lineOffset, colOffset);
     }
 
     KillScreen();
 }
 
-void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){ 
+void UpdateUI(shared_ptr<IEditable> buffer, std::string mode, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
         int currentLineNumber = buffer->GetCurrentLineNumber();
         int currentCursorCol = buffer->GetCursorX();
@@ -69,20 +70,37 @@ void UpdateUI(shared_ptr<IEditable> buffer, int& lineOffset, int& colOffset){
 
         erase();        
 
-        auto start = buffer->BeginAtCurrentLine();
+        auto start = buffer->BeginStepsFromCurrentLine(-5);
         auto end = buffer->EndStepsFromCurrentLine(row-1);
 
+        int linenum = start.LineNumber();
+        int termLine = 0;
         for(auto line = start ; line != end; ++line){
-            if((*line).length() == 0)
+            /* throw away to stop overline wrapping */
+            move(termLine, 0);
+            clrtoeol();
+            termLine ++;
+
+            if((*line).length() == 0 || colOffset > (*line).length()){ 
+                printw(" %*d| %s \n", lineColWidth, linenum, "");
+                linenum++;
                 continue;
+            }
 
             printw(" %*d| %s \n", 
                     lineColWidth,
-                    0,
-                    (*line).substr(colOffset, colOffset + col - 6 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
+                    linenum,
+                    (*line).substr(colOffset, colOffset + col - 5 - lineColWidth).c_str()); //(colOffset, colOffset + col - 6 - lineColWidth).c_str());
+                linenum++;
+
         }
 
-        move(0, currentCursorCol - colOffset + lineColWidth+3);
+        int offset = currentLineNumber <= 5 ? currentLineNumber : 5;
+        move(row-1, 0);
+        clrtoeol();
+        printw("mode: [%s]", mode.c_str());
+
+        move(offset, currentCursorCol - colOffset + lineColWidth+3);
         refresh();
         
         while(currentLineNumber - lineOffset >= row - 5)
@@ -110,6 +128,7 @@ void InitScreen(){
     nonl();
     scrollok(stdscr, FALSE);
     idlok(stdscr, FALSE);
+    set_escdelay(0);
 }
 
 void KillScreen(){

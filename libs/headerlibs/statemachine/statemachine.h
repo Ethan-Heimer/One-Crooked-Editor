@@ -28,6 +28,10 @@ namespace StateMachines{
                 currentState->OnUpdate();
                 currentState->Transition();
             }
+
+            std::shared_ptr<T> CurrentState() const{
+                return currentState;
+            }
         private:
 
             std::shared_ptr<T> currentState;

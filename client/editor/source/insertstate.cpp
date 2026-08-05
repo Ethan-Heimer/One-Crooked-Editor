@@ -1,42 +1,44 @@
 #include <cctype>
 #include <ncurses.h>
 
+#include "editorcommands.h"
 #include "editorstates.h"
 #include "editorconstants.h"
 
 using namespace Editor::States;
 using namespace Editor::Actions;
 using namespace CrookedEditor::States;
+using namespace CrookedEditor::Mutators;
 
 constexpr string InsertState::StateName() const{
     return Constants::InsertState;
 }
 
 void InsertState::OnEnter(){
+    insertModeMutator = commandManager.RegesterMutation<InsertModeMutator>();
     actions
-    .AddAction("\b", Action{[this](){
-        if(buffer.lock()->IsCursorAtBeginningOfLine()){
-            buffer.lock()->DeleteLine();
+    .AddAction("\x1b", [this](){
+        nextState = Constants::NormalState;
+    })
+    .AddAction("\b", [this](){
+        if(cursor.IsCursorAtBeginningOfLine()){
+            insertModeMutator->DoAction<InsertModeMutator::DeleteLineAction>();
         }
         else
-            buffer.lock()->DeleteCharacter();
-    }})
-    .AddAction("\n", Action{[this](){
-        buffer.lock()->InsertLine();
-        buffer.lock()->AppendTextToNextLine();
-    }})
-    .AddAction("\r", Action{[this](){
-        buffer.lock()->InsertLine();
-        buffer.lock()->AppendTextToNextLine();
-    }})
-    .AddAction("\x1b", Action{[this](){
-        nextState = Constants::NormalState;
-    }})
-    .AddAction("\t", Action{[this](){
+            insertModeMutator->DoAction<InsertModeMutator::DeleteCharacterAction>();
+    })
+    .AddAction("\n", [this](){
+        insertModeMutator->DoAction<InsertModeMutator::NewLineAction>();
+    })
+    .AddAction("\r", [this](){
+        insertModeMutator->DoAction<InsertModeMutator::NewLineAction>();
+    })
+    .AddAction("\t", [this](){
         for(int i = 0; i < 4; i++){
-            buffer.lock()->InsertCharacter(' ');
+            insertModeMutator->DoAction<InsertModeMutator::InsertCharacterAction>(static_cast<char>(' '));
         }
-    }});
+    });
+    
 }
 
 void InsertState::OnUpdate(){
@@ -50,8 +52,12 @@ void InsertState::OnUpdate(){
 
     actions.TraverseToNextAction(static_cast<char>(input));
 
-    if(std::isprint(static_cast<unsigned char>(input)))
-        buffer.lock()->InsertCharacter(input);
+    if(std::isprint(static_cast<unsigned char>(input))){
+        insertModeMutator->DoAction<InsertModeMutator::InsertCharacterAction>(static_cast<char>(input));
+    }
+}
+
+void InsertState::OnExit(){
 }
 
 void InsertState::Transition(){

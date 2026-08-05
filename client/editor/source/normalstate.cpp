@@ -6,7 +6,7 @@
 #include <ncurses.h>
 
 using namespace CrookedEditor::States;
-using namespace CrookedEditor::Commands;
+using namespace CrookedEditor::Mutators;
 
 constexpr string NormalState::StateName() const{
     return Constants::NormalState;
@@ -15,42 +15,36 @@ constexpr string NormalState::StateName() const{
 void NormalState::OnEnter(){
     actions
     .AddAction("j", [this](){ 
-        buffer.lock()->GotoNextLine();
+        cursor.GotoNextLine();
     })
     .AddAction("k", [this](){ 
-        buffer.lock()->GotoPreviousLine();
+        cursor.GotoPreviousLine();
     })
     .AddAction("h", [this](){ 
-        buffer.lock()->MoveCursorLeft();
+        cursor.MoveCursorLeft();
     })
     .AddAction("l", [this](){ 
-        buffer.lock()->MoveCursorRight();
+        cursor.MoveCursorRight();
     })
     .AddAction("i", [this](){ 
         nextState = Constants::InsertState;
     })
-    .AddAction("o", [this](){ 
-        nextState = Constants::InsertState;
-        buffer.lock()->InsertLine();
-        buffer.lock()->GotoNextLine();
-    })
     .AddAction("u", [this](){ 
-        undoHandler.UndoCommand();
+        undoHandler.UndoMutator();
     })
     .AddAction("r", [this](){ 
-        undoHandler.RedoCommand();
+        undoHandler.RedoMutator();
     })
     .AddAction(":w", [this](){ 
-        fileSaver.SaveToFile(buffer.lock());
+        SaveBuffer();
     })
     .AddAction(":q", [this](){ 
         *quitToken = true;
     })
     .AddAction(":wq", [this](){ 
         *quitToken = true;
-        fileSaver.SaveToFile(buffer.lock());
-    })
-    .AddAction("t", commandManager.CreateCommand<TestCommand>('t'));
+        SaveBuffer();
+    });
 }
 
 void NormalState::OnUpdate(){

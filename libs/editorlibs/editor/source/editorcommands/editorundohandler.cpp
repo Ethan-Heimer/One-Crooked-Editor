@@ -1,10 +1,9 @@
-#include "editorundohandler.h"
+#include "editormutations/editorundohandler.h"
 
-#include "editorcommands/ieditorcommand.h"
 #include <memory>
 #include <stack>
 
-using namespace Editor::Commands;
+using namespace Editor::Mutators;
 using namespace std;
 
 struct UndoHandler::Impl{
@@ -12,14 +11,14 @@ struct UndoHandler::Impl{
      * Todo: Make undo Tree one day
      */
 
-    stack<Command> undoStack;
-    stack<Command> redoStack;
+    stack<Mutator> undoStack;
+    stack<Mutator> redoStack;
 
     void Undo(){
         if(undoStack.empty())
             return;
 
-        Command command = std::move(undoStack.top());
+        Mutator command = std::move(undoStack.top());
         undoStack.pop();
 
         command.Undo();
@@ -30,14 +29,14 @@ struct UndoHandler::Impl{
         if(redoStack.empty())
             return;
 
-        Command command = std::move(redoStack.top());
+        Mutator command = std::move(redoStack.top());
         redoStack.pop();
 
         command.Do();
         undoStack.push(std::move(command)); 
     }
 
-    void AddCommand(Command command){
+    void AddMutator(Mutator command){
         undoStack.push(std::move(command));
         redoStack = {};
     }
@@ -46,14 +45,14 @@ struct UndoHandler::Impl{
 UndoHandler::UndoHandler() : pImpl(std::make_unique<Impl>()){};
 UndoHandler::~UndoHandler() = default;
 
-void UndoHandler::UndoCommand(){
+void UndoHandler::UndoMutator(){
     pImpl->Undo();
 }
 
-void UndoHandler::RedoCommand(){
+void UndoHandler::RedoMutator(){
     pImpl->Redo();
 }
 
-void UndoHandler::AddCommand(Command command){
-    pImpl->AddCommand(std::move(command));
+void UndoHandler::AddMutator(Mutator command){
+    pImpl->AddMutator(std::move(command));
 }

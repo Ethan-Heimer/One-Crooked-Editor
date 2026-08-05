@@ -111,12 +111,15 @@ class GapBuffer{
             Insert(string);
         }
 
-        void Delete(){
+        char Delete(){
             if(gapStart == 0)
-                return;
+                return '\0';
             
             gapStart--;
+            char deletedChar = buffer[gapStart];
             buffer[gapStart] = '_';
+
+            return deletedChar;
         }
 
         void DeleteBetween(unsigned int pointerOne, unsigned int pointerTwo){
@@ -126,9 +129,9 @@ class GapBuffer{
             }
         }
 
-        void DeleteAt(unsigned int index){
+        char DeleteAt(unsigned int index){
             MoveGapTo(index);
-            Delete();
+            return Delete();
         }
 
         string RawContents(){
