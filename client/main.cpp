@@ -1,14 +1,18 @@
+#include <format>
 #include <memory>
 
 #include <ncurses.h>
 #include <queue>
 #include <chrono>
 
+#include <sstream>
 #include <unistd.h>
 #include <ios>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <thread>
+#include <mutex>
 
 #include "bufferfilehandler.h"
 #include "editorcontext.h"
@@ -29,64 +33,133 @@ using namespace Editor::States;
 using namespace CrookedEditor::Buffers;
 using namespace CrookedEditor::States;
 
+struct RenderData{
+    stringstream data;
+    std::string mode;
+
+    unsigned int currentLineNumber;
+    unsigned int currentCursorCol;
+};
+
 void InitScreen();
 void KillScreen();
 
 void process_mem_usage(double& vm_usage, double& resident_set);
-void UpdateUI(shared_ptr<IEditable> buffer, uint64_t ms, double vm, double rss, const std::string& mode, int& lineOffset, int& colOffset);
+void UpdateUI(RenderData data, uint64_t ms, double vm, double rss, int& lineOffset, int& colOffset);
+
+void EditorLoop(std::mutex* renderLock, std::mutex* inputLock, bool* quitToken, std::queue<RenderData>* renderQueue, std::queue<int>* inputQueue, std::string fileName){
+    EditorContext context{BufferFileInterpreter{}, 
+        DefaultStates<NormalState, InsertState>{},
+        inputQueue, fileName.data()};
+
+    while(!*quitToken){
+        inputLock->lock(); 
+        context.Update(); //<---- pass input here instead? feels like it would be better for thread safty
+        inputLock->unlock();
+
+        *quitToken = context.quit;
+
+        stringstream data{};
+
+        int row, col;
+        getmaxyx(stdscr, row, col); //<--- rendering things, move eventually
+
+        auto start = context.buffer->BeginStepsFromCurrentLine(-5);
+        auto end = context.buffer->EndStepsFromCurrentLine(row-1);
+
+        for(auto line = start ; line != end; ++line){
+           data << std::format("{:3}| {}", line.LineNumber(), (*line)) << endl; 
+        }
+
+        // <---- better rendering command archecture
+        renderLock->lock();
+        RenderData renderData{std::move(data), context.CurrentModeName(),
+            context.buffer->GetCurrentLineNumber(), context.buffer->GetCursorX()};
+        renderQueue->emplace(std::move(renderData));
+        renderLock->unlock();
+    }
+}
+
+void IOLoop(std::mutex* renderLock, std::mutex* inputLock, bool* quitToken, std::queue<RenderData>* renderQueue, std::queue<int>* inputQueue){
+    int lineOffset = 0;
+    int colOffset = 0;
+
+    milliseconds msd {};
+    double vm, rss;
+    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
+    InitScreen();
+
+    while(!*quitToken){
+        milliseconds msb = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        process_mem_usage(vm, rss);
+
+        int ch = inputManager->GetKeyInput();
+        if(ch != ERR){
+            inputLock->lock();
+            if(ch == KEY_BACKSPACE)
+                inputQueue->push('\b');
+            else
+                inputQueue->push(ch);
+            inputLock->unlock();
+        }
+
+        renderLock->lock();
+        if(!renderQueue->empty()){
+            UpdateUI(std::move(renderQueue->front()), msd.count(), vm, rss, lineOffset, colOffset);
+            renderQueue->pop(); 
+        }
+        renderLock->unlock();
+
+        milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        msd = msa-msb;
+    }
+
+    KillScreen();
+}
 
 int main(int argc, char** argv){
     if(argc < 2){
         return 1; 
     }
 
-    queue<int> inputQueue;
+    bool quitToken = false;
+    std::queue<RenderData> renderQueue;
+    std::queue<int> inputQueue;
+
+    // <--- RAII, Create safe objects that handle their own locks 
+    std::mutex inputLock;
+    std::mutex renderLock;
+
     string fileName{argv[1]};
  
-    EditorContext context{BufferFileInterpreter{}, 
-        DefaultStates<NormalState, InsertState>{},
-        &inputQueue, fileName};
+    std::thread editor{EditorLoop, &renderLock, &inputLock, &quitToken, &renderQueue, &inputQueue, fileName};
+    std::thread IO{IOLoop, &renderLock, &inputLock, &quitToken, &renderQueue, &inputQueue};
 
-    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
-    InitScreen();
-
-    int lineOffset = 0;
-    int colOffset = 0;
-
-    milliseconds msd {};
-    double vm, rss;
-
-    while(!context.quit){
-        milliseconds msb = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        int ch = inputManager->GetKeyInput();
-        if(ch != ERR){
-            if(ch == KEY_BACKSPACE)
-                inputQueue.push('\b');
-            else
-                inputQueue.push(ch);
-        }
-         
-        context.Update();
-        UpdateUI(context.buffer, msd.count(), vm, rss, context.CurrentModeName(), lineOffset, colOffset);
-
-        milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        msd = msa-msb;
-
-        process_mem_usage(vm, rss);
-    }
-
-    KillScreen();
+    editor.join();
+    IO.join();
 }
 
-void UpdateUI(shared_ptr<IEditable> buffer, uint64_t ms, double vm, double rss, const std::string& mode, int& lineOffset, int& colOffset){ 
+void UpdateUI(RenderData data, uint64_t ms, double vm, double rss, int& lineOffset, int& colOffset){ 
         const int lineColWidth = 3;
-        int currentLineNumber = buffer->GetCurrentLineNumber();
-        int currentCursorCol = buffer->GetCursorX();
+        int currentLineNumber = data.currentLineNumber;
+        int currentCursorCol = data.currentCursorCol;
         int row, col;
 
         getmaxyx(stdscr, row, col);
 
-        erase();        
+        string line;
+        int termLine = 0;
+
+        erase();
+        while(std::getline(data.data, line)){
+            move(termLine, 0);
+            clrtoeol();
+            termLine ++;
+
+            printw("%s", line.c_str());
+        }
+
+        /*
 
         auto start = buffer->BeginStepsFromCurrentLine(-5);
         auto end = buffer->EndStepsFromCurrentLine(row-1);
@@ -94,7 +167,6 @@ void UpdateUI(shared_ptr<IEditable> buffer, uint64_t ms, double vm, double rss, 
         int linenum = start.LineNumber();
         int termLine = 0;
         for(auto line = start ; line != end; ++line){
-            /* throw away to stop overline wrapping */
             move(termLine, 0);
             clrtoeol();
             termLine ++;
@@ -112,15 +184,19 @@ void UpdateUI(shared_ptr<IEditable> buffer, uint64_t ms, double vm, double rss, 
                 linenum++;
 
         }
+        */
+
 
         int offset = currentLineNumber <= 5 ? currentLineNumber : 5;
         move(row-1, 0);
         clrtoeol();
-        printw("mode: [%s] @ ms: %lu | vm: %lf KB (%lf MB) rss: %lf", mode.c_str(), ms, vm, vm/1024, rss);
+        printw("mode: [%s] @ ms: %lu | vm: %lf KB (%lf MB) rss: %lf", data.mode.c_str(), ms, vm, vm/1024, rss);
 
-        move(offset, currentCursorCol - colOffset + lineColWidth+3);
-        refresh();
-        
+        move(offset, currentCursorCol - colOffset + lineColWidth+2);
+
+        wnoutrefresh(stdscr);
+        doupdate();
+
         while(currentLineNumber - lineOffset >= row - 5)
             lineOffset++;
 
