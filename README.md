@@ -1,11 +1,21 @@
 # One Crooked Editor
 
-Crooked Editor is an educational project, and its designed to embrace breaking things and iteration. 
-From this commit forward- the code for this project will be written with this editor, including this readme! No AI.
+Crooked Editor is an educational project, and its designed to embrace breaking things. No AI.
 
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 08/5/2026 - multithreading
+v0.007 adds multithreading, runtime diagnostics, and memory leak detection. This update, while not adding new editor features,
+will be the foundation to a bigger rendering update.
+
+Crooked Editor is now also multithreaded! main.cpp got even more messy but 
+hopefully v0.008 will clean it up. Crooked editor contains an IO thread and an Editor thread. Ncurses is not a thread safe library, 
+and becuse im using it for IO, instead of a deticated rendering thread i have to use a general IO thread. we'll see if this holds up.
+
+Crooked Editor now is built with gcc's address sanitizer to detect memory leaks when built in debug mode. the `build.sh` script will
+build Crooked Editor in debug mode, `install.sh` will not.
+
 ## 08/4/2026 - undo/redo
 I pushed all of the updates into v0.006... whoops. thats alright as v0.006 was very broken to begin with
 BUT, Crooked editor has never worked better! v0.006(.2, i guess) Introduces Undo and Redo. But before I talk about
