@@ -22,20 +22,20 @@ void InsertState::OnEnter(){
     })
     .AddAction("\b", [this](){
         if(cursor.IsCursorAtBeginningOfLine()){
-            insertModeMutator->DoAction<InsertModeMutator::DeleteLineAction>();
+            insertModeMutator->DoAction<DeleteLineAction>();
         }
         else
-            insertModeMutator->DoAction<InsertModeMutator::DeleteCharacterAction>();
+            insertModeMutator->DoAction<DeleteCharacterAction>();
     })
     .AddAction("\n", [this](){
-        insertModeMutator->DoAction<InsertModeMutator::NewLineAction>();
+        insertModeMutator->DoAction<NewLineAction>();
     })
     .AddAction("\r", [this](){
-        insertModeMutator->DoAction<InsertModeMutator::NewLineAction>();
+        insertModeMutator->DoAction<NewLineAction>();
     })
     .AddAction("\t", [this](){
         for(int i = 0; i < 4; i++){
-            insertModeMutator->DoAction<InsertModeMutator::InsertCharacterAction>(static_cast<char>(' '));
+            insertModeMutator->DoAction<InsertCharacterAction>(static_cast<char>(' '));
         }
     });
     
@@ -53,7 +53,7 @@ void InsertState::OnUpdate(){
     actions.TraverseToNextAction(static_cast<char>(input));
 
     if(std::isprint(static_cast<unsigned char>(input))){
-        insertModeMutator->DoAction<InsertModeMutator::InsertCharacterAction>(static_cast<char>(input));
+        insertModeMutator->DoAction<InsertCharacterAction>(static_cast<char>(input));
     }
 }
 
