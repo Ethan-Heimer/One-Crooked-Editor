@@ -3,7 +3,7 @@ this is a file saving test
 
 aaabbb this
 
-int 
+int  this s a test with gcc sanitizer 
 main(){
 
 this s a test
@@ -19,6 +19,9 @@ trhis is a test
 end
 end 2
 
+this is a debug test
+
+ thats a lot of memory oh man
 int main(){
     int i = 0;
 
