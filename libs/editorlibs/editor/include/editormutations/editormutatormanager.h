@@ -26,7 +26,7 @@ namespace Editor::Mutators {
             }
 
         private:
-            UndoHandler& undoHandler;
             IEditable& buffer;
+            UndoHandler& undoHandler;
     };
 }

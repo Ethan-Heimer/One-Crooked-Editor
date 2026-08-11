@@ -5,6 +5,7 @@
 namespace Systems::Input{
     class IInputManager{
         public:
+            virtual ~IInputManager(){}
             virtual int GetKeyInput() noexcept = 0;
     };
 }

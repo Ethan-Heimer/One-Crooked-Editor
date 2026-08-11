@@ -49,13 +49,10 @@ void NormalState::OnEnter(){
 
 void NormalState::OnUpdate(){
     nextState = StateName();
-    if(inputQueue->empty())
-        return;
 
-    int input = inputQueue->front();    
-    inputQueue->pop();
-
-    actions.TraverseToNextAction(static_cast<char>(input));
+    for(const char c : input){
+        actions.TraverseToNextAction(c);
+    }
 }
 
 void NormalState::Transition(){

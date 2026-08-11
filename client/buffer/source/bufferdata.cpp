@@ -70,7 +70,7 @@ Editor::LineIterator BufferData::End() const{
 
 Editor::LineIterator BufferData::EndStepsFromCurrentLine(unsigned int steps) const{
     std::shared_ptr<Node> currentNode = currentLine;
-    int i = 0;
+    unsigned int i = 0;
     while(currentNode->next && i < steps) {
         currentNode = currentNode->next; 
         i++;

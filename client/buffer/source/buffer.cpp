@@ -20,7 +20,7 @@ void Buffer::GotoPreviousLine() noexcept{
 }
 
 void Buffer::GotoLine(unsigned int lineNumber) noexcept{
-    int currentLineNumber = GetCurrentLineNumber();
+    unsigned int currentLineNumber = GetCurrentLineNumber();
 
     if(bool traverseUp = currentLineNumber > lineNumber; traverseUp){
         while(buffer.currentLine->previous.lock() && buffer.currentLine->index != lineNumber){

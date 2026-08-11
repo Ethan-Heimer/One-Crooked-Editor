@@ -44,16 +44,12 @@ void InsertState::OnEnter(){
 void InsertState::OnUpdate(){
     nextState = StateName();
 
-    if(inputQueue->empty())
-        return;
+    for(const char c : input){
+        actions.TraverseToNextAction(c);
 
-    int input = inputQueue->front();
-    inputQueue->pop();
-
-    actions.TraverseToNextAction(static_cast<char>(input));
-
-    if(std::isprint(static_cast<unsigned char>(input))){
-        insertModeMutator->DoAction<InsertCharacterAction>(static_cast<char>(input));
+        if(std::isprint(c)){
+            insertModeMutator->DoAction<InsertCharacterAction>(c);
+        }
     }
 }
 
