@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstring>
-#include <iostream>
+#include <strings.h>
 #include <vector>
 
 namespace Rendering{
@@ -73,18 +72,18 @@ namespace Rendering{
 
             Pixel GetPixel(unsigned int x, unsigned int y){
                 /* wrapping modes? */
-                if(x > width)
+                if(x > width - 1)
                     x = width - 1;
 
-                if(y > height)
+                if(y > height - 1)
                     y = height - 1;
 
-                int index = y * width + x;
+                unsigned int index = y * width + x;
                 return {charChannel[index]};
             }
 
             void SetPixel(unsigned int x, unsigned int y, Pixel pixel){
-                if(x > width || y > height)
+                if(x > width-1 || y > height-1)
                     return;
 
                 int index = y * width + x;

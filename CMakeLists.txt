@@ -37,9 +37,9 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/statemachine/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/safequeue/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/trees/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/states/include")
-
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/editor/include")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")

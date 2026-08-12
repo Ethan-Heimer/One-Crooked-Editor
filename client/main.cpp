@@ -6,11 +6,6 @@
 #include <chrono>
 
 #include <sstream>
-#include <sys/poll.h>
-#include <unistd.h>
-#include <termios.h>
-#include <ios>
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <thread>
@@ -18,10 +13,10 @@
 #include "bufferfilehandler.h"
 #include "editorcontext.h"
 #include "editorstates.h"
-#include "iinputmanager.h"
 #include "rendercommand.hpp"
-#include "renderstringcommand.hpp"
+#include "terminal.hpp"
 #include "tuirenderer.hpp"
+#include "standardrenderercommands.hpp"
 
 #include "inputmanager.h"
 #include "safequeue.h"
@@ -39,13 +34,15 @@ using namespace CrookedEditor::States;
 using namespace Rendering;
 using namespace Rendering::Commands;
 
+using namespace Terminal;
+
 void process_mem_usage(double& vm_usage, double& resident_set);
-void EditorLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> renderQueue, shared_ptr<SafeQueue<int>> inputQueue, std::string fileName){
+void EditorLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> renderQueue, 
+         shared_ptr<SafeQueue<int>> inputQueue, std::string fileName, shared_ptr<const TerminalController> terminalController){
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
     while(!*quitToken){
-
         while(!inputQueue->empty()){
             inputStream << static_cast<char>(inputQueue->front());
             inputQueue->pop();
@@ -57,39 +54,54 @@ void EditorLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>
 
         *quitToken = context.quit;
 
+        unsigned int row, col;
+        terminalController->GetTerminalSize(row, col);
 
         auto start = context.buffer->BeginStepsFromCurrentLine(-5);
-        auto end = context.buffer->EndStepsFromCurrentLine(15-1);
+        auto end = context.buffer->EndStepsFromCurrentLine(row-1);
 
         int i = 0;
         for(auto line = start ; line != end; ++line){
             std::string str = std::format("{:3}| {}", line.LineNumber(), (*line)); 
-            unique_ptr<RenderCommand> command = std::make_unique<RenderString>(0, i, str);
-            renderQueue->move(std::move(command));
+            unique_ptr<RenderCommand> command = std::make_unique<RenderString>(i, 0, str);
+            renderQueue->move(std::move(command));            
+
+            if(line.IsCurrentLine()){
+                unsigned int cursorCol = context.buffer->GetCursorX() + 5;
+                unsigned int cursorRow = i; 
+                renderQueue->move(std::make_unique<ChangeCursorPosition>(cursorRow, cursorCol));
+            }
+
             i++;
         }
     }
 
 }
 
-void IOLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> renderQueue, shared_ptr<SafeQueue<int>> inputQueue){
-    Rendering::TUIRenderer renderer{};
+void IOLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> renderQueue, 
+        shared_ptr<SafeQueue<int>> inputQueue, shared_ptr<TerminalController> terminalController){
+    Rendering::TUIRenderer renderer{*terminalController};
+    InputManager inputManager{*terminalController};
+
     milliseconds msd {};
     double vm, rss;
-    shared_ptr<IInputManager> inputManager = std::make_shared<InputManager>();
 
     while(!*quitToken){
         milliseconds msb = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         process_mem_usage(vm, rss);
 
-        int ch = inputManager->GetKeyInput();
-
+        int ch = inputManager.GetKeyInput();
         if(ch != 0){
-            if(ch == 8)
+            if(ch == 127)
                 inputQueue->push('\b');
-            else
+            else{
                 inputQueue->push(ch);
+            }
         }
+
+        unsigned int row, col{};
+        terminalController->GetTerminalSize(row, col);
+        renderQueue->move(std::make_unique<RenderString>(row-1, 0, std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss)));
 
         while(!renderQueue->empty()){
             std::unique_ptr<RenderCommand> command = std::move(renderQueue->front());
@@ -97,12 +109,11 @@ void IOLoop(bool* quitToken, shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> re
             renderQueue->pop(); 
 
         }
-        renderer.Display(msd.count());
+        renderer.Display();
 
         milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         msd = msa-msb;
     }
-
 }
 
 int main(int argc, char** argv){
@@ -114,11 +125,12 @@ int main(int argc, char** argv){
 
     shared_ptr<SafeQueue<unique_ptr<RenderCommand>>> renderQueue = std::make_shared<SafeQueue<unique_ptr<RenderCommand>>>();
     shared_ptr<SafeQueue<int>> inputQueue = std::make_shared<SafeQueue<int>>();
+    shared_ptr<TerminalController> terminalController = std::make_shared<TerminalController>();
 
     string fileName{argv[1]};
  
-    std::thread editor{EditorLoop, &quitToken, renderQueue, inputQueue, fileName};
-    std::thread IO{IOLoop, &quitToken, renderQueue, inputQueue};
+    std::thread editor{EditorLoop, &quitToken, renderQueue, inputQueue, fileName, terminalController};
+    std::thread IO{IOLoop, &quitToken, renderQueue, inputQueue, terminalController};
 
     editor.join();
     IO.join();

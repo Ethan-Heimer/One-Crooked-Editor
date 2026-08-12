@@ -3,19 +3,10 @@ cmake_minimum_required(VERSION 3.10)
 set(LIBNAME tuirenderer)
 project(${LIBNAME} VERSION 3.0 LANGUAGES CXX)
 
-set(CURSES_NEED_WIDE TRUE)
-set(CURSES_NEED_NCURSES TRUE)
-find_package(Curses REQUIRED)
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist)
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
 
-# add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/buffer" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 add_library(${LIBNAME} SHARED ${SOURCE_FILES})
 
-target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/gapbuffer/")
-target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/linkedlist/")
-target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/statemachine/")
-target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/trees/")
-
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")

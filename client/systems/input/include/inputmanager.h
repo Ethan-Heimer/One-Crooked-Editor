@@ -1,20 +1,16 @@
 #pragma once
 
-#include "iinputmanager.h"
-
+#include "terminal.hpp"
 #include <termios.h>
 #include <unistd.h>
 
 namespace Systems::Input{
-    class InputManager : public IInputManager{
+    class InputManager{
         public:
-            InputManager();
-            ~InputManager() override;
-
-            int GetKeyInput() noexcept override;
+            InputManager(Terminal::TerminalController& terminalController);
+            int GetKeyInput() noexcept;
 
         private:
-            struct termios originalState;
             int key;
     };
 }

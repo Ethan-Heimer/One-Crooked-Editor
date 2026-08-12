@@ -5,12 +5,14 @@
 namespace Editor {
     class ILineData{
         public:
-        virtual std::shared_ptr<ILineData> NextLine() const = 0;
-        virtual std::shared_ptr<ILineData> PreviousLine() const = 0;
+            virtual std::shared_ptr<ILineData> NextLine() const = 0;
+            virtual std::shared_ptr<ILineData> PreviousLine() const = 0;
 
-        virtual std::string ToString() const = 0;
-        virtual void* GetLineAddress() const = 0;
-        virtual int LineNumber() const = 0;
+            virtual std::string ToString() const = 0;
+            virtual void* GetLineAddress() const = 0;
+            virtual int LineNumber() const = 0;
+            
+            bool IsCurrentLine = false;
     };
 
     class LineIterator{
@@ -40,8 +42,12 @@ namespace Editor {
                return currentLine->ToString();
             };
 
-            int LineNumber(){
+            int LineNumber() const{
                 return currentLine->LineNumber();
+            }
+
+            bool IsCurrentLine() const{
+                return currentLine->IsCurrentLine;
             }
 
         private:
