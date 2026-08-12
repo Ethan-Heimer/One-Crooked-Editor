@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rendercommand.hpp"
+#include "rendercommandqueue.hpp"
 #include "terminal.hpp"
 
 #include <memory>
@@ -14,7 +14,7 @@ namespace Rendering{
             TUIRenderer(const TUIRenderer& other) = delete;
             TUIRenderer(TUIRenderer&& other) = default;
 
-            void DoCommand(Commands::RenderCommand& command);
+            void DoCommands(Commands::RenderingCommandQueue& queue);
             void Display();
 
         private:

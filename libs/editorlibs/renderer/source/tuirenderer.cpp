@@ -25,8 +25,10 @@ struct TUIRenderer::Impl{
             terminalController.ExitAlternteScreen();
         }
 
-        void DoCommand(Commands::RenderCommand& command){
-            command.Do(cursorPos, frameBuffer);
+        void DoCommands(Commands::RenderingCommandQueue& queue){
+            while(!queue.Empty()){
+                queue.PopCommand()(cursorPos, frameBuffer);
+            }
         }
 
         void Display(){ 
@@ -80,8 +82,8 @@ TUIRenderer::TUIRenderer(Terminal::TerminalController& terminalController)
 
 TUIRenderer::~TUIRenderer() = default;
 
-void TUIRenderer::DoCommand(Commands::RenderCommand& command){
-    pImpl->DoCommand(command);
+void TUIRenderer::DoCommands(Commands::RenderingCommandQueue& commands){
+    pImpl->DoCommands(commands);
 }
 
 void TUIRenderer::Display(){
