@@ -76,11 +76,7 @@ void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue,
 
         int ch = inputManager.GetKeyInput();
         if(ch != 0){
-            if(ch == 127)
-                inputQueue->push('\b');
-            else{
-                inputQueue->push(ch);
-            }
+            inputQueue->push(ch);
         }
 
         int row, col{};

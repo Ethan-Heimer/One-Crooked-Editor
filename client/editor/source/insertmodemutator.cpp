@@ -1,4 +1,4 @@
-#include "editorcommands.h"
+#include "insertmutator.hpp"
 #include <memory>
 
 using namespace CrookedEditor::Mutators;
@@ -135,7 +135,7 @@ InsertModeMutator::InsertModeMutator(Editor::IEditable& editable)
 
 // this is copied twice: I think this is because of the type erosion
 InsertModeMutator::InsertModeMutator(const InsertModeMutator& other) : IMutatorBehavior(other){
-    for(int i = 0; i < other.undoStack.size(); i++){
+    for(size_t i = 0; i < other.undoStack.size(); i++){
         this->undoStack.push_back(other.undoStack[i]->Clone());
     }
 }
@@ -157,7 +157,7 @@ void InsertModeMutator::Undo(){
     if(undoStack.size() == 0)
         return;
 
-    for(int i = 0; i < undoStack.size(); i++){
+    for(size_t i = 0; i < undoStack.size(); i++){
         undoStack[i]->UndoSelf();
     }
 }

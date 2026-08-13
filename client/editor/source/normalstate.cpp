@@ -1,7 +1,7 @@
-#include "editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
 #include "editoractions/editoraction.h"
+#include "newlinemutator.hpp"
 
 #include <ncurses.h>
 
@@ -36,6 +36,10 @@ void NormalState::OnEnter(){
         cursor.MoveCursorRight();
     })
     .AddAction("i", [this](){ 
+        nextState = Constants::InsertState;
+    })
+    .AddAction("o", [this](){ 
+        mutationManager.DoMutation<NewLineMutator>();
         nextState = Constants::InsertState;
     })
     .AddAction("u", [this](){ 

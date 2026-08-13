@@ -14,16 +14,16 @@ namespace Editor::States{
             IEditorState(std::function<void(std::string_view)> switchState,
                     IEditableCursorCommands& cursor, 
                     std::function<void()> saveBuffer, 
-                    Mutators::MutatorManager& commandManager,
+                    Mutators::MutatorManager& mutationManager,
                     Mutators::UndoHandler& undoHandler,
                     std::string_view& input, bool* quitToken)
                 : StateMachines::IState(switchState), cursor(cursor), SaveBuffer(saveBuffer), 
-                commandManager(commandManager),undoHandler(undoHandler), input(input), quitToken(quitToken){}
+                mutationManager(mutationManager),undoHandler(undoHandler), input(input), quitToken(quitToken){}
 
         protected:
             IEditableCursorCommands& cursor;
             std::function<void()> SaveBuffer;
-            Mutators::MutatorManager& commandManager;
+            Mutators::MutatorManager& mutationManager;
             Mutators::UndoHandler& undoHandler;
 
             std::string_view& input;

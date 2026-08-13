@@ -46,7 +46,7 @@ struct TUIRenderer::Impl{
                     y = i / frameBuffer.Width();
         
                     terminalController.MoveCursor(y+1, x+1, stream);
-                    terminalController.SetForgroundTrueColor(255, 150, 150, stream);
+                    terminalController.SetForgroundTrueColor(245, 214, 174, stream);
                     stream << frameBuffer.GetPixel(x, y).character;
                 }
             }
