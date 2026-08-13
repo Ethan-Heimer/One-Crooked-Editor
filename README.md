@@ -1,8 +1,10 @@
 # One Crooked Editor
 
 Crooked Editor is an educational project, and its designed to embrace breaking things. No AI.
+The codebase is not the best, but it's slowly improving. If reading it `client/main.cpp` is a good place to start.
+I don't want to make things 'perfect' until I have to, meaining a disorganized code-base until it matters
 
-#Requrements
+# Requrements
  - Unix System
  - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty and ITerm2 are supported)**
 
