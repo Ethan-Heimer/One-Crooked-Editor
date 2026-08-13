@@ -1,7 +1,6 @@
 #include <cctype>
 #include <ncurses.h>
 
-#include "editorcommands.h"
 #include "editorstates.h"
 #include "editorconstants.h"
 
@@ -15,12 +14,12 @@ constexpr string InsertState::StateName() const{
 }
 
 void InsertState::OnEnter(){
-    insertModeMutator = commandManager.RegesterMutation<InsertModeMutator>();
+    insertModeMutator = mutationManager.CreateMutation<InsertModeMutator>();
     actions
     .AddAction("\x1b", [this](){
         nextState = Constants::NormalState;
     })
-    .AddAction("\b", [this](){
+    .AddAction({127}, [this](){
         if(cursor.IsCursorAtBeginningOfLine()){
             insertModeMutator->DoAction<DeleteLineAction>();
         }
@@ -33,6 +32,18 @@ void InsertState::OnEnter(){
     .AddAction("\r", [this](){
         insertModeMutator->DoAction<NewLineAction>();
     })
+    .AddAction({10}, [this](){ 
+        cursor.GotoNextLine();
+    })
+    .AddAction({11}, [this](){ 
+        cursor.GotoPreviousLine();
+    })
+    .AddAction({8}, [this](){ 
+        cursor.MoveCursorLeft();
+    })
+    .AddAction({12}, [this](){ 
+        cursor.MoveCursorRight();
+    })
     .AddAction("\t", [this](){
         for(int i = 0; i < 4; i++){
             insertModeMutator->DoAction<InsertCharacterAction>(static_cast<char>(' '));
@@ -44,16 +55,12 @@ void InsertState::OnEnter(){
 void InsertState::OnUpdate(){
     nextState = StateName();
 
-    if(inputQueue->empty())
-        return;
+    for(const char c : input){
+        actions.TraverseToNextAction(c);
 
-    int input = inputQueue->front();
-    inputQueue->pop();
-
-    actions.TraverseToNextAction(static_cast<char>(input));
-
-    if(std::isprint(static_cast<unsigned char>(input))){
-        insertModeMutator->DoAction<InsertCharacterAction>(static_cast<char>(input));
+        if(std::isprint(c)){
+            insertModeMutator->DoAction<InsertCharacterAction>(c);
+        }
     }
 }
 

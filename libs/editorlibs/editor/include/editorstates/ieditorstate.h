@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <queue>
 #include <string_view>
 
 #include "editormutations/editormutatormanager.h"
@@ -12,22 +11,22 @@
 namespace Editor::States{
     class IEditorState : public StateMachines::IState{
         public:
-            IEditorState(IEditableCursorCommands& cursor, 
-                    std::function<void()> saveBuffer,
-                    std::function<void(std::string_view)> switchState,
-                    Mutators::MutatorManager& commandManager,
+            IEditorState(std::function<void(std::string_view)> switchState,
+                    IEditableCursorCommands& cursor, 
+                    std::function<void()> saveBuffer, 
+                    Mutators::MutatorManager& mutationManager,
                     Mutators::UndoHandler& undoHandler,
-                    std::queue<int>* inputQueue, bool* quitToken)
-                : StateMachines::IState(switchState), inputQueue(inputQueue), 
-                commandManager(commandManager), undoHandler(undoHandler), SaveBuffer(saveBuffer), cursor(cursor), quitToken(quitToken){}
+                    std::string_view& input, bool* quitToken)
+                : StateMachines::IState(switchState), cursor(cursor), SaveBuffer(saveBuffer), 
+                mutationManager(mutationManager),undoHandler(undoHandler), input(input), quitToken(quitToken){}
 
         protected:
             IEditableCursorCommands& cursor;
             std::function<void()> SaveBuffer;
-            Mutators::MutatorManager& commandManager;
+            Mutators::MutatorManager& mutationManager;
             Mutators::UndoHandler& undoHandler;
 
-            std::queue<int>* inputQueue;
+            std::string_view& input;
             bool* quitToken;
     };
 }

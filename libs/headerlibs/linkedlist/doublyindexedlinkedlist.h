@@ -17,7 +17,7 @@ class DoublyIndexedLinkedList{
             shared_ptr<Node> next;
             weak_ptr<Node> previous;
 
-            int index = 0;
+            unsigned int index = 0;
 
             bool operator==(const Node& other) const{
                 return data.get() == other.data.get();

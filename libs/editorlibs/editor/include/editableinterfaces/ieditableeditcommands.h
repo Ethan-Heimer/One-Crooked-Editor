@@ -27,5 +27,6 @@ namespace Editor{
 
             virtual LineIterator End() const = 0;
             virtual LineIterator EndStepsFromCurrentLine(unsigned int steps) const = 0;
+            virtual LineIterator AtLine(unsigned int line) const = 0 ;
     };
 };

@@ -1,9 +1,16 @@
 #include "inputmanager.h"
-
-#include <ncurses.h>
+#include "terminal.hpp"
 
 using namespace Systems::Input;
 
-int InputManager::GetKeyInput() noexcept{
-    return getch();
+InputManager::InputManager(Terminal::TerminalController& terminalController){
+    terminalController.EnterRawMode();
+}
+
+int InputManager::GetKeyInput() noexcept{ 
+    int ch{};
+    read(STDIN_FILENO, &ch, 1);
+    key = ch;
+
+    return ch;
 }

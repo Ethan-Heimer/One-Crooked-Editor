@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <queue>
 #include <string>
 #include "editorfilehandler.h"
 #include "editorstatecontext.h"
@@ -22,10 +21,9 @@ namespace Editor{
 
             bool quit;
 
-            EditorContext(FileHandling::FileHandler fileHandler, States::StateParameters stateParams,
-                    std::queue<int>* inputQueue, std::string fileName);
+            EditorContext(FileHandling::FileHandler fileHandler, States::StateParameters stateParams, std::string fileName);
 
-            void Update();
+            void Update(std::string_view input);
             std::string CurrentModeName();
     };
 }

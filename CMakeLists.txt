@@ -9,16 +9,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g)
-    add_link_options(-fsanitize=address)
-endif()
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+#   add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g)
+#   add_link_options(-fsanitize=address)
+#endif()
 
-set(CURSES_NEED_WIDE TRUE)
-set(CURSES_NEED_NCURSES TRUE)
-find_package(Curses REQUIRED)
+#add_compile_options(-O3)
+add_compile_options(-Wall -Wextra)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/editor")
+add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/renderer")
 
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_SOURCE_DIR}/client/*.cpp")
 add_executable(${NAME}
@@ -28,20 +28,23 @@ add_executable(${NAME}
 target_link_libraries(${NAME} PRIVATE ${CURSES_LIBRARIES})
 
 target_link_libraries(${NAME} PRIVATE editor)
+target_link_libraries(${NAME} PRIVATE tuirenderer)
 
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/gapbuffer/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/linkedlist/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/statemachine/")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/undoing/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/safequeue/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/trees/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/states/include")
-
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/editor/include")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/buffer/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/editor/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/editor/include/mutators")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/rendering/include")
 

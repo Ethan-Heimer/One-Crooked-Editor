@@ -1,7 +1,7 @@
-#include "editorcommands.h"
 #include "editorconstants.h"
 #include "editorstates.h"
 #include "editoractions/editoraction.h"
+#include "newlinemutator.hpp"
 
 #include <ncurses.h>
 
@@ -13,12 +13,21 @@ constexpr string NormalState::StateName() const{
 }
 
 void NormalState::OnEnter(){
+    constexpr int jumpBy = 10;
     actions
     .AddAction("j", [this](){ 
         cursor.GotoNextLine();
     })
     .AddAction("k", [this](){ 
         cursor.GotoPreviousLine();
+    })
+    .AddAction("J", [this](){ 
+        for(int i = 0; i < jumpBy; i++)
+            cursor.GotoNextLine();
+    })
+    .AddAction("K", [this](){ 
+        for(int i = 0; i < jumpBy; i++)
+            cursor.GotoPreviousLine();
     })
     .AddAction("h", [this](){ 
         cursor.MoveCursorLeft();
@@ -27,6 +36,10 @@ void NormalState::OnEnter(){
         cursor.MoveCursorRight();
     })
     .AddAction("i", [this](){ 
+        nextState = Constants::InsertState;
+    })
+    .AddAction("o", [this](){ 
+        mutationManager.DoMutation<NewLineMutator>();
         nextState = Constants::InsertState;
     })
     .AddAction("u", [this](){ 
@@ -49,13 +62,10 @@ void NormalState::OnEnter(){
 
 void NormalState::OnUpdate(){
     nextState = StateName();
-    if(inputQueue->empty())
-        return;
 
-    int input = inputQueue->front();    
-    inputQueue->pop();
-
-    actions.TraverseToNextAction(static_cast<char>(input));
+    for(const char c : input){
+        actions.TraverseToNextAction(c);
+    }
 }
 
 void NormalState::Transition(){

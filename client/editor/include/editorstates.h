@@ -1,7 +1,7 @@
 #pragma once
 
 #include "editoractiontree.h"
-#include "editorcommands.h"
+#include "insertmutator.hpp"
 #include "ieditorstate.h"
 
 #define EditorState(Name) \

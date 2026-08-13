@@ -8,7 +8,7 @@ namespace Editor::Mutators{
         public:
             template<typename T>
             Mutator(std::function<void(Mutator)> addToUndo, T&& value) 
-            : addToUndo(addToUndo), impl(std::make_unique<Model<T>>(std::move(value))){}
+            : impl(std::make_unique<Model<T>>(std::move(value))), addToUndo(addToUndo){}
 
             Mutator(Mutator&& other){
                 impl = std::move(other.impl);

@@ -1,12 +1,10 @@
 #pragma once
 
-#include <sstream>
-
 #include "ieditable.h"
 #include "bufferdata.h"
 
 namespace CrookedEditor::Buffers{
-    class Buffer : public Editor::IEditable{
+    class Buffer final : public Editor::IEditable{
         public:
             BufferData buffer; 
             Buffer();
@@ -45,6 +43,8 @@ namespace CrookedEditor::Buffers{
 
             virtual Editor::LineIterator End() const override;
             virtual Editor::LineIterator EndStepsFromCurrentLine(unsigned int steps) const override;
+
+            virtual Editor::LineIterator AtLine(unsigned int line) const override;
 
             unsigned int GetCursorX() const noexcept override;
             unsigned int GetCurrentLineNumber() const noexcept override;

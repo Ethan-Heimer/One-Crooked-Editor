@@ -14,14 +14,14 @@ namespace Editor::States{
         std::function<void()> saveBuffer;
         Mutators::MutatorManager& commandManager;
         Mutators::UndoHandler& undoHandler;
-        std::queue<int>* inputQueue;
+        std::string_view& inputQueue;
         bool* quitToken;
     };
 
     template<typename T>
     struct StateType{
         std::shared_ptr<IEditorState> Instanciate(StateConstructorArgs args){
-            return std::make_shared<T>(args.buffer, args.saveBuffer, args.switchState,
+            return std::make_shared<T>(args.switchState, args.buffer, args.saveBuffer,
                     args.commandManager, args.undoHandler, args.inputQueue, args.quitToken);
         };
     };

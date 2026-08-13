@@ -91,6 +91,5 @@ namespace CrookedEditor::Mutators {
 
         private:
             std::vector<std::unique_ptr<ActionToken>> undoStack{};
-    }; 
-    
+    };     
 }

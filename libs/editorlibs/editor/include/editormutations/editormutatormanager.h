@@ -13,7 +13,7 @@ namespace Editor::Mutators {
 
             template<typename T, typename... U>
             requires std::is_base_of_v<IMutatorBehavior, T> 
-            T* RegesterMutation(U... args){
+            T* CreateMutation(U... args){
                 auto addToUndo = [this](Mutator command){
                     this->undoHandler.AddMutator(std::move(command));
                 };
@@ -25,8 +25,21 @@ namespace Editor::Mutators {
                 return ptr;
             }
 
+            template<typename T, typename... U>
+            requires std::is_base_of_v<IMutatorBehavior, T> 
+            void DoMutation(U... args){
+                auto addToUndo = [this](Mutator command){
+                    this->undoHandler.AddMutator(std::move(command));
+                };
+
+                Mutator command{addToUndo, T{buffer, args...}};
+                command.Do();
+
+                this->undoHandler.AddMutator(std::move(command));
+            }
+
         private:
-            UndoHandler& undoHandler;
             IEditable& buffer;
+            UndoHandler& undoHandler;
     };
 }
