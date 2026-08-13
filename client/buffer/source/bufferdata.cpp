@@ -1,7 +1,14 @@
 #include "bufferdata.h"
-#include "buffer.h"
 
 using namespace CrookedEditor::Buffers;
+
+BufferData::LineData::LineData(std::shared_ptr<Node> line, std::weak_ptr<const Node> currentLine) 
+    : line(line), currentLine(currentLine){
+        if(!line || !currentLine.lock())
+            IsCurrentLine = false;
+
+        IsCurrentLine = line == currentLine.lock();
+}
 
 std::shared_ptr<Editor::ILineData> BufferData::LineData::NextLine() const{
     if(!line)
@@ -32,6 +39,9 @@ void* BufferData::LineData::GetLineAddress() const{
 }
 
 int BufferData::LineData::LineNumber() const{
+    if(!line)
+        return 0;
+
     return line->index;
 }
 
@@ -80,3 +90,14 @@ Editor::LineIterator BufferData::EndStepsFromCurrentLine(unsigned int steps) con
 
     return Editor::LineIterator{make_shared<LineData>(currentNode->next, currentLine)};
 };
+
+Editor::LineIterator BufferData::AtLine(unsigned int line) const{
+    std::shared_ptr<Node> currentNode = head;
+    unsigned int i = 0;
+    while(currentNode && i < line) {
+        currentNode = currentNode->next; 
+        i++;
+    }
+     
+    return Editor::LineIterator{make_shared<LineData>(currentNode, currentLine)};
+}

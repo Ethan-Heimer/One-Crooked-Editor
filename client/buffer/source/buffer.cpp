@@ -134,3 +134,7 @@ LineIterator Buffer::End() const{
 LineIterator Buffer::EndStepsFromCurrentLine(unsigned int steps) const{
     return buffer.EndStepsFromCurrentLine(steps);
 }
+
+LineIterator Buffer::AtLine(unsigned int line) const{
+    return buffer.AtLine(line);
+}

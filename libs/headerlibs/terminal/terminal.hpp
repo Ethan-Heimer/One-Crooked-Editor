@@ -40,7 +40,7 @@ namespace Terminal{
             }
 
 
-            void GetTerminalSize(unsigned int& row, unsigned int& col) const{
+            void GetTerminalSize(int& row, int& col) const{
                 row = winSize.ws_row;
                 col = winSize.ws_col;
             }

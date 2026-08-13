@@ -11,7 +11,7 @@ namespace Rendering{
     class TUITexture{
         public:
             TUITexture(){}
-            TUITexture(unsigned int width, unsigned int height) : width(width), height(height){
+            TUITexture(int width, int height) : width(width), height(height){
                 size_t channelSize = width * height;
                 charChannel.reserve(channelSize);
                 for(size_t i = 0; i < channelSize; i++)
@@ -58,31 +58,39 @@ namespace Rendering{
                 return *this;
             }
 
-            unsigned int Width() const{
+             int Width() const{
                 return width;
             }
 
-            unsigned int Height() const{
+             int Height() const{
                 return height;
             }
 
-            unsigned int Area() const{
+             int Area() const{
                 return width * height;
             }
 
-            Pixel GetPixel(unsigned int x, unsigned int y){
+            Pixel GetPixel(int x, int y){
                 /* wrapping modes? */
+                if(x < 0)
+                    x = 0;
+                if(y < 0)
+                    y = 0;
+
                 if(x > width - 1)
                     x = width - 1;
 
                 if(y > height - 1)
                     y = height - 1;
 
-                unsigned int index = y * width + x;
+                 int index = y * width + x;
                 return {charChannel[index]};
             }
 
-            void SetPixel(unsigned int x, unsigned int y, Pixel pixel){
+            void SetPixel( int x,  int y, Pixel pixel){
+                if(x < 0 || y < 0)
+                    return; 
+
                 if(x > width-1 || y > height-1)
                     return;
 
@@ -90,8 +98,17 @@ namespace Rendering{
                 charChannel[index] = pixel.character;
             }
 
-            void Reinitialize(unsigned int width, unsigned int height){
-                unsigned long capacity = width * height;
+            void Reinitialize(int width, int height){
+                if(width < 0 || height < 0){
+                    Clear();
+
+                    this->width = width;
+                    this->height = height;
+
+                    return;
+                }
+
+                long capacity = width * height;
                 if(Area() < capacity){
                     charChannel.reserve(capacity);
                 } else if(Area() > capacity){
@@ -99,7 +116,7 @@ namespace Rendering{
                     charChannel.reserve(capacity);
                 }
 
-                for(unsigned long i = 0; i < charChannel.capacity(); i++)
+                for(size_t i = 0; i < charChannel.capacity(); i++)
                     charChannel.push_back(' ');
 
                 this->width = width;
@@ -107,7 +124,7 @@ namespace Rendering{
             }
 
             void Clear(){
-                for(unsigned int i = 0; i < Area(); i++){
+                for( int i = 0; i < Area(); i++){
                     charChannel[i] = ' ';
                 }
             }
@@ -122,19 +139,19 @@ namespace Rendering{
 
             static void DiffMap(const TUITexture& a, const TUITexture& b, std::vector<bool>& bitMap){
                 const TUITexture& smallestTexture = SmallestTexture(a, b);
-                unsigned int capacity = smallestTexture.Area();
+                size_t capacity = smallestTexture.Area();
 
                 if(bitMap.capacity() < capacity){
                     bitMap.resize(capacity);
                 }
 
-                for(unsigned int i = 0; i < capacity; i++){
+                for(size_t i = 0; i < capacity; i++){
                     bitMap[i] = a.charChannel[i] != b.charChannel[i];
                 }
             }
 
             static void CopyChannels(TUITexture& from, TUITexture& to){
-                unsigned int capacity = from.Area();
+                int capacity = from.Area();
                 if(to.Area() != capacity)
                     to.Reinitialize(from.width, from.height);
                 
@@ -142,8 +159,8 @@ namespace Rendering{
             }
 
         private:
-            unsigned int width{};
-            unsigned int height{};
+            int width{};
+            int height{};
 
             std::vector<char> charChannel{};
             /* vectorized for future simd */

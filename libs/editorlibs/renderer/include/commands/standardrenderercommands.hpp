@@ -8,17 +8,17 @@ namespace Rendering::Commands{
     class RenderString : public Rendering::Commands::RenderCommandBase{
         public:
             std::string string;
-            unsigned int row{}, col{};
+            int row{}, col{};
 
-            RenderString(const Terminal::TerminalController& terminal, unsigned int row, unsigned int col, std::string string);
+            RenderString(const Terminal::TerminalController& terminal, int row, int col, std::string string);
             void Do(CursorPosition& cursorPos, TUITexture& frameBuffer) override;
     };
 
     class ChangeCursorPosition : public Rendering::Commands::RenderCommandBase{
         public:
-            unsigned int row{}, col{};
+            int row{}, col{};
 
-            ChangeCursorPosition(const Terminal::TerminalController& terminal, unsigned int row, unsigned int col);
+            ChangeCursorPosition(const Terminal::TerminalController& terminal, int row, int col);
             void Do(CursorPosition& cursorPos, TUITexture& frameBuffer);
     };
 }

@@ -4,7 +4,7 @@
 using namespace Rendering::Commands;
 using namespace Terminal;
 
-RenderString::RenderString(const TerminalController& terminalController, unsigned int row, unsigned int col, std::string string)
+RenderString::RenderString(const TerminalController& terminalController, int row, int col, std::string string)
     : RenderCommandBase(terminalController), string(string), row(row), col(col){}
 
 void RenderString::Do(CursorPosition& cursorPos, TUITexture& frameBuffer){

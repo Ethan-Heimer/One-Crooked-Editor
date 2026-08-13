@@ -13,10 +13,7 @@ namespace CrookedEditor::Buffers {
                 std::shared_ptr<Node> line;
                 std::weak_ptr<const Node> currentLine;
 
-                LineData(std::shared_ptr<Node> line, std::weak_ptr<const Node> currentLine) 
-                    : line(line), currentLine(currentLine){
-                    IsCurrentLine = line == currentLine.lock();
-                };
+                LineData(std::shared_ptr<Node> line, std::weak_ptr<const Node> currentLine);
 
                 std::shared_ptr<Editor::ILineData> NextLine() const override;
                 std::shared_ptr<Editor::ILineData> PreviousLine() const override;
@@ -32,6 +29,7 @@ namespace CrookedEditor::Buffers {
 
             Editor::LineIterator End() const override;
             Editor::LineIterator EndStepsFromCurrentLine(unsigned int steps) const override;
+            Editor::LineIterator AtLine(unsigned int line) const override;
     };
 
     using BufferNode = shared_ptr<BufferData::Node>;

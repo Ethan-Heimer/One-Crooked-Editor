@@ -13,12 +13,21 @@ constexpr string NormalState::StateName() const{
 }
 
 void NormalState::OnEnter(){
+    constexpr int jumpBy = 10;
     actions
     .AddAction("j", [this](){ 
         cursor.GotoNextLine();
     })
     .AddAction("k", [this](){ 
         cursor.GotoPreviousLine();
+    })
+    .AddAction("J", [this](){ 
+        for(int i = 0; i < jumpBy; i++)
+            cursor.GotoNextLine();
+    })
+    .AddAction("K", [this](){ 
+        for(int i = 0; i < jumpBy; i++)
+            cursor.GotoPreviousLine();
     })
     .AddAction("h", [this](){ 
         cursor.MoveCursorLeft();

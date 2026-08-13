@@ -33,6 +33,7 @@ using namespace Editor::States;
 
 using namespace CrookedEditor::Buffers;
 using namespace CrookedEditor::States;
+using namespace CrookedEditor::Renderer;
 
 using namespace Rendering;
 using namespace Rendering::Commands;
@@ -40,11 +41,12 @@ using namespace Rendering::Commands;
 using namespace Terminal;
 
 void process_mem_usage(double& vm_usage, double& resident_set);
-void EditorLoop(bool* quitToken, std::function<void(const IEditable&)> renderEditor, 
+void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
          shared_ptr<SafeQueue<int>> inputQueue, std::string fileName){
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
+    EditorRenderingState renderingState{};
     while(!*quitToken){
         while(!inputQueue->empty()){
             inputStream << static_cast<char>(inputQueue->front());
@@ -56,32 +58,8 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&)> renderEdi
         inputStream.clear();
 
         *quitToken = context.quit;
-
-        renderEditor(*context.buffer);
-
-        /*
-        unsigned int row, col;
-        terminalController->GetTerminalSize(row, col);
-
-        auto start = context.buffer->BeginStepsFromCurrentLine(-5);
-        auto end = context.buffer->EndStepsFromCurrentLine(row-1);
-
-        unsigned int i = 0;
-        for(auto line = start ; line != end; ++line){
-            std::string str = std::format("{:3}| {}", line.LineNumber(), (*line)); 
-            pushCommand<RenderString>(i, 0, str);
-
-            if(line.IsCurrentLine()){
-                unsigned int cursorCol = context.buffer->GetCursorX() + 5;
-                unsigned int cursorRow = i; 
-                pushCommand(ChangeCursorPosition{cursorRow, cursorCol});
-            }
-
-            i++;
-        }
-        */
+        renderEditor(*context.buffer, renderingState);
     }
-
 }
 
 void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue, 
@@ -105,11 +83,14 @@ void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue,
             }
         }
 
-        unsigned int row, col{};
+        int row, col{};
         terminalController->GetTerminalSize(row, col);
-        renderQueue->NewCommand<RenderString>(row-1, 0u, std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss));
-        renderer.DoCommands(*renderQueue);
-        renderer.Display();
+
+        if(!renderQueue->Empty()){
+            renderQueue->NewCommand<RenderString>(row-1, 0, std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss));
+            renderer.DoCommands(*renderQueue);
+            renderer.Display();
+        }
 
         milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         msd = msa-msb;
@@ -129,8 +110,8 @@ int main(int argc, char** argv){
 
     string fileName{argv[1]};
 
-    auto renderEditor = [renderQueue](const IEditable& buffer){
-        renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer));
+    auto renderEditor = [renderQueue](const IEditable& buffer, EditorRenderingState& renderingState){
+        renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer), std::ref(renderingState));
     };
  
     std::thread editor{EditorLoop, &quitToken, renderEditor, inputQueue, fileName};

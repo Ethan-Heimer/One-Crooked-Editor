@@ -28,10 +28,22 @@ namespace Editor {
             };
 
             friend bool operator==(const LineIterator& a, const LineIterator& b){
+                if(a.currentLine == nullptr && b.currentLine==nullptr)
+                    return true;
+
+                if(a.currentLine == nullptr || b.currentLine == nullptr)
+                    return false;
+
                 return a.currentLine->GetLineAddress() == b.currentLine->GetLineAddress(); 
             };
 
             friend bool operator!=(const LineIterator& a, const LineIterator& b){
+                if(a.currentLine == nullptr && b.currentLine==nullptr)
+                    return false;
+
+                if(a.currentLine == nullptr || b.currentLine == nullptr)
+                    return true;
+
                 return a.currentLine->GetLineAddress() != b.currentLine->GetLineAddress(); 
             };
 
@@ -43,10 +55,16 @@ namespace Editor {
             };
 
             int LineNumber() const{
+                if(currentLine == nullptr)
+                    return 0;
+
                 return currentLine->LineNumber();
             }
 
             bool IsCurrentLine() const{
+                if(currentLine == nullptr)
+                    return false;
+
                 return currentLine->IsCurrentLine;
             }
 
@@ -62,6 +80,8 @@ namespace Editor {
 
             virtual LineIterator End() const = 0;
             virtual LineIterator EndStepsFromCurrentLine(unsigned int steps) const = 0;
+
+            virtual LineIterator AtLine(unsigned int line) const = 0;
     };
 
 }

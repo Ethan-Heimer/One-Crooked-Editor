@@ -4,7 +4,7 @@
 using namespace Rendering::Commands;
 using namespace Terminal;
 
-ChangeCursorPosition::ChangeCursorPosition(const TerminalController& terminalController, unsigned int row, unsigned int col) 
+ChangeCursorPosition::ChangeCursorPosition(const TerminalController& terminalController, int row, int col) 
     : RenderCommandBase(terminalController), row(row), col(col){}
 
 void ChangeCursorPosition::Do(CursorPosition& cursorPos, TUITexture& frameBuffer){

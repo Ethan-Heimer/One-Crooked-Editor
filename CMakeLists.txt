@@ -45,4 +45,5 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/buffer/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/editor/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/rendering/include")
 

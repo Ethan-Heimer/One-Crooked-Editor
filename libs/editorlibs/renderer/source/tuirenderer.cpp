@@ -11,7 +11,7 @@ struct TUIRenderer::Impl{
             previousFrameBuffer = TUITexture{col, row};
         
             diffMap.reserve(col * row);
-            for(unsigned int i = 0; i < col*row; i++){
+            for(int i = 0; i < col*row; i++){
                 diffMap.push_back(false);
             }
         
@@ -40,7 +40,7 @@ struct TUIRenderer::Impl{
             terminalController.HideCursor(stream);
             terminalController.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
         
-            for(unsigned int i = 0; i < col * row; i++){
+            for(int i = 0; i < col * row; i++){
                 if(diffMap[i]){
                     x = i % frameBuffer.Width();
                     y = i / frameBuffer.Width();
@@ -68,7 +68,7 @@ struct TUIRenderer::Impl{
         Terminal::TerminalController& terminalController;
 
         CursorPosition cursorPos;
-        unsigned int row, col;
+        int row, col;
 
         std::ostringstream stream;
         std::vector<bool> diffMap{};
