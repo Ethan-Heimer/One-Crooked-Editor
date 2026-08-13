@@ -2,9 +2,47 @@
 
 Crooked Editor is an educational project, and its designed to embrace breaking things. No AI.
 
+#Requrements
+ - Unix System
+ - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty and ITerm2 are supported)**
+
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 08/12/2026 - Rendering
+I hate NCurses. I've never had a good time using it and it just feels so clunky. So I got rid of it and opted to do all the terminal
+shinanigans myself. v0.008 removes Ncurses as a dependancy and uses a new custom solution for this project. With that, this editor is no
+longer capatable with Windows as I use the unix standard library to communicate to the terminal. On top of that, the editor needs to be ran with
+a terminal that supports *true colors* and *DEC 2026* Synchronized output escape sequences. I've made a requierments section above, and maybe one 
+day i'll tackle making the editor supported on more platforms.
+
+## Librenderer
+anyway, renering. Ive created a rendering lib that handles takes in rendering comands that update a frame buffer. The frame buffer is a `TUITexture`
+that, for now, holds just a character per pixel but will soon also hold forground colors, background colors, and font information per pixel.
+The renderer renders the differences between the last frame buffer and the current frame buffer. Render commands are used to interface with the renderer,
+and the client can implement its own commands. This will be better fleshed out when implementing LSPs and figuring out the graphical capibilites i need
+to get that looking fine.
+
+I've fleshed out the scrolling behavior of the editor as well, and it should fell familiar ot vim.
+
+## Features
+I didn't neglect to add new features this time:
+
+[Normal Mode]
+ - `o` - adds new line and enters insert mode
+ - `J` - jump down 10 lines
+ - `K` - jump up 10 lines
+
+[Insert Mode]
+ - `CTRL + j` - move cursor down
+ - `CTRL + k` - move cursor up
+ - `CTRL + h` - move cursor left
+ - `CTRL + l` - move cursor right
+
+## Future Steps
+I want to work on LSP support. I don't think its going to be the worst but alot in the code base will change, which is good!
+Thats been the point of this project. 
+
 ## 08/5/2026 - multithreading
 v0.007 adds multithreading, runtime diagnostics, and memory leak detection. This update, while not adding new editor features,
 will be the foundation to a bigger rendering update.
