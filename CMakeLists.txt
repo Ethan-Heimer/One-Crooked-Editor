@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 set(NAME CrookedEditor)
 project(${NAME} VERSION 1.0.0 LANGUAGES CXX)
@@ -19,16 +19,16 @@ add_compile_options(-Wall -Wextra)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/editor")
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/renderer")
+add_subdirectory("${CMAKE_SOURCE_DIR}/libs/vendor/Json-For-C")
 
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_SOURCE_DIR}/client/*.cpp")
 add_executable(${NAME}
     ${SOURCE_FILES}
 )
 
-target_link_libraries(${NAME} PRIVATE ${CURSES_LIBRARIES})
-
 target_link_libraries(${NAME} PRIVATE editor)
 target_link_libraries(${NAME} PRIVATE tuirenderer)
+target_link_libraries(${NAME} PRIVATE jsonlib)
 
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 

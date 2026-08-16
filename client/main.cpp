@@ -1,5 +1,8 @@
+#include <cstdio>
+#include <cstring>
 #include <format>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <fcntl.h>
 #include <poll.h>
@@ -9,6 +12,7 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <sys/types.h>
 #include <thread>
 
 #include "bufferfilehandler.h"
@@ -41,24 +45,90 @@ using namespace Rendering::Commands;
 using namespace Terminal;
 
 void process_mem_usage(double& vm_usage, double& resident_set);
+pid_t StartLSP(std::array<int, 2>& parentToChildPipe, std::array<int, 2>& childToParentPipe){
+    if(pipe(parentToChildPipe.data()) < 0 || pipe(childToParentPipe.data()) < 0){
+        std::cerr << "Pipe Creation failed to LSP" << std::endl;
+        return -1;
+    }
+
+    pid_t pid = fork();
+    if(pid < 0){
+        std::cerr << "error spawining child process" << std::endl;
+        return -1;
+    }
+
+    if(pid == 0){
+        // in child process
+        close(parentToChildPipe[1]); // close write end to child input pipe
+        close(childToParentPipe[0]); // close read end to child output pipe
+        
+        dup2(parentToChildPipe[0], STDIN_FILENO);  // Redirect stdin to be the input pipe
+        dup2(childToParentPipe[1], STDOUT_FILENO); // Redirect stdout to be the output pipe
+        dup2(STDOUT_FILENO, STDERR_FILENO);
+                                                   //
+        execlp("clangd", "clangd", "--log=verbose", "--background-index", NULL);
+        exit(0);
+    }
+    else{
+
+        close(parentToChildPipe[0]); // close read end to parent output pipe
+        close(childToParentPipe[1]); // close write end to parent input pipe
+        
+        int flags = fcntl(childToParentPipe[0], F_GETFL, 0);
+        fcntl(childToParentPipe[0], F_SETFL, flags | O_NONBLOCK);
+    }
+
+    return 1;
+}
+
 void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
-         shared_ptr<SafeQueue<int>> inputQueue, std::string fileName){
-    EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
-    stringstream inputStream;
+         shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
 
-    EditorRenderingState renderingState{};
-    while(!*quitToken){
-        while(!inputQueue->empty()){
-            inputStream << static_cast<char>(inputQueue->front());
-            inputQueue->pop();
+    std::array<int, 2> parentToChildPipe;
+    std::array<int, 2> childToParentPipe;
+    pid_t processID = StartLSP(parentToChildPipe, childToParentPipe);  
+    if(processID != 0){
+
+        EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
+        stringstream inputStream;
+
+        EditorRenderingState renderingState{};
+
+        std::string request = 
+            "{"
+            "  \"jsonrpc\": \"2.0\","
+            "  \"id\": 1,"
+            "  \"method\": \"initialize\","
+            "  \"params\": {"
+            "    \"processId\": " + std::to_string(getpid()) + ","
+            "    \"rootUri\": null,"
+            "    \"capabilities\": {}"
+            "  }"
+            "}";
+        std::string message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
+        write(parentToChildPipe[1], message.c_str() , message.length());
+
+        while(!*quitToken){
+            while(!inputQueue->empty()){
+                inputStream << static_cast<char>(inputQueue->front());
+                inputQueue->pop();
+            }
+
+            context.Update(std::move(inputStream).str());
+            inputStream.str("");
+            inputStream.clear();
+
+            *quitToken = context.quit;
+            renderEditor(*context.buffer, renderingState);
+
+            // make non blocking?
+            char ch;
+            int n = read(childToParentPipe[0], &ch, 1);
+            if(n > 0){
+                std::fstream ostream{"debug.txt", std::ios::in | std::ios::out | std::ios::app};
+                ostream << ch;
+            }
         }
-
-        context.Update(std::move(inputStream).str());
-        inputStream.str("");
-        inputStream.clear();
-
-        *quitToken = context.quit;
-        renderEditor(*context.buffer, renderingState);
     }
 }
 
@@ -110,7 +180,7 @@ int main(int argc, char** argv){
         renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer), std::ref(renderingState));
     };
  
-    std::thread editor{EditorLoop, &quitToken, renderEditor, inputQueue, fileName};
+    std::thread editor{EditorLoop, &quitToken, renderEditor, inputQueue, terminalController, fileName};
     std::thread IO{IOLoop, &quitToken, renderQueue, inputQueue, terminalController};
 
     editor.join();

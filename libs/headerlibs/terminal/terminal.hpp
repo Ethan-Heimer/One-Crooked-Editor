@@ -56,6 +56,20 @@ namespace Terminal{
                 tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
             }
 
+            void EnterRawModeFD(int fd){
+                struct termios raw;
+                tcgetattr(fd, &startingState);
+
+                raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+                raw.c_oflag &= ~(OPOST);
+                raw.c_cflag &= ~(CS8);
+                raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+                raw.c_cc[VMIN] = 0;
+                raw.c_cc[VTIME] = 0;
+
+                tcsetattr(fd, TCSAFLUSH, &raw);
+            }
+
             void EnterAlternateScreen(){
                 std::cout << ENTER_ALTERNATE;
             }

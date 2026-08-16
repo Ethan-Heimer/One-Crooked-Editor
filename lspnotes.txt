@@ -1,0 +1,9 @@
+I've successfully written a client that receives completion results from a server. Here's (approximately) what it does:
+
+    send an initialize
+    send an initialized notification
+    send a textDocument/didOpen
+
+At this point, your server should be ready to answer the textDocument/completion request. Depending on the response, you may also need to use completionItem/resolve as well. To date, I've never needed this for the servers I've used, however.
+
+Good luck!
