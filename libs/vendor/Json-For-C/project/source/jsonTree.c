@@ -1,5 +1,6 @@
 #include "json/jsonTree.h"
 #include "utils/string.h"
+#include "utils/token.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,6 +13,8 @@ Json* NewJson(){
 
     json->children = NULL;
     json->childLength = 0;
+
+    json->valueType = NO_VALUE;
 
     return json;
 }

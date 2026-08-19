@@ -103,6 +103,7 @@ void JInit(){
     ASTNodeAddChild(OpenArray, ArrayOpenBracket);
     ASTNodeAddChild(OpenArray, ArrayStringStart);
     ASTNodeAddChild(OpenArray, OpenArray);
+    ASTNodeAddChild(OpenArray, CloseArray);
 
     ASTNode* NumericArrayChildrenNodes[] = {ArrayDataCamma, CloseArray};
     AddNumericCharactersToNode(OpenArray, NumericArrayChildrenNodes, 2);

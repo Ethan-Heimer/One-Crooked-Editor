@@ -186,7 +186,7 @@ void AddAsciiToNode(ASTNode* parentNode, ASTNode** childNodes, int childCount){
     //add all (valid) ascii characters
     ASTListNode* newNodeList = NULL;
     for(unsigned char i = 0; i < '~'; i++){ 
-        if(i == '"')
+        if(i == '"' || i == '\\')
             continue;
 
         ASTNode* node = CreateASTNode(TEXT_DATA, i);
@@ -199,10 +199,21 @@ void AddAsciiToNode(ASTNode* parentNode, ASTNode** childNodes, int childCount){
         ASTListAppendNode(&newNodeList, listNode);
     }
 
+    //add '\"'
+    ASTNode* backslash = CreateASTNode(TEXT_DATA, '\\');
+    ASTNode* quote = CreateASTNode(TEXT_DATA, '"');
+
+    ASTNodeAddChild(backslash, quote);
+    ASTNodeAddChild(parentNode, backslash);
+    for(int j = 0; j < childCount; j++)
+        ASTNodeAddChild(quote, childNodes[j]);
+
+    ASTListNode* backslashlistNode = CreateASTListNode(backslash);
+    ASTListAppendNode(&newNodeList, backslashlistNode);
+
     //attach nodes to eachother
     int childLength = parentNode->ChildCount;
     ASTListNode* currentNode = newNodeList;
-
     while(currentNode != NULL){
         for(int i = 0; i < childLength; i++){ 
             ASTNodeAddChild(currentNode->node, parentNode->Children[i]);
@@ -211,7 +222,12 @@ void AddAsciiToNode(ASTNode* parentNode, ASTNode** childNodes, int childCount){
         currentNode = currentNode->next;
     }
 
-    DeleteASTList(&newNodeList); 
+    currentNode = newNodeList;
+    while(currentNode != NULL){
+        //add nodes after "\"" as well
+        ASTNodeAddChild(quote, currentNode->node);
+        currentNode = currentNode->next;
+    }
 }
 
 void AddBooleanValues(ASTNode* parentNode, ASTNode** childNodes, int childCount){
@@ -284,7 +300,6 @@ void Tokenize(ASTNode* currentSyntaxNode, char currentChar, String* tokenString,
         //all data type tokens get 'type erased' to just DATA for the tree to understand
         //token get assigned a secondary token type with what type the value actually is
         //there is 100% a better way to do this, but its whatever it works
-        DetermineTokenValueType(tokenString);
         TokenValueType valueType = DetermineTokenValueType(tokenString);
         PushToken(queue, tokenString, DATA, valueType); 
 

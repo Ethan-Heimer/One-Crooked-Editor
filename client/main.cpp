@@ -1,7 +1,7 @@
 #include <cstdio>
-#include <cstring>
 #include <format>
 #include <functional>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <fcntl.h>
@@ -14,22 +14,30 @@
 #include <string>
 #include <sys/types.h>
 #include <thread>
+#include <unistd.h>
+#include <vector>
 
 #include "bufferfilehandler.h"
 #include "editorcontext.h"
 #include "editorstates.h"
 #include "ieditable.h"
+#include "lspclient.hpp"
 #include "rendercommandqueue.hpp"
+#include "responses/lspinitilizeresponse.hpp"
 #include "terminal.hpp"
 #include "tuirenderer.hpp"
 #include "standardrenderercommands.hpp"
 #include "rendering/include/rendereditorcommand.hpp"
+
+#include "requests/lspinitializerequest.hpp"
 
 #include "inputmanager.h"
 #include "safequeue.h"
 
 using namespace std;
 using namespace std::chrono;
+using namespace std::filesystem;
+
 using namespace Editor;
 
 using namespace Systems::Input;
@@ -45,56 +53,32 @@ using namespace Rendering::Commands;
 using namespace Terminal;
 
 void process_mem_usage(double& vm_usage, double& resident_set);
-pid_t StartLSP(std::array<int, 2>& parentToChildPipe, std::array<int, 2>& childToParentPipe){
-    if(pipe(parentToChildPipe.data()) < 0 || pipe(childToParentPipe.data()) < 0){
-        std::cerr << "Pipe Creation failed to LSP" << std::endl;
-        return -1;
-    }
-
-    pid_t pid = fork();
-    if(pid < 0){
-        std::cerr << "error spawining child process" << std::endl;
-        return -1;
-    }
-
-    if(pid == 0){
-        // in child process
-        close(parentToChildPipe[1]); // close write end to child input pipe
-        close(childToParentPipe[0]); // close read end to child output pipe
-        
-        dup2(parentToChildPipe[0], STDIN_FILENO);  // Redirect stdin to be the input pipe
-        dup2(childToParentPipe[1], STDOUT_FILENO); // Redirect stdout to be the output pipe
-        dup2(STDOUT_FILENO, STDERR_FILENO);
-                                                   //
-        execlp("clangd", "clangd", "--log=verbose", "--background-index", NULL);
-        exit(0);
-    }
-    else{
-
-        close(parentToChildPipe[0]); // close read end to parent output pipe
-        close(childToParentPipe[1]); // close write end to parent input pipe
-        
-        int flags = fcntl(childToParentPipe[0], F_GETFL, 0);
-        fcntl(childToParentPipe[0], F_SETFL, flags | O_NONBLOCK);
-    }
-
-    return 1;
-}
+std::string GetLSPResponse(long fd);
 
 void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
          shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
 
-    std::array<int, 2> parentToChildPipe;
-    std::array<int, 2> childToParentPipe;
-    pid_t processID = StartLSP(parentToChildPipe, childToParentPipe);  
-    if(processID != 0){
+    LSP::LSPClient lspClient{};
+    lspClient.StartLSP("clangd", "--log=verbose --background-index");
 
-        EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
-        stringstream inputStream;
+    EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
+    stringstream inputStream;
 
-        EditorRenderingState renderingState{};
+    EditorRenderingState renderingState{};
+    auto responseFuture = lspClient.SendRequestAsync<LSP::InitializeResponse>(LSP::InitializeRequest{});
 
-        std::string request = 
+    //bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
+
+    //lsp client communication spec:
+    // client.SendRequest(ILSPRequest);
+    // client.SendNotification(ILSPNoticication);
+    //
+    // -- client needs to defines events on when the SERVER sends a notifications
+    // 
+
+    // Start Initilization handshake
+    /*
+    std::string request = 
             "{"
             "  \"jsonrpc\": \"2.0\","
             "  \"id\": 1,"
@@ -105,30 +89,126 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
             "    \"capabilities\": {}"
             "  }"
             "}";
-        std::string message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
-        write(parentToChildPipe[1], message.c_str() , message.length());
 
-        while(!*quitToken){
-            while(!inputQueue->empty()){
-                inputStream << static_cast<char>(inputQueue->front());
-                inputQueue->pop();
-            }
+    std::string message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
+    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
 
-            context.Update(std::move(inputStream).str());
-            inputStream.str("");
-            inputStream.clear();
+    std::fstream ostream{"debug.txt", std::ios::out};
+    std::string response = GetLSPResponse(lspClient.childToParentPipe[0]);
+    ostream << response;
 
-            *quitToken = context.quit;
-            renderEditor(*context.buffer, renderingState);
+    request = 
+            "{"
+            "  \"jsonrpc\": \"2.0\","
+            "  \"method\": \"initialized\","
+            "  \"params\": {}"
+            "}";
 
-            // make non blocking?
-            char ch;
-            int n = read(childToParentPipe[0], &ch, 1);
-            if(n > 0){
-                std::fstream ostream{"debug.txt", std::ios::in | std::ios::out | std::ios::app};
-                ostream << ch;
-            }
+    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
+    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
+    // End initilization handshake
+        
+    // textdocument/didOpen notification
+    path absolutePath = canonical(fileName);
+    std::ifstream fileContentStream{fileName};
+    //make sure file opened
+    std::stringstream fileContentBuffer; 
+
+    char ch;
+    while(fileContentStream.get(ch)){
+        switch(ch){
+            case '\n':
+                fileContentBuffer << "\\n";
+                break;
+
+            case '\r':
+                fileContentBuffer << "\\r";
+                break;
+
+            case '"':
+                fileContentBuffer << "\\\"";
+                break;
+
+            default:
+                fileContentBuffer << ch;
+                break;
         }
+    }
+       
+    // document did open notification
+    // * the server needs to keep track of the document in memory
+    request = 
+            "{"
+            "  \"jsonrpc\": \"2.0\","
+            "  \"method\": \"textDocument/didOpen\","
+            "  \"params\": {"
+            "       \"textDocument\": {"
+            "           \"uri\": \"file:///" + absolutePath.string() + "\","
+            "          \"languageId\": \"scss\","
+            "          \"version\": 1,"
+            "          \"text\": \"" + fileContentBuffer.str() + "\""
+            "       }"
+            "   }"
+            "}";
+
+    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
+    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
+    // end document did open notification
+
+    // a notification is sent back with diagnostic data about the lsp's config?
+    response = GetLSPResponse(lspClient.childToParentPipe[0]);
+    ostream << std::endl;
+    ostream << response;
+
+    //another notification is sent back with diagnostic data about the document
+    response = GetLSPResponse(lspClient.childToParentPipe[0]);
+    ostream << std::endl;
+    ostream << response;
+
+    request = "{"
+    "\"jsonrpc\": \"2.0\","
+    "\"id\": 2,"
+    "\"method\": \"textDocument/semanticTokens/full\"," //there is a range version too, probably for when edits are made
+    "\"params\": {"
+    "\"textDocument\": {"
+    "\"uri\": \"file:///" + absolutePath.string() + "\""
+    "}"
+    "}"
+    "}";
+
+    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
+    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
+
+    // response back with hightlighting
+    response = GetLSPResponse(lspClient.childToParentPipe[0]);
+    ostream << std::endl;
+    ostream << response;
+    */
+
+    // syntax tokens are grouped into sets of 5
+    // clangd doesnt highligt things like primitives, operators, comments, etc
+    // a primitive highlighter should be developed to allow for these
+
+    while(!*quitToken){
+        lspClient.PollReponses();
+        if(responseFuture.wait_for(0ms) == std::future_status::ready){
+            std::cout << "Ready!!!" << std::endl;
+            auto response = responseFuture.get();
+            //bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
+            //std::cout << "Capabilities: " << test;
+        }
+
+        while(!inputQueue->empty()){
+            inputStream << static_cast<char>(inputQueue->front());
+            inputQueue->pop();
+        }
+
+        context.Update(std::move(inputStream).str());
+        inputStream.str("");
+        inputStream.clear();
+
+        *quitToken = context.quit;
+        renderEditor(*context.buffer, renderingState);
     }
 }
 
@@ -228,6 +308,42 @@ void process_mem_usage(double& vm_usage, double& resident_set)
    resident_set = rss * page_size_kb;
 }
 
+std::string GetLSPResponse(long fd){
+    //grab header
+    std::stringstream buffer;
+    bool readingHeader = true;
+    while(readingHeader){
+        char ch;
+        int n = read(fd, &ch, 1);
+        if(n > 0){
+            //marks end of header transmition
+            if(ch == '\r'){
+                //consume following '\n\r\n'
+                read(fd, &ch, 1); 
+                read(fd, &ch, 1); 
+                read(fd, &ch, 1); 
 
+                readingHeader = false;
+                }else {
+                    buffer << ch;
+                }
+            }
+        }
 
+        //get content length
+        int contentLength = 0;
+        sscanf(buffer.str().c_str(), "Content-Length: %d", &contentLength);
+
+        //get the rest of the content
+        std::vector<char> contentBuffer;
+        contentBuffer.resize(contentLength);
+
+        int bytesRead = 0;
+        while(bytesRead < contentLength){
+           int n = read(fd, &contentBuffer[bytesRead], contentLength - bytesRead);
+           bytesRead += n;
+        }
+
+        return std::string{contentBuffer.begin(), contentBuffer.end()};
+}
 

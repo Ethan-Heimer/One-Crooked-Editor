@@ -15,10 +15,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 #endif()
 
 #add_compile_options(-O3)
-add_compile_options(-Wall -Wextra)
+#add_compile_options(-Wall -Wextra)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/editor")
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/renderer")
+add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/lsp")
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/vendor/Json-For-C")
 
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_SOURCE_DIR}/client/*.cpp")
@@ -29,6 +30,7 @@ add_executable(${NAME}
 target_link_libraries(${NAME} PRIVATE editor)
 target_link_libraries(${NAME} PRIVATE tuirenderer)
 target_link_libraries(${NAME} PRIVATE jsonlib)
+target_link_libraries(${NAME} PRIVATE lsp)
 
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 
@@ -38,9 +40,6 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/safequeue/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/trees/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
-
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/states/include")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/editorlibs/editor/include")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/buffer/include")
