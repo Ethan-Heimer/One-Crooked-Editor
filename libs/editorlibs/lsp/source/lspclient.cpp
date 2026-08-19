@@ -12,11 +12,13 @@ LSPClient::LSPClient(){
 }
 
 LSPClient::~LSPClient(){
+    JEnd();
+
     if(lspProcessID > 0){
         kill(lspProcessID, SIGKILL);
     }
 
-    JEnd();
+    std::cout << "KILLED";
 }
 
 pid_t StartLSPProcess(std::string lspName, std::string arguments, 

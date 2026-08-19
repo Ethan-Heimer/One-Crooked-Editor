@@ -48,7 +48,7 @@ namespace LSP{
             LSPClient();
             ~LSPClient();
             LSPClient(const LSPClient& other) = delete;
-            LSPClient(LSPClient&& other) = default;
+            LSPClient(LSPClient&& other) = delete;
 
             void StartLSP(std::string lspName, std::string arguments); 
 
@@ -89,8 +89,8 @@ namespace LSP{
 
             }
 
-            int SendRequest(){
-                /*
+            template<typename Res, typename Req>
+            Res SendRequest(Req request){
                 currentIdMut.lock();
                 int id = currentRequestID;
                 currentRequestID++;
@@ -114,14 +114,14 @@ namespace LSP{
 
                 awaitResponseMap.erase(id);
                 responseMap.erase(id);
-                */
 
-                return 10;
+                return std::move(response);
             }
+
 
             template<typename Res, typename Req>
             auto SendRequestAsync(Req request){
-                return std::async(std::launch::async, &LSPClient::SendRequest, this);
+                return std::async(std::launch::async, &LSPClient::SendRequest<Res, Req>, this, std::move(request));
             }
     };
 }

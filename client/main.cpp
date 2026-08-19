@@ -59,15 +59,24 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
          shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
 
     LSP::LSPClient lspClient{};
-    lspClient.StartLSP("clangd", "--log=verbose --background-index");
+    //have lsp client handle this and init it in start lsp?
+    std::thread lspThread = std::thread([](LSP::LSPClient& lspClient, bool* quitToken){
+        lspClient.StartLSP("clangd", "--log=verbose --background-index");
+
+        while(!*quitToken){
+            lspClient.PollReponses();
+            std::this_thread::sleep_for(1ms);
+        }
+    }, std::ref(lspClient), quitToken);
 
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
     EditorRenderingState renderingState{};
-    auto responseFuture = lspClient.SendRequestAsync<LSP::InitializeResponse>(LSP::InitializeRequest{});
 
-    //bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
+    auto responseFuture = lspClient.SendRequestAsync<LSP::InitializeResponse>(LSP::InitializeRequest{});
+    auto response = responseFuture.get();
+    bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
 
     //lsp client communication spec:
     // client.SendRequest(ILSPRequest);
@@ -190,14 +199,6 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
     // a primitive highlighter should be developed to allow for these
 
     while(!*quitToken){
-        lspClient.PollReponses();
-        if(responseFuture.wait_for(0ms) == std::future_status::ready){
-            std::cout << "Ready!!!" << std::endl;
-            auto response = responseFuture.get();
-            //bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
-            //std::cout << "Capabilities: " << test;
-        }
-
         while(!inputQueue->empty()){
             inputStream << static_cast<char>(inputQueue->front());
             inputQueue->pop();
@@ -209,7 +210,10 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
 
         *quitToken = context.quit;
         renderEditor(*context.buffer, renderingState);
+        std::this_thread::sleep_for(1ms);
     }
+
+    lspThread.join();
 }
 
 void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue, 
@@ -240,6 +244,7 @@ void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue,
 
         milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         msd = msa-msb;
+        std::this_thread::sleep_for(1ms);
     }
 }
 
