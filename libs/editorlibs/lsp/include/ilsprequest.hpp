@@ -12,7 +12,7 @@ namespace LSP{
         public:
             virtual std::string GetJson(int requestId) const = 0;
 
-            T GetResponseType() const{
+            constexpr T GetResponseType() const{
                 return T{};
             }
     };
