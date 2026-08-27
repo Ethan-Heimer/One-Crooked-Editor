@@ -1,7 +1,9 @@
 #include "lspclient.hpp"
 
+#include <chrono>
 #include <csignal>
 #include <format>
+#include <thread>
 #include <unistd.h>
 #include <iostream>
 #include "json/json.h"
@@ -12,13 +14,17 @@ LSPClient::LSPClient(){
 }
 
 LSPClient::~LSPClient(){
-    JEnd();
+
+    quitPolling = true;
+
+    if(pollThread.joinable())
+        pollThread.join();
 
     if(lspProcessID > 0){
         kill(lspProcessID, SIGKILL);
     }
 
-    std::cout << "KILLED";
+    JEnd();
 }
 
 pid_t StartLSPProcess(std::string lspName, std::string arguments, 
@@ -29,6 +35,13 @@ void LSPClient::StartLSP(std::string lspName, std::string arguments){
     if(lspProcessID < 0){
         //throw?
     }
+
+    pollThread = std::thread{[this](){
+        while(!quitPolling){
+            PollReponses();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        };
+    }};
 }
 
 pid_t StartLSPProcess(std::string lspName, std::string arguments, 

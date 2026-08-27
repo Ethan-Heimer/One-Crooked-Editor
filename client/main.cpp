@@ -30,9 +30,17 @@
 #include "rendering/include/rendereditorcommand.hpp"
 
 #include "requests/lspinitializerequest.hpp"
+#include "requests/lspsemantictokensfullrequest.hpp"
+
+#include "notifications/lspinitializednotification.hpp"
+#include "notifications/lspdocumentdidopennotification.hpp"
 
 #include "inputmanager.h"
 #include "safequeue.h"
+
+#ifdef __APPLE__
+    #include <mach/mach.h>
+#endif
 
 using namespace std;
 using namespace std::chrono;
@@ -59,144 +67,28 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
          shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
 
     LSP::LSPClient lspClient{};
-    //have lsp client handle this and init it in start lsp?
-    std::thread lspThread = std::thread([](LSP::LSPClient& lspClient, bool* quitToken){
-        lspClient.StartLSP("clangd", "--log=verbose --background-index");
-
-        while(!*quitToken){
-            lspClient.PollReponses();
-            std::this_thread::sleep_for(1ms);
-        }
-    }, std::ref(lspClient), quitToken);
+    lspClient.StartLSP("clangd", "--log=verbose --background-index");
 
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
     EditorRenderingState renderingState{};
 
-    auto responseFuture = lspClient.SendRequestAsync<LSP::InitializeResponse>(LSP::InitializeRequest{});
-    auto response = responseFuture.get();
+    // LSP INIT -- handled in start lsp?
+    auto responseFuture = lspClient.SendRequest(LSP::InitializeRequest{});
+    auto response = responseFuture.Get();
     bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
 
-    //lsp client communication spec:
-    // client.SendRequest(ILSPRequest);
-    // client.SendNotification(ILSPNoticication);
-    //
-    // -- client needs to defines events on when the SERVER sends a notifications
-    // 
+    lspClient.SendNotification(LSP::InitializedNotification{});
+    lspClient.SendNotification(LSP::DocumentDidOpenNotification{fileName});
+    // END
 
-    // Start Initilization handshake
-    /*
-    std::string request = 
-            "{"
-            "  \"jsonrpc\": \"2.0\","
-            "  \"id\": 1,"
-            "  \"method\": \"initialize\","
-            "  \"params\": {"
-            "    \"processId\": " + std::to_string(getpid()) + ","
-            "    \"rootUri\": null,"
-            "    \"capabilities\": {}"
-            "  }"
-            "}";
+    auto semanticResponseFuture = lspClient.SendRequest(LSP::SemanticTokensFullRequest{fileName});
+    auto semanticResponse = semanticResponseFuture.Get();
 
-    std::string message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
-    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
-
-    std::fstream ostream{"debug.txt", std::ios::out};
-    std::string response = GetLSPResponse(lspClient.childToParentPipe[0]);
-    ostream << response;
-
-    request = 
-            "{"
-            "  \"jsonrpc\": \"2.0\","
-            "  \"method\": \"initialized\","
-            "  \"params\": {}"
-            "}";
-
-    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
-    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
-    // End initilization handshake
-        
-    // textdocument/didOpen notification
-    path absolutePath = canonical(fileName);
-    std::ifstream fileContentStream{fileName};
-    //make sure file opened
-    std::stringstream fileContentBuffer; 
-
-    char ch;
-    while(fileContentStream.get(ch)){
-        switch(ch){
-            case '\n':
-                fileContentBuffer << "\\n";
-                break;
-
-            case '\r':
-                fileContentBuffer << "\\r";
-                break;
-
-            case '"':
-                fileContentBuffer << "\\\"";
-                break;
-
-            default:
-                fileContentBuffer << ch;
-                break;
-        }
+    for(auto i : semanticResponse.data){
+        std::cout << i << " ";
     }
-       
-    // document did open notification
-    // * the server needs to keep track of the document in memory
-    request = 
-            "{"
-            "  \"jsonrpc\": \"2.0\","
-            "  \"method\": \"textDocument/didOpen\","
-            "  \"params\": {"
-            "       \"textDocument\": {"
-            "           \"uri\": \"file:///" + absolutePath.string() + "\","
-            "          \"languageId\": \"scss\","
-            "          \"version\": 1,"
-            "          \"text\": \"" + fileContentBuffer.str() + "\""
-            "       }"
-            "   }"
-            "}";
-
-    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
-    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
-    // end document did open notification
-
-    // a notification is sent back with diagnostic data about the lsp's config?
-    response = GetLSPResponse(lspClient.childToParentPipe[0]);
-    ostream << std::endl;
-    ostream << response;
-
-    //another notification is sent back with diagnostic data about the document
-    response = GetLSPResponse(lspClient.childToParentPipe[0]);
-    ostream << std::endl;
-    ostream << response;
-
-    request = "{"
-    "\"jsonrpc\": \"2.0\","
-    "\"id\": 2,"
-    "\"method\": \"textDocument/semanticTokens/full\"," //there is a range version too, probably for when edits are made
-    "\"params\": {"
-    "\"textDocument\": {"
-    "\"uri\": \"file:///" + absolutePath.string() + "\""
-    "}"
-    "}"
-    "}";
-
-    message = "Content-Length: " + std::to_string(request.length()) + "\r\n\r\n" + request;
-    write(lspClient.parentToChildPipe[1], message.c_str() , message.length());
-
-    // response back with hightlighting
-    response = GetLSPResponse(lspClient.childToParentPipe[0]);
-    ostream << std::endl;
-    ostream << response;
-    */
-
-    // syntax tokens are grouped into sets of 5
-    // clangd doesnt highligt things like primitives, operators, comments, etc
-    // a primitive highlighter should be developed to allow for these
 
     while(!*quitToken){
         while(!inputQueue->empty()){
@@ -212,8 +104,6 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
         renderEditor(*context.buffer, renderingState);
         std::this_thread::sleep_for(1ms);
     }
-
-    lspThread.join();
 }
 
 void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue, 
@@ -253,6 +143,8 @@ int main(int argc, char** argv){
         return 1; 
     }
 
+    int* p = new int;
+
     bool quitToken = false;
     shared_ptr<SafeQueue<int>> inputQueue = std::make_shared<SafeQueue<int>>();
 
@@ -270,14 +162,20 @@ int main(int argc, char** argv){
 
     editor.join();
     IO.join();
+
+    //this_thread::sleep_for(std::chrono::milliseconds(100000));
 }
 
 
-// Source - https://stackoverflow.com/a/671389
-// Posted by Don Wakefield, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-08-05, License - CC BY-SA 2.5
 void process_mem_usage(double& vm_usage, double& resident_set)
 {
+   // Source - https://stackoverflow.com/a/671389
+   // Posted by Don Wakefield, modified by community. See post 'Timeline' for change history
+   // Retrieved 2026-08-05, License - CC BY-SA 2.5
+   vm_usage = 0;
+   resident_set = 0;
+
+#ifdef __linux__
    using std::ios_base;
    using std::ifstream;
    using std::string;
@@ -286,18 +184,15 @@ void process_mem_usage(double& vm_usage, double& resident_set)
    resident_set = 0.0;
 
    // 'file' stat seems to give the most reliable results
-   //
    ifstream stat_stream("/proc/self/stat",ios_base::in);
 
    // dummy vars for leading entries in stat that we don't care about
-   //
    string pid, comm, state, ppid, pgrp, session, tty_nr;
    string tpgid, flags, minflt, cminflt, majflt, cmajflt;
    string utime, stime, cutime, cstime, priority, nice;
    string O, itrealvalue, starttime;
 
    // the two fields we want
-   //
    unsigned long vsize;
    long rss;
 
@@ -311,6 +206,23 @@ void process_mem_usage(double& vm_usage, double& resident_set)
    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
    vm_usage     = vsize / 1024.0;
    resident_set = rss * page_size_kb;
+#endif
+
+#ifdef __APPLE__
+    task_vm_info_data_t vm_info;
+    mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
+
+    kern_return_t kr = task_info(
+        mach_task_self(),
+        TASK_VM_INFO,
+        (task_info_t)&vm_info, 
+        &count
+    );
+
+    if(kr == KERN_SUCCESS){
+       vm_usage  = vm_info.phys_footprint;
+    }
+#endif
 }
 
 std::string GetLSPResponse(long fd){

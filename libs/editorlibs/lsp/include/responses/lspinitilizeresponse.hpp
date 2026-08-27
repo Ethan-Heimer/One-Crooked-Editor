@@ -13,6 +13,7 @@ namespace LSP{
     class InitializeResponse final : public ILSPResponse{
         public:
             std::map<std::string, std::variant<int, float, bool, std::string>> capabilities{};
+
             virtual void Deserialize(const ResponseJSON& serverResponse) override{
                 Json* capabilitiesOBJ = JGetValue(serverResponse.result, "capabilities", NULL);
                 if(!capabilitiesOBJ){

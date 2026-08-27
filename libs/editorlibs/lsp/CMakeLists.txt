@@ -11,3 +11,4 @@ add_library(${LIBNAME} SHARED ${SOURCE_FILES})
 
 target_link_libraries(${LIBNAME} PRIVATE jsonlib)
 target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/coroutine/")
