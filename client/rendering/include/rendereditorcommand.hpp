@@ -8,13 +8,9 @@
 #include <string>
 #include <vector>
 
-namespace CrookedEditor::Renderer {
-    struct EditorRenderingState{
-        int lastRowNumber;
-        int currentLineViewOffset;
-        int colOffset;
-    };
+#include "editorrenderingstate.hpp"
 
+namespace CrookedEditor::Renderer {
     class RenderEditorCommand : public Rendering::Commands::RenderCommandBase{
         public:
             const int lineColumnSpace = 4;

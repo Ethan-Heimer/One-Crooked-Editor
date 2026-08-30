@@ -1,5 +1,8 @@
 #include "tuirenderer.hpp"
+#include "tuitexture.hpp"
+#include <iostream>
 #include <memory>
+#include <numbers>
 using namespace Rendering;
 
 struct TUIRenderer::Impl{ 
@@ -39,15 +42,18 @@ struct TUIRenderer::Impl{
             terminalController.StartSyncOut(stream);
             terminalController.HideCursor(stream);
             terminalController.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
-        
+       
+            Pixel pixelData;
             for(int i = 0; i < col * row; i++){
                 if(diffMap[i]){
                     x = i % frameBuffer.Width();
-                    y = i / frameBuffer.Width();
-        
+                    y = i / frameBuffer.Width(); 
+
+                    pixelData = frameBuffer.GetPixel(x, y);
+
                     terminalController.MoveCursor(y+1, x+1, stream);
-                    terminalController.SetForgroundTrueColor(245, 214, 174, stream);
-                    stream << frameBuffer.GetPixel(x, y).character;
+                    terminalController.SetForgroundTrueColor(pixelData.fRed, pixelData.fGreen, pixelData.fBlue, stream);
+                    stream << pixelData.character;
                 }
             }
         

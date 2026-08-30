@@ -10,6 +10,9 @@
 #include <variant>
 
 namespace LSP{
+    struct Capabilities{
+
+    };
     class InitializeResponse final : public ILSPResponse{
         public:
             std::map<std::string, std::variant<int, float, bool, std::string>> capabilities{};

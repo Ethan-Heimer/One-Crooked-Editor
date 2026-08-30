@@ -1,0 +1,14 @@
+-- render texture --
+ - make rendertexture DRY
+ - make renduretexture use SIMD for comaprison
+ - make way to EDIT rendertexture pixel data
+
+-- other --
+ - make IEditable not use the 'partition' pattern and use object composition instead
+ - make lsp initilize request return a concrete capibilities object
+ - make editor view concepts clearer (rendering editor command, editor rendering state)
+ - update LSP on edit made (editor context event)
+ - REFACTOR EDITOR TO HAVE LAYERED ARCHITECTURE ****
+
+-- crashes --
+ - make it so editor does not crash when given a file other than a c++ file

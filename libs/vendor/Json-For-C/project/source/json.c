@@ -120,6 +120,7 @@ void JInit(){
     //Array Closed Bracket
     ASTNodeAddChild(ArrayCloseBracket, ArrayDataCamma);
     ASTNodeAddChild(ArrayCloseBracket, CloseArray);
+    ASTNodeAddChild(ArrayCloseBracket, ArrayCloseBracket);
     
     //Array Open Quote Key 
     ASTNodeAddChild(ArrayOpenQuoteKey, ArrayClosedQuoteKey);
@@ -139,6 +140,7 @@ void JInit(){
 
     //Array Colon
     ASTNodeAddChild(ArrayColon, ArrayOpenQuotePair); 
+    ASTNodeAddChild(ArrayColon, ArrayOpenBracket); 
 
     ASTNode* NumericArrayDataChildrenNodes[] = {ArrayObjectCamma, ArrayCloseBracket};
     AddNumericCharactersToNode(ArrayColon, NumericArrayDataChildrenNodes, 2);
@@ -154,6 +156,7 @@ void JInit(){
     //Array String End
     ASTNodeAddChild(ArrayStringEnd, ArrayDataCamma);
     ASTNodeAddChild(ArrayStringEnd, CloseArray);
+    ASTNodeAddChild(ArrayStringEnd, ArrayColon);
 
     //Array Data Comma
     ASTNodeAddChild(ArrayDataCamma, ArrayOpenBracket);

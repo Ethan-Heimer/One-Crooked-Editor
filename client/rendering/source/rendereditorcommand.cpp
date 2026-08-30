@@ -79,6 +79,9 @@ void ScrollViewVertical(const int& verticalScrollThreshold, const int& visableLi
                 break;
         }
     }
+
+    renderingData.firstLineNumberShown = currentLineNumber - renderingData.currentLineViewOffset;
+    renderingData.lastLineNumberShown = visableLines + renderingData.firstLineNumberShown; 
 }
 
 void ScrollViewHorizontal(const int& lineNumberColumnWidth, const int& termCol, const int& cursorCol, int& colOffset){

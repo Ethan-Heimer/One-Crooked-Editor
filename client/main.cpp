@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <filesystem>
 #include <format>
 #include <functional>
 #include <future>
@@ -23,7 +24,9 @@
 #include "ieditable.h"
 #include "lspclient.hpp"
 #include "rendercommandqueue.hpp"
+#include "renderlspsemantictokens.hpp"
 #include "responses/lspinitilizeresponse.hpp"
+#include "responses/lspsemantictokensfullresponse.hpp"
 #include "terminal.hpp"
 #include "tuirenderer.hpp"
 #include "standardrenderercommands.hpp"
@@ -63,32 +66,39 @@ using namespace Terminal;
 void process_mem_usage(double& vm_usage, double& resident_set);
 std::string GetLSPResponse(long fd);
 
-void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
+void EditorLoop(bool* quitToken, 
+        std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
+        std::function<void(const std::vector<int>& tokens, EditorRenderingState& renderingState)> renderSemanticTokens, 
          shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
 
+    bool isCPP = false;
+    if(std::filesystem::exists(fileName)){
+        auto path = std::filesystem::path(fileName);
+        auto extension = path.extension();
+        isCPP = (extension == ".cpp" || extension == ".c" || extension == ".hpp" || extension == ".h");
+    }
+
+    LSP::SemanticTokensFullResponse semanticResponse;
     LSP::LSPClient lspClient{};
-    lspClient.StartLSP("clangd", "--log=verbose --background-index");
+
+    if(isCPP){
+        lspClient.StartLSP("clangd", "--log=verbose --background-index");
+
+        // LSP INIT -- handled in start lsp?
+        auto responseFuture = lspClient.SendRequest(LSP::InitializeRequest{});
+        auto response = responseFuture.Get();
+
+        lspClient.SendNotification(LSP::InitializedNotification{});
+        lspClient.SendNotification(LSP::DocumentDidOpenNotification{fileName});
+        auto semanticResponseFuture = lspClient.SendRequest(LSP::SemanticTokensFullRequest{fileName});
+
+        semanticResponse = semanticResponseFuture.Get();
+    }
 
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
     EditorRenderingState renderingState{};
-
-    // LSP INIT -- handled in start lsp?
-    auto responseFuture = lspClient.SendRequest(LSP::InitializeRequest{});
-    auto response = responseFuture.Get();
-    bool test = std::get<bool>(response.capabilities["compilationDatabase.automaticReload"]);
-
-    lspClient.SendNotification(LSP::InitializedNotification{});
-    lspClient.SendNotification(LSP::DocumentDidOpenNotification{fileName});
-    // END
-
-    auto semanticResponseFuture = lspClient.SendRequest(LSP::SemanticTokensFullRequest{fileName});
-    auto semanticResponse = semanticResponseFuture.Get();
-
-    for(auto i : semanticResponse.data){
-        std::cout << i << " ";
-    }
 
     while(!*quitToken){
         while(!inputQueue->empty()){
@@ -102,6 +112,10 @@ void EditorLoop(bool* quitToken, std::function<void(const IEditable&, EditorRend
 
         *quitToken = context.quit;
         renderEditor(*context.buffer, renderingState);
+
+        if(isCPP)
+            renderSemanticTokens(semanticResponse.data, renderingState);
+
         std::this_thread::sleep_for(1ms);
     }
 }
@@ -156,8 +170,12 @@ int main(int argc, char** argv){
     auto renderEditor = [renderQueue](const IEditable& buffer, EditorRenderingState& renderingState){
         renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer), std::ref(renderingState));
     };
+
+    auto renderSemanticTokens = [renderQueue](const std::vector<int>& tokens, EditorRenderingState& renderingState){
+        renderQueue->NewCommand<CrookedEditor::Renderer::RenderSemanticTokensCommand>(std::ref(tokens), std::ref(renderingState));
+    };
  
-    std::thread editor{EditorLoop, &quitToken, renderEditor, inputQueue, terminalController, fileName};
+    std::thread editor{EditorLoop, &quitToken, renderEditor, renderSemanticTokens, inputQueue, terminalController, fileName};
     std::thread IO{IOLoop, &quitToken, renderQueue, inputQueue, terminalController};
 
     editor.join();

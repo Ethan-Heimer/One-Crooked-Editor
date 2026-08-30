@@ -21,7 +21,7 @@ namespace LSP{
                     "   \"method\": \"textDocument/semanticTokens/full\"," //there is a range version too, probably for when edits are made
                     "   \"params\": {"
                     "       \"textDocument\": {"
-                    "       \"uri\": \"file:///" + absolutePath.string() + "\""
+                    "           \"uri\": \"file:///" + absolutePath.string() + "\""
                     "       }"
                     "   }"
                     "}";

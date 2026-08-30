@@ -6,6 +6,10 @@
 namespace Rendering{
     struct Pixel{
         char character;
+
+        unsigned char fRed{255};
+        unsigned char fGreen{255};
+        unsigned char fBlue{255};
     };
 
     class TUITexture{
@@ -13,9 +17,15 @@ namespace Rendering{
             TUITexture(){}
             TUITexture(int width, int height) : width(width), height(height){
                 size_t channelSize = width * height;
+
                 charChannel.reserve(channelSize);
-                for(size_t i = 0; i < channelSize; i++)
+                for(size_t i = 0; i < channelSize; i++){
                     charChannel.push_back(' ');
+                    fRedChannel.push_back(255);
+                    fBlueChannel.push_back(255);
+                    fGreenChannel.push_back(255);
+                }
+
             }
 
             ~TUITexture(){}
@@ -25,6 +35,10 @@ namespace Rendering{
                 height = other.height;
 
                 charChannel = other.charChannel;
+
+                fRedChannel = other.fRedChannel;
+                fBlueChannel = other.fBlueChannel;
+                fGreenChannel = other.fGreenChannel;
             }
 
             TUITexture(TUITexture&& other){
@@ -32,6 +46,10 @@ namespace Rendering{
                 height = other.height;
 
                 charChannel = std::move(other.charChannel);
+
+                fRedChannel = std::move(other.fRedChannel);
+                fBlueChannel = std::move(other.fBlueChannel);
+                fGreenChannel = std::move(other.fGreenChannel);
 
                 other.width = 0;
                 other.height = 0;
@@ -43,6 +61,10 @@ namespace Rendering{
 
                 charChannel = other.charChannel;
 
+                fRedChannel = other.fRedChannel;
+                fBlueChannel = other.fBlueChannel;
+                fGreenChannel = other.fGreenChannel;
+
                 return *this;
             }
 
@@ -51,6 +73,10 @@ namespace Rendering{
                 height = other.height;
 
                 charChannel = std::move(other.charChannel);
+
+                fRedChannel = std::move(other.fRedChannel);
+                fBlueChannel = std::move(other.fBlueChannel);
+                fGreenChannel = std::move(other.fGreenChannel);
                 
                 other.width = 0;
                 other.height = 0;
@@ -84,7 +110,7 @@ namespace Rendering{
                     y = height - 1;
 
                  int index = y * width + x;
-                return {charChannel[index]};
+                return {charChannel[index], fRedChannel[index], fGreenChannel[index], fBlueChannel[index]};
             }
 
             void SetPixel( int x,  int y, Pixel pixel){
@@ -95,7 +121,12 @@ namespace Rendering{
                     return;
 
                 int index = y * width + x;
+
                 charChannel[index] = pixel.character;
+
+                fRedChannel[index] = pixel.fRed;
+                fGreenChannel[index] = pixel.fGreen;
+                fBlueChannel[index] = pixel.fBlue;
             }
 
             void Reinitialize(int width, int height){
@@ -111,21 +142,44 @@ namespace Rendering{
                 long capacity = width * height;
                 if(Area() < capacity){
                     charChannel.reserve(capacity);
+
+                    fRedChannel.reserve(capacity);
+                    fGreenChannel.reserve(capacity);
+                    fBlueChannel.reserve(capacity);
+
                 } else if(Area() > capacity){
                     charChannel = std::vector<char>{};
                     charChannel.reserve(capacity);
+
+                    fRedChannel = std::vector<unsigned char>{};
+                    fRedChannel.reserve(capacity);
+
+                    fGreenChannel = std::vector<unsigned char>{};
+                    fGreenChannel.reserve(capacity);
+
+                    fBlueChannel = std::vector<unsigned char>{};
+                    fBlueChannel.reserve(capacity);
                 }
 
-                for(size_t i = 0; i < charChannel.capacity(); i++)
+                for(size_t i = 0; i < capacity; i++){
                     charChannel.push_back(' ');
+                    
+                    fRedChannel.push_back({});
+                    fGreenChannel.push_back({});
+                    fBlueChannel.push_back({});
+                }
 
                 this->width = width;
                 this->height = height;
             }
 
             void Clear(){
-                for( int i = 0; i < Area(); i++){
+                for(int i = 0; i < Area(); i++){
                     charChannel[i] = ' ';
+
+                    fRedChannel[i] = 255;
+                    fGreenChannel[i] = 255;
+                    fBlueChannel[i] = 255;
                 }
             }
 
@@ -146,7 +200,10 @@ namespace Rendering{
                 }
 
                 for(size_t i = 0; i < capacity; i++){
-                    bitMap[i] = a.charChannel[i] != b.charChannel[i];
+                    bitMap[i] = a.charChannel[i] != b.charChannel[i] ||
+                                a.fRedChannel[i] != b.fRedChannel[i] ||
+                                a.fGreenChannel[i] != b.fGreenChannel[i] ||
+                                a.fBlueChannel[i] != b.fBlueChannel[i];
                 }
             }
 
@@ -156,6 +213,10 @@ namespace Rendering{
                     to.Reinitialize(from.width, from.height);
                 
                 std::copy(from.charChannel.begin(), from.charChannel.end(), to.charChannel.begin());
+
+                std::copy(from.fRedChannel.begin(), from.fRedChannel.end(), to.fRedChannel.begin());
+                std::copy(from.fGreenChannel.begin(), from.fGreenChannel.end(), to.fGreenChannel.begin());
+                std::copy(from.fBlueChannel.begin(), from.fBlueChannel.end(), to.fBlueChannel.begin());
             }
 
         private:
@@ -163,6 +224,11 @@ namespace Rendering{
             int height{};
 
             std::vector<char> charChannel{};
+
+            std::vector<unsigned char> fRedChannel{};
+            std::vector<unsigned char> fBlueChannel{};
+            std::vector<unsigned char> fGreenChannel{};
+
             /* vectorized for future simd */
     };
 }
