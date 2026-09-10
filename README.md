@@ -9,6 +9,9 @@ Crooked Editor is an educational project, and its designed to embrace breaking t
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 08/31/2026 - LSP Prototype
+
+
 ## 08/12/2026 - Rendering
 I hate NCurses. I've never had a good time using it and it just feels so clunky. So I got rid of it and opted to do all the terminal
 shinanigans myself. v0.008 removes Ncurses as a dependancy and uses a new custom solution for this project. With that, this editor is no

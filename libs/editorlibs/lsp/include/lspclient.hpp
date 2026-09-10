@@ -9,11 +9,11 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <array>
 #include <format>
 #include <unistd.h>
 #include <sys/poll.h>
 #include "coroutines.hpp"
+#include "functional"
 
 namespace LSP{
     using FileDescriptor = int;
@@ -22,30 +22,30 @@ namespace LSP{
         public:
             const int responseTimeout = 3;
 
-            pid_t lspProcessID;
             std::atomic<int> currentRequestID{1};
-
-            std::array<FileDescriptor, 2> parentToChildPipe;
-            std::array<FileDescriptor, 2> childToParentPipe;
-            std::array<FileDescriptor, 2> childStdErrorPipe;
-
             std::map<int, Coroutines::LazyAwaitable> schedular;
             std::map<int, std::optional<ResponseJSON>> responseMap;
+
+            int lspProcessHandle;
+            int lspInputPipe;
+            int lspOutputPipe;
 
             std::thread pollThread;
             bool quitPolling;
 
-            LSPClient();
+            std::function<void(int handle)> killLspProcess;
+
+            LSPClient(std::function<void(int handle)> killLspProcess);
             LSPClient(const LSPClient& other) = delete;
             LSPClient(LSPClient&& other) = delete;
 
             ~LSPClient();
 
-            void StartLSP(std::string lspName, std::string arguments); 
+            void StartLSP(std::function<std::tuple<int, int, int>()> subprocessGenerator); 
 
             void PollReponses(){
                 struct pollfd pfds[1];
-                pfds[0].fd = childToParentPipe[0];
+                pfds[0].fd = lspOutputPipe;
                 pfds[0].events = POLLIN;
                 int ret = poll(pfds, 1, 0);
 
@@ -55,7 +55,7 @@ namespace LSP{
                 else if(!ret){
                     //nothing to read
                 }else{
-                    std::string responseString = UTILS::GetLSPResponse(childToParentPipe[0]);
+                    std::string responseString = UTILS::GetLSPResponse(lspOutputPipe);
                     ResponseJSON responseJson{responseString}; 
                     int responseID = responseJson.responseId;
 
@@ -82,7 +82,7 @@ namespace LSP{
 
                 std::string requestJson = request.GetJson(id);
                 std::string content = std::format("Content-Length: {}\r\n\r\n{}", requestJson.length(), requestJson);
-                write(parentToChildPipe[1], content.c_str(), content.length());
+                write(lspInputPipe, content.c_str(), content.length());
 
                 //await response
                 schedular[id] = Coroutines::LazyAwaitable{};
@@ -103,7 +103,7 @@ namespace LSP{
             void SendNotification(const ILSPNotification& notification){
                 std::string requestJson = notification.GetJson();
                 std::string content = std::format("Content-Length: {}\r\n\r\n{}", requestJson.length(), requestJson);
-                write(parentToChildPipe[1], content.c_str(), content.length()); 
+                write(lspInputPipe, content.c_str(), content.length()); 
             }
     };
 }

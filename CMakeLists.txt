@@ -49,12 +49,14 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/trees/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/coroutine/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/subprocess/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/buffer/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/editor/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/editor/include/mutators")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/rendering/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/application/include")
 
 #target_compile_options(${NAME} PUBLIC -fsanitize=address -fno-omit-frame-pointer)
 #target_link_options(${NAME} PUBLIC -fsanitize=address)

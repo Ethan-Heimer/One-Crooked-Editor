@@ -1,9 +1,7 @@
-#include <cstdio>
+#include <exception>
 #include <filesystem>
 #include <format>
 #include <functional>
-#include <future>
-#include <iostream>
 #include <memory>
 #include <fcntl.h>
 #include <poll.h>
@@ -11,7 +9,6 @@
 #include <chrono>
 
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <sys/types.h>
 #include <thread>
@@ -25,7 +22,6 @@
 #include "lspclient.hpp"
 #include "rendercommandqueue.hpp"
 #include "renderlspsemantictokens.hpp"
-#include "responses/lspinitilizeresponse.hpp"
 #include "responses/lspsemantictokensfullresponse.hpp"
 #include "terminal.hpp"
 #include "tuirenderer.hpp"
@@ -40,6 +36,8 @@
 
 #include "inputmanager.h"
 #include "safequeue.h"
+
+#include "application.hpp"
 
 #ifdef __APPLE__
     #include <mach/mach.h>
@@ -66,41 +64,18 @@ using namespace Terminal;
 void process_mem_usage(double& vm_usage, double& resident_set);
 std::string GetLSPResponse(long fd);
 
-void EditorLoop(bool* quitToken, 
+void EditorLoop(const std::atomic<bool>& quitToken, 
+        CrookedEditor::Application::Application& application,
         std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
         std::function<void(const std::vector<int>& tokens, EditorRenderingState& renderingState)> renderSemanticTokens, 
          shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
-
-    bool isCPP = false;
-    if(std::filesystem::exists(fileName)){
-        auto path = std::filesystem::path(fileName);
-        auto extension = path.extension();
-        isCPP = (extension == ".cpp" || extension == ".c" || extension == ".hpp" || extension == ".h");
-    }
-
-    LSP::SemanticTokensFullResponse semanticResponse;
-    LSP::LSPClient lspClient{};
-
-    if(isCPP){
-        lspClient.StartLSP("clangd", "--log=verbose --background-index");
-
-        // LSP INIT -- handled in start lsp?
-        auto responseFuture = lspClient.SendRequest(LSP::InitializeRequest{});
-        auto response = responseFuture.Get();
-
-        lspClient.SendNotification(LSP::InitializedNotification{});
-        lspClient.SendNotification(LSP::DocumentDidOpenNotification{fileName});
-        auto semanticResponseFuture = lspClient.SendRequest(LSP::SemanticTokensFullRequest{fileName});
-
-        semanticResponse = semanticResponseFuture.Get();
-    }
 
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
 
     EditorRenderingState renderingState{};
 
-    while(!*quitToken){
+    while(!quitToken){
         while(!inputQueue->empty()){
             inputStream << static_cast<char>(inputQueue->front());
             inputQueue->pop();
@@ -110,17 +85,15 @@ void EditorLoop(bool* quitToken,
         inputStream.str("");
         inputStream.clear();
 
-        *quitToken = context.quit;
+        if(context.quit)
+            application.Quit();
+
         renderEditor(*context.buffer, renderingState);
-
-        if(isCPP)
-            renderSemanticTokens(semanticResponse.data, renderingState);
-
         std::this_thread::sleep_for(1ms);
     }
 }
 
-void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue, 
+void IOLoop(const std::atomic<bool>& quitToken, shared_ptr<RenderingCommandQueue> renderQueue, 
         shared_ptr<SafeQueue<int>> inputQueue, shared_ptr<TerminalController> terminalController){
     Rendering::TUIRenderer renderer{*terminalController};
     InputManager inputManager{*terminalController};
@@ -128,7 +101,7 @@ void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue,
     milliseconds msd {};
     double vm, rss;
 
-    while(!*quitToken){
+    while(!quitToken){
         milliseconds msb = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         process_mem_usage(vm, rss);
 
@@ -152,20 +125,24 @@ void IOLoop(bool* quitToken, shared_ptr<RenderingCommandQueue> renderQueue,
     }
 }
 
+
 int main(int argc, char** argv){
     if(argc < 2){
         return 1; 
     }
 
-    int* p = new int;
+    CrookedEditor::Application::Application app{};
 
-    bool quitToken = false;
     shared_ptr<SafeQueue<int>> inputQueue = std::make_shared<SafeQueue<int>>();
 
     shared_ptr<TerminalController> terminalController = std::make_shared<TerminalController>();
     shared_ptr<RenderingCommandQueue> renderQueue = std::make_shared<RenderingCommandQueue>(*terminalController);
 
     string fileName{argv[1]};
+
+    auto quitFunc = [&](){
+        app.Quit();
+    };
 
     auto renderEditor = [renderQueue](const IEditable& buffer, EditorRenderingState& renderingState){
         renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer), std::ref(renderingState));
@@ -175,13 +152,12 @@ int main(int argc, char** argv){
         renderQueue->NewCommand<CrookedEditor::Renderer::RenderSemanticTokensCommand>(std::ref(tokens), std::ref(renderingState));
     };
  
-    std::thread editor{EditorLoop, &quitToken, renderEditor, renderSemanticTokens, inputQueue, terminalController, fileName};
-    std::thread IO{IOLoop, &quitToken, renderQueue, inputQueue, terminalController};
+    app.SpawnThread(EditorLoop, std::ref(app), renderEditor, renderSemanticTokens, inputQueue, terminalController, fileName);
+    app.SpawnThread(IOLoop, renderQueue, inputQueue, terminalController);
+    
+    app.Run();
 
-    editor.join();
-    IO.join();
-
-    //this_thread::sleep_for(std::chrono::milliseconds(100000));
+    return 0;
 }
 
 
@@ -242,43 +218,3 @@ void process_mem_usage(double& vm_usage, double& resident_set)
     }
 #endif
 }
-
-std::string GetLSPResponse(long fd){
-    //grab header
-    std::stringstream buffer;
-    bool readingHeader = true;
-    while(readingHeader){
-        char ch;
-        int n = read(fd, &ch, 1);
-        if(n > 0){
-            //marks end of header transmition
-            if(ch == '\r'){
-                //consume following '\n\r\n'
-                read(fd, &ch, 1); 
-                read(fd, &ch, 1); 
-                read(fd, &ch, 1); 
-
-                readingHeader = false;
-                }else {
-                    buffer << ch;
-                }
-            }
-        }
-
-        //get content length
-        int contentLength = 0;
-        sscanf(buffer.str().c_str(), "Content-Length: %d", &contentLength);
-
-        //get the rest of the content
-        std::vector<char> contentBuffer;
-        contentBuffer.resize(contentLength);
-
-        int bytesRead = 0;
-        while(bytesRead < contentLength){
-           int n = read(fd, &contentBuffer[bytesRead], contentLength - bytesRead);
-           bytesRead += n;
-        }
-
-        return std::string{contentBuffer.begin(), contentBuffer.end()};
-}
-

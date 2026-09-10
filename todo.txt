@@ -9,6 +9,7 @@
  - make editor view concepts clearer (rendering editor command, editor rendering state)
  - update LSP on edit made (editor context event)
  - REFACTOR EDITOR TO HAVE LAYERED ARCHITECTURE ****
+ - remove JSON-FOR-C as a depenancy, use other parser
 
 -- crashes --
  - make it so editor does not crash when given a file other than a c++ file

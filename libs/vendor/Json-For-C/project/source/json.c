@@ -39,6 +39,9 @@ void JInit(){
     ASTNode* ArrayOpenBracket = CreateASTNode('{', '{');
     ASTNode* ArrayCloseBracket = CreateASTNode('}', '}');
 
+    ASTNode* ArrayOpenArray = CreateASTNode('[', '[');
+    ASTNode* ArrayCloseArray = CreateASTNode(']', ']');
+
     ASTNode* ArrayColon = CreateASTNode(':', ':');
 
     ASTNode* ArrayDataCamma = CreateASTNode(',', ',');
@@ -141,10 +144,26 @@ void JInit(){
     //Array Colon
     ASTNodeAddChild(ArrayColon, ArrayOpenQuotePair); 
     ASTNodeAddChild(ArrayColon, ArrayOpenBracket); 
+    ASTNodeAddChild(ArrayColon, ArrayOpenArray);
 
     ASTNode* NumericArrayDataChildrenNodes[] = {ArrayObjectCamma, ArrayCloseBracket};
     AddNumericCharactersToNode(ArrayColon, NumericArrayDataChildrenNodes, 2);
     AddBooleanValues(ArrayColon, NumericArrayDataChildrenNodes, 2);
+
+    //array open array
+    ASTNodeAddChild(ArrayOpenArray, ArrayOpenBracket);
+    ASTNodeAddChild(ArrayOpenArray, ArrayStringStart);
+    ASTNodeAddChild(ArrayOpenArray, ArrayOpenArray);
+    ASTNodeAddChild(ArrayOpenArray, ArrayCloseArray);
+
+    ASTNode* ArrayContextChildrenNodes[] = {ArrayDataCamma, ArrayCloseArray};
+    AddNumericCharactersToNode(ArrayOpenArray, ArrayContextChildrenNodes, 2);
+    AddBooleanValues(ArrayOpenArray, NumericArrayChildrenNodes, 2);
+
+    //array close array
+    ASTNodeAddChild(ArrayCloseArray, ArrayCloseBracket);
+    ASTNodeAddChild(ArrayCloseArray, ArrayCloseArray);
+    //ASTNodeAddChild(ArrayCloseArray, ArrayDataCamma);
 
     //Array Camma
     ASTNodeAddChild(ArrayObjectCamma, ArrayOpenQuoteKey);
