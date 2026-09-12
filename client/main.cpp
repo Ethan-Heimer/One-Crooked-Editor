@@ -1,9 +1,8 @@
-#include <exception>
-#include <filesystem>
 #include <format>
 #include <functional>
 #include <memory>
 #include <fcntl.h>
+#include <ostream>
 #include <poll.h>
 
 #include <chrono>
@@ -16,23 +15,18 @@
 #include <vector>
 
 #include "bufferfilehandler.h"
+#include "configvault.hpp"
 #include "editorcontext.h"
 #include "editorstates.h"
 #include "ieditable.h"
-#include "lspclient.hpp"
 #include "rendercommandqueue.hpp"
 #include "renderlspsemantictokens.hpp"
-#include "responses/lspsemantictokensfullresponse.hpp"
 #include "terminal.hpp"
+#include "texteditor.hpp"
 #include "tuirenderer.hpp"
 #include "standardrenderercommands.hpp"
 #include "rendering/include/rendereditorcommand.hpp"
 
-#include "requests/lspinitializerequest.hpp"
-#include "requests/lspsemantictokensfullrequest.hpp"
-
-#include "notifications/lspinitializednotification.hpp"
-#include "notifications/lspdocumentdidopennotification.hpp"
 
 #include "inputmanager.h"
 #include "safequeue.h"
@@ -48,7 +42,6 @@ using namespace std::chrono;
 using namespace std::filesystem;
 
 using namespace Editor;
-
 using namespace Systems::Input;
 using namespace Editor::States;
 
@@ -66,9 +59,8 @@ std::string GetLSPResponse(long fd);
 
 void EditorLoop(const std::atomic<bool>& quitToken, 
         CrookedEditor::Application::Application& application,
-        std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor, 
-        std::function<void(const std::vector<int>& tokens, EditorRenderingState& renderingState)> renderSemanticTokens, 
-         shared_ptr<SafeQueue<int>> inputQueue, std::shared_ptr<TerminalController> terminalController, std::string fileName){
+        std::function<void(const IEditable&, EditorRenderingState& renderingState)> renderEditor,  
+         shared_ptr<SafeQueue<int>> inputQueue, std::string fileName){
 
     EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
     stringstream inputStream;
@@ -132,6 +124,7 @@ int main(int argc, char** argv){
     }
 
     CrookedEditor::Application::Application app{};
+    CrookedEditor::Application::ConfigVault configVault;
 
     shared_ptr<SafeQueue<int>> inputQueue = std::make_shared<SafeQueue<int>>();
 
@@ -148,13 +141,19 @@ int main(int argc, char** argv){
         renderQueue->NewCommand<CrookedEditor::Renderer::RenderEditorCommand>(std::ref(buffer), std::ref(renderingState));
     };
 
-    auto renderSemanticTokens = [renderQueue](const std::vector<int>& tokens, EditorRenderingState& renderingState){
-        renderQueue->NewCommand<CrookedEditor::Renderer::RenderSemanticTokensCommand>(std::ref(tokens), std::ref(renderingState));
+    auto getNextKey = [&]() mutable {
+       if(inputQueue->empty()) 
+           return -1;
+
+       int input = inputQueue->front();
+       inputQueue->pop();
+       return input;
     };
+
+    CrookedEditor::Application::TextEditor textEditor{app, configVault};
+    textEditor.Start(fileName, getNextKey, renderEditor);
  
-    app.SpawnThread(EditorLoop, std::ref(app), renderEditor, renderSemanticTokens, inputQueue, terminalController, fileName);
-    app.SpawnThread(IOLoop, renderQueue, inputQueue, terminalController);
-    
+    app.SpawnThread(IOLoop, renderQueue, inputQueue, terminalController); 
     app.Run();
 
     return 0;

@@ -120,7 +120,9 @@ namespace CrookedEditor::Application{
 
             Process::FileDescripter GetInputFileDescriptor(SubprocessHandle handle) const;
             Process::FileDescripter GetOutputFileDescriptor(SubprocessHandle handle) const;
+
             void Kill(SubprocessHandle handle);
+            void KillThread(ThreadHandle handle);
 
             void Run();
             void Quit();

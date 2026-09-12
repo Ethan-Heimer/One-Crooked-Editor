@@ -14,6 +14,10 @@ using namespace Process;
 struct Application::Impl{
     public: 
         ~Impl(){
+            for(auto& pair : threadQuitTokens){
+                threadQuitTokens[pair.first] = true;
+            }
+
             for(auto& pair : threads){
                 pair.second.join(); 
             }
@@ -24,7 +28,8 @@ struct Application::Impl{
         }
 
         ThreadHandle SpawnThread(const ThreadConstructor& threadConstructor){
-            threads[lastThreadID] = threadConstructor.CreateThread(quit); 
+            threadQuitTokens[lastThreadID] = false;
+            threads[lastThreadID] = threadConstructor.CreateThread(threadQuitTokens.at(lastThreadID)); 
             lastThreadID++;
 
             return lastThreadID;
@@ -62,24 +67,35 @@ struct Application::Impl{
             subprocesses.erase(handle);
         }
 
+        void KillThread(ThreadHandle handle){
+            threadQuitTokens[handle] = true;
+            threads[handle].join();
+
+            threads.erase(handle);
+            threadQuitTokens.erase(handle);
+        }
+
 
         void Run(){
-            while(!quit){
+            while(!quitApplication){
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         }
 
         void Quit(){
-            quit = true;
+            quitApplication = true;
         }
 
     private:
+        std::map<int, std::atomic<bool>> threadQuitTokens;
         std::map<int, std::thread> threads;
+
         std::map<int, Subprocess> subprocesses;
 
         int lastThreadID;
         int lastSubprocessID;
-        std::atomic<bool> quit{};
+
+        std::atomic<bool> quitApplication{};
 
 };
 
@@ -106,6 +122,10 @@ FileDescripter Application::GetOutputFileDescriptor(SubprocessHandle handle) con
 
 void Application::Kill(SubprocessHandle handle){
     pImpl->Kill(handle);
+}
+
+void Application::KillThread(ThreadHandle handle){
+    pImpl->KillThread(handle);
 }
 
 void Application::Run(){
