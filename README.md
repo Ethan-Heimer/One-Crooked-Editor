@@ -9,8 +9,40 @@ Crooked Editor is an educational project, and its designed to embrace breaking t
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
-## 08/31/2026 - LSP Prototype
+## 09/22/2026 - Kernals & Rings
+Its been about a month since the last update, and v0.010 is shaping up to be a 
+large restructure of the project. While implementin LPS (a prototype can be found in v0.009), 
+I realized that crooked editor needed more structure to implement lsp support properly. There needed
+to be a stable, configurable, core that a LSP implementation could depend on to properly support 
+the protocalls capability. This got me thinking about how I could archetect this editor into proper layers.
 
+### The Kernal and Rings
+Im kinda stealing terms from OS and for this, but it makes the project sound cooler so whatever. 
+The 'Kernal' is the core of Crooked Editor. As of right now, it containes the application layer, which 
+is responsable for managing resources like threads and subprocesses. It provides mechenisms for these resources 
+to be cleaned up gracefully when its time to terminate the program. A configuration layer lives above the app layer, 
+and the custom renderer above that. Finaly at the top is the text editor itself, which depends on all layers. 
+
+What is going to make the kernal special however, is the ablility for to start up c++ plugins an a 'ring' 
+above it. Ring one, I guess, and this is where features that are not 'core' to a text editor will go. 
+Ring one plugins will still be fast, and they will interact with the editors c++ APIS. This is where
+the editors LSP API will live, and beacuse there is a strong kernal underneath, I can poperly support
+the capabilities of the protocalls.
+
+Above ring one will be ring two, the Lua layer. Because the layer beneth the Lua layer is flexable, so 
+will the Lua API. Ill provide some API to add resources to the Lua runtime so that ring one plugins
+can be configured in ring two. Some plugins don't need to be fast, and some people dont like to work
+in C++. So ring two is where these plugins will live. Honestly, I think of ring one being more for
+development plugins and ring two being more for lua plugins
+
+### Whats next 
+
+That being said, I havent started on the rings yet, only the kernal. My goal it to optimize
+and clean it up. After the kernal has the capabilities to execute ring one c++ plugins, I want 
+to shift my focus a bit, and I'm going to make an improved Json-For-C++ parser. My goal 
+is to make a parser that is 100% compile time capable using C++ 26 reflection and 
+actually develop it agains the JSON specification. This is an impotant project as this is 
+how i'll parse LSP responses.
 
 ## 08/12/2026 - Rendering
 I hate NCurses. I've never had a good time using it and it just feels so clunky. So I got rid of it and opted to do all the terminal

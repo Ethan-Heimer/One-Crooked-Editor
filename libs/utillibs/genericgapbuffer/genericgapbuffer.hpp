@@ -6,6 +6,10 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+//implement iterators
+//delete from x to y
+//insert range?
         
 namespace GenericBuffer{
     enum class Options{
