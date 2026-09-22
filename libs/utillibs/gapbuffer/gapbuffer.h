@@ -10,7 +10,6 @@
 using namespace std;
 
 //Gap right is exclusive
-
 class GapBuffer{
     public:
         GapBuffer(size_t startingSize, size_t resizeStride) : buffer(0, '\0'), resizeStride(resizeStride), gapStart(0), gapEnd(0){}
