@@ -35,7 +35,7 @@ namespace Terminal{
             }
 
             ~TerminalController(){
-                tcsetattr(STDIN_FILENO, TCSAFLUSH, &startingState);
+                ExitRawMode();
                 ExitAlternteScreen();
             }
 
@@ -54,6 +54,8 @@ namespace Terminal{
                 raw.c_cc[VMIN] = 0;
                 raw.c_cc[VTIME] = 0;
                 tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+                inRawMode = true;
             }
 
             void EnterRawModeFD(int fd){
@@ -68,6 +70,11 @@ namespace Terminal{
                 raw.c_cc[VTIME] = 0;
 
                 tcsetattr(fd, TCSAFLUSH, &raw);
+            }
+
+            void ExitRawMode(){
+                tcsetattr(STDIN_FILENO, TCSAFLUSH, &startingState);
+                inRawMode = false;
             }
 
             void EnterAlternateScreen(){
@@ -138,4 +145,8 @@ namespace Terminal{
         private:
             struct winsize winSize;
             struct termios startingState;
+
+            bool inRawMode = false;
+            bool inAlternateScreen = false;
+
     };}

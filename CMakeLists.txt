@@ -50,6 +50,7 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/terminal/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/coroutine/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/subprocess/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/headerlibs/diagnostics/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/client/buffer/include")

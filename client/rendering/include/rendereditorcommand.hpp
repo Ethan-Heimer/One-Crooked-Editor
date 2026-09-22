@@ -13,23 +13,17 @@
 namespace CrookedEditor::Renderer {
     class RenderEditorCommand : public Rendering::Commands::RenderCommandBase{
         public:
-            const int lineColumnSpace = 4;
-            const int verticalScrollThreshold = 5;
-            const int invisableRows = 2;
+            const EditorRenderingState renderingState;
 
             std::vector<std::string> lines;
             std::vector<std::string> lineNumbers;
-            std::vector<bool> isCurrentLine;
+            int currentLine;
 
-            int cursorCol;
             int row, col;
 
-            int& colOffset;
-                
-            int lineNumberPaddingWidth{};
-            int lineNumberColumnWidth{};
+            RenderEditorCommand(const Terminal::TerminalController& terminalController, EditorRenderingState renderingData,
+                    std::vector<std::string>&& lines, std::vector<std::string>&& lineNumbers, int currentLine);
 
-            RenderEditorCommand(const Terminal::TerminalController& terminalController, const Editor::IEditable& buffer, EditorRenderingState& renderingData);
             void Do(Rendering::CursorPosition& cursorPos, Rendering::TUITexture& frameBuffer) override;
     };
 }

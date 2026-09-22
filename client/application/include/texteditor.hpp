@@ -3,17 +3,21 @@
 #include "application.hpp"
 #include "configvault.hpp"
 #include "editorrenderingstate.hpp"
-#include "ieditable.h"
+#include "terminal.hpp"
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace CrookedEditor::Application{
     class TextEditor{
         public:
-            TextEditor(Application& app, ConfigVault& config);
+            TextEditor(Application& app, Terminal::TerminalController& terminalController, ConfigVault& config);
             ~TextEditor();
 
             void Start(std::string_view fileName, std::function<int()> getNextKey, 
-                std::function<void(const Editor::IEditable& buffer, Renderer::EditorRenderingState& renderingState)> renderEditor);
+                std::function<void(Renderer::EditorRenderingState renderingState, 
+                    std::vector<std::string>&& lines, std::vector<std::string>&& lineNumbers,
+                    int currentLine)> renderEditor);
 
             void Stop();
 

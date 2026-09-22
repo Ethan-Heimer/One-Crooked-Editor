@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 #include <subprocess.hpp>
+#include <vector>
 
 namespace CrookedEditor::Application{
     using ThreadHandle = int;
@@ -93,8 +94,15 @@ namespace CrookedEditor::Application{
         Process::FileDescripter outputFd;
     };
 
+    struct MemoryUsageData{
+        double vmUsage;
+        double residentSet;
+    };
+
     class Application{
         public:
+            constexpr static int EmpytHandle = -1;
+
             Application();
             ~Application();
             Application(const Application&) = delete;
@@ -114,7 +122,6 @@ namespace CrookedEditor::Application{
                 return SpawnSubprocess(SubprocessConstructor{process, args...});
             }
 
-
             ThreadHandle SpawnThread(ThreadConstructor threadConstructor) const;
             SubprocessInfo SpawnSubprocess(SubprocessConstructor process) const;
 
@@ -123,6 +130,13 @@ namespace CrookedEditor::Application{
 
             void Kill(SubprocessHandle handle);
             void KillThread(ThreadHandle handle);
+
+            void PrintLog(std::string_view message);
+
+            MemoryUsageData MemoryUsage();
+
+            int GetThreadCount();
+            std::vector<int> GetThreadIds();
 
             void Run();
             void Quit();
