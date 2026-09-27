@@ -1,11 +1,12 @@
 #include "buffer.h"
 #include <memory>
+#include <sstream>
 
 using namespace CrookedEditor::Buffers;
 using namespace Editor;
 
 Buffer::Buffer(){
-    buffer.Append("", 5);    
+    buffer.Append(0, 10);    
     buffer.currentLine = buffer.head;
 }
 
@@ -47,7 +48,8 @@ void Buffer::MoveCursorToCol(unsigned int col) noexcept{
 }
             
 bool Buffer::IsCursorAtBeginningOfLine() const noexcept{
-    return buffer.currentLine->data->IsGapAtBeginning();
+    int gapIndex = buffer.currentLine->data->GapStartRawIndex();
+    return gapIndex == 0;
 }
             
 void Buffer::InsertCharacter(char character) noexcept{
@@ -55,19 +57,29 @@ void Buffer::InsertCharacter(char character) noexcept{
 }
 
 void Buffer::InsertString(string_view string) noexcept{
-    buffer.currentLine->data->Insert(string.data());
+    for(int i = 0; i < string.length(); i++){
+        buffer.currentLine->data->Insert(string[i]);
+    }
 }
 
 void Buffer::InsertStringAt(unsigned int index, std::string_view string) noexcept{
-    buffer.currentLine->data->InsertAt(index, string.data());
+    buffer.currentLine->data->MoveGapTo(index);
+    InsertString(string);
 }
             
 char Buffer::DeleteCharacter() noexcept{
-    return buffer.currentLine->data->Delete();
+    char ch = '\0';
+    int gapIndex = buffer.currentLine->data->GapStartRawIndex();
+    if(gapIndex == 0)
+        return ch;
+
+    ch = buffer.currentLine->data->At(gapIndex-1);
+    buffer.currentLine->data->Remove();
+    return ch;
 }
             
 void Buffer::InsertLine() noexcept{
-    buffer.AppendAfter(buffer.currentLine, "", 5);
+    buffer.AppendAfter(buffer.currentLine, 0, 10);
 }
             
 void Buffer::DeleteLine(std::string* remainingText) noexcept{
@@ -75,8 +87,10 @@ void Buffer::DeleteLine(std::string* remainingText) noexcept{
     if(!hasPreviousLine)
         return;
 
+    int length = buffer.currentLine->data->Size();
+
     if(remainingText)
-        *remainingText = buffer.currentLine->data->ToString();
+        *remainingText = SubstringBetween(0, length);
 
     buffer.Remove(buffer.currentLine);
     buffer.currentLine = buffer.currentLine->previous.lock();
@@ -84,15 +98,24 @@ void Buffer::DeleteLine(std::string* remainingText) noexcept{
 
 void Buffer::DeleteFromCol(unsigned int col, std::string* subString) noexcept{
     int gapIndex = col;
-    int endIndex = buffer.currentLine->data->EndIndex();
+    int endIndex = buffer.currentLine->data->Size();
 
     if(subString)
-        *subString = buffer.currentLine->data->Substring(gapIndex, endIndex);
-    buffer.currentLine->data->DeleteBetween(gapIndex, endIndex); 
+        *subString = SubstringBetween(gapIndex, endIndex);
+
+    buffer.currentLine->data->MoveGapTo(endIndex);
+    for(int i = gapIndex; i >= 0; i--){
+        buffer.currentLine->data->Remove();
+    }
 }
 
 std::string Buffer::SubstringBetween(unsigned int start, unsigned int end) noexcept{
-    return buffer.currentLine->data->Substring(start, end);
+    stringstream ss;
+    for(int i = start; i < end; i++){
+        ss << buffer.currentLine->data->At(i);
+    }
+
+    return ss.str();
 }
 
 void Buffer::MoveToHead() noexcept{
@@ -100,7 +123,7 @@ void Buffer::MoveToHead() noexcept{
 }
 
 unsigned int Buffer::GetCursorX() const noexcept{
-    return buffer.currentLine->data->GetGapIndex();
+    return buffer.currentLine->data->GapStartRawIndex();
 }
 
 unsigned int Buffer::GetCurrentLineNumber() const noexcept{
@@ -108,11 +131,13 @@ unsigned int Buffer::GetCurrentLineNumber() const noexcept{
 }
 
 void Buffer::InsertCharacterAt(unsigned index, char character) noexcept{
-    buffer.currentLine->data->InsertAt(index, character);
+    buffer.currentLine->data->MoveGapTo(index);
+    buffer.currentLine->data->Insert(character);
 }
 
 char Buffer::DeleteCharacterAt(unsigned int index) noexcept{
-    return buffer.currentLine->data->DeleteAt(index);
+    buffer.currentLine->data->MoveGapTo(index);
+    return DeleteCharacter();
 }
 
 LineIterator Buffer::Begin() const{

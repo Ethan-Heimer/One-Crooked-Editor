@@ -1,4 +1,6 @@
 #include "bufferdata.h"
+#include <string>
+#include <sstream>
 
 using namespace CrookedEditor::Buffers;
 
@@ -28,7 +30,14 @@ std::string BufferData::LineData::ToString() const{
     if(!line)
         return "";
 
-    return line->data->ToString();
+    int end = line->data->Size();
+    std::stringstream ss;
+
+    for(int i = 0; i < end; i++){
+        ss << line->data->At(i);
+    }
+
+    return ss.str();
 }
 
 void* BufferData::LineData::GetLineAddress() const{

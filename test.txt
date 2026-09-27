@@ -22,7 +22,7 @@ end
 end 2
 
 this is a debug test
-
+this is a insert test for generic gap buffers
  thats a lot of memory oh man
 int main(){
     int i = 0;

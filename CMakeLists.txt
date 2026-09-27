@@ -42,7 +42,6 @@ target_link_libraries(${NAME} PRIVATE tuirenderer)
 
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/gapbuffer/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/linkedlist/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/statemachine/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/safequeue/")
@@ -51,6 +50,7 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/te
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/coroutine/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/subprocess/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/diagnostics/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/genericgapbuffer/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/buffer/include")

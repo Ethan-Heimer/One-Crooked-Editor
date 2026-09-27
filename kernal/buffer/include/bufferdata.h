@@ -1,11 +1,11 @@
 #pragma once
 
 #include "editorlineiterator.h"
-#include "gapbuffer.h"
+#include "genericgapbuffer.hpp"
 #include "doublyindexedlinkedlist.h"
 
 namespace CrookedEditor::Buffers {
-    class BufferData final : public DoublyIndexedLinkedList<GapBuffer>, public Editor::ILineCollection{
+    class BufferData final : public DoublyIndexedLinkedList<GenericBuffer::GapBuffer<char>>, public Editor::ILineCollection{
         public:
             std::shared_ptr<Node> currentLine{head}; 
 
