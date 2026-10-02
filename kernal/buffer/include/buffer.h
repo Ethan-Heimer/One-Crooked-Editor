@@ -22,7 +22,7 @@ namespace CrookedEditor::Buffers{
             void InsertCharacter(char character) noexcept override;
             void InsertCharacterAt(unsigned index, char character) noexcept override;
 
-            void InsertString(string_view character) noexcept override;
+            void InsertString(std::string_view character) noexcept override;
             void InsertStringAt(unsigned int index, std::string_view string) noexcept override;
             
             void InsertLine() noexcept override;

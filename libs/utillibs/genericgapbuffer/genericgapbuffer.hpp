@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <iostream>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -65,6 +64,8 @@ namespace GenericBuffer{
                 endPtrExcl = other.endPtrExcl;
 
                 expansionBredth = other.expansionBredth;
+
+                return *this;
             }
 
             GapBuffer& operator=(GapBuffer&& other){
@@ -78,8 +79,10 @@ namespace GenericBuffer{
                 other.buffer = {};
                 other.startPtrIncl = 0;
                 other.endPtrExcl = 0;
+
+                return *this;
             }
-    
+ 
             void Insert(T element){
                 if(startPtrIncl >= endPtrExcl){
                     ExpandGap();
@@ -146,16 +149,29 @@ namespace GenericBuffer{
                 }
             }
     
-            size_t Size(){
+            size_t Size() const{
                 return Size<Options::Normalized>();
             }
    
             template<Options Opt>
-            constexpr size_t Size(){
+            constexpr size_t Size() const{
                 if constexpr (Opt == Options::Raw)
                     return buffer.size();
                 else 
                     return buffer.size() - (endPtrExcl - startPtrIncl); 
+            }
+    
+    
+            template<Options Opt>
+            auto At(int index) const -> std::conditional_t<Opt == Options::Raw, const std::optional<T>&, const T&>{
+                if constexpr (Opt == Options::Raw)
+                    return buffer[index];
+                else {
+                    if(index < startPtrIncl)
+                        return *buffer[index];
+                    else
+                        return *buffer[index + (endPtrExcl - startPtrIncl)];
+                }
             }
     
     
@@ -170,19 +186,30 @@ namespace GenericBuffer{
                         return *buffer[index + (endPtrExcl - startPtrIncl)];
                 }
             }
+
+            const T& At(int index) const {
+                return At<Options::Normalized>(index);
+            }
     
             T& At(int index){
                 return At<Options::Normalized>(index);
             }
-    
-            int GapStartRawIndex(){
+            int GapStartRawIndex() const{
                 return startPtrIncl;
             }
     
-            int GapEndRawIndex(){
+            int GapEndRawIndex() const{
                 return endPtrExcl;
             }
-    
+
+            void* Data() const{
+                return (void*)buffer.data();
+            }
+
+            const T& operator[](int index) const{
+                return At(index);
+            }
+
             T& operator[](int index){
                 return At(index);
             }
@@ -209,6 +236,11 @@ namespace GenericBuffer{
 
             void operator+=(T&& element){
                 Insert(element);
+            }
+
+            friend bool operator==(GenericBuffer::GapBuffer<T>& a, 
+                    GenericBuffer::GapBuffer<T>& b){
+                return a.Data() == b.Data();
             }
             
         

@@ -2,26 +2,37 @@
 
 #include "editorlineiterator.h"
 #include "genericgapbuffer.hpp"
-#include "doublyindexedlinkedlist.h"
 
 namespace CrookedEditor::Buffers {
-    class BufferData final : public DoublyIndexedLinkedList<GenericBuffer::GapBuffer<char>>, public Editor::ILineCollection{
+    using LineType = GenericBuffer::GapBuffer<char>;
+    using BufferType = GenericBuffer::GapBuffer<LineType>;
+
+    class BufferData final : public Editor::ILineCollection{
         public:
-            std::shared_ptr<Node> currentLine{head}; 
-
             struct LineData final : Editor::ILineData{
-                std::shared_ptr<Node> line;
-                std::weak_ptr<const Node> currentLine;
+                int CurrentIndex;
+                const BufferData& Buffer;
 
-                LineData(std::shared_ptr<Node> line, std::weak_ptr<const Node> currentLine);
+                LineData(const BufferData& buffer, int index);
 
                 std::shared_ptr<Editor::ILineData> NextLine() const override;
                 std::shared_ptr<Editor::ILineData> PreviousLine() const override;
 
                 std::string ToString() const override;
-                void* GetLineAddress() const override;
                 int LineNumber() const override;
+                void* GetAddress() const override;
             };
+
+
+            const LineType& CurrentLine() const;
+            LineType& CurrentLine();
+
+            int GetCurentLineIndex() const;
+            void SetCurrentLine(int index);
+
+            size_t Size();
+            void InsertLine();
+            void DeleteLine();
 
             Editor::LineIterator Begin() const override;
             Editor::LineIterator BeginAtCurrentLine() const override;
@@ -30,7 +41,8 @@ namespace CrookedEditor::Buffers {
             Editor::LineIterator End() const override;
             Editor::LineIterator EndStepsFromCurrentLine(unsigned int steps) const override;
             Editor::LineIterator AtLine(unsigned int line) const override;
-    };
 
-    using BufferNode = shared_ptr<BufferData::Node>;
+        private:
+            BufferType data;
+    };
 }

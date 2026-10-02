@@ -60,11 +60,10 @@ NewLineAction::NewLineAction(Editor::IEditable& buffer) : ActionToken(buffer){
     cursorRow = buffer.GetCurrentLineNumber();
     cursorCol = buffer.GetCursorX();
 
-    buffer.InsertLine();
 
     std::string textToAppend{};
     buffer.DeleteFromCol(cursorCol, &textToAppend);
-    buffer.GotoNextLine();
+    buffer.InsertLine();
     buffer.InsertString(textToAppend);
 };
 
@@ -82,11 +81,10 @@ void NewLineAction::UndoSelf(){
 void NewLineAction::RedoSelf(){
     buffer.GotoLine(cursorRow);
 
-    buffer.InsertLine();
 
     std::string textToAppend{};
     buffer.DeleteFromCol(cursorCol, &textToAppend);
-    buffer.GotoNextLine();
+    buffer.InsertLine();
     buffer.InsertString(textToAppend);
 }
 

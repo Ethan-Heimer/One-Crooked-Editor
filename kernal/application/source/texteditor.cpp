@@ -93,14 +93,14 @@ struct TextEditor::Impl{
                 GetDataInView(visableLines, renderingState, *context.buffer, 
                         lines, lineNumbers);
 
-
                 CalculateLineNumberColumnValues(lineNumbers, lineColumnSpace, 
                         renderingState.lineNumberColumnWidth, renderingState.lineNumberPaddingWidth);
+
+                app.PrintLog(std::format("line data length: {}", lines.size()));
 
                 renderEditor(renderingState, std::move(lines), std::move(lineNumbers), currentLine);
 
                 renderingState.lastRowNumber = currentLineNumber;
-                //
                 
                 std::this_thread::sleep_for(1ms);
             };
@@ -182,12 +182,11 @@ struct TextEditor::Impl{
     
         auto start = buffer.BeginStepsFromCurrentLine(-renderingData.currentLineViewOffset);
         auto end = buffer.EndStepsFromCurrentLine((visableLines-renderingData.currentLineViewOffset));
-    
-        for(auto line = start ; line != end; ++line){
+
+        for(auto line = start; line != end; ++line){
             lines.push_back(*line);
             lineNumbers.push_back(std::to_string(line.LineNumber()));
-        }
-    
+        } 
     }
 
     void CalculateLineNumberColumnValues(const std::vector<std::string>& lineNumbers, const int& minLineNumberColWidth, 

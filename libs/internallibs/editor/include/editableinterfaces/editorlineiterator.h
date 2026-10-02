@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <iostream>
 
 namespace Editor {
     class ILineData{
@@ -10,7 +11,7 @@ namespace Editor {
             virtual std::shared_ptr<ILineData> PreviousLine() const = 0;
 
             virtual std::string ToString() const = 0;
-            virtual void* GetLineAddress() const = 0;
+            virtual void* GetAddress() const = 0;
             virtual int LineNumber() const = 0;
             
             bool IsCurrentLine = false;
@@ -34,18 +35,19 @@ namespace Editor {
 
                 if(a.currentLine == nullptr || b.currentLine == nullptr)
                     return false;
-
-                return a.currentLine->GetLineAddress() == b.currentLine->GetLineAddress(); 
+                
+                return a.currentLine->GetAddress() == b.currentLine->GetAddress(); 
             };
 
             friend bool operator!=(const LineIterator& a, const LineIterator& b){
+
                 if(a.currentLine == nullptr && b.currentLine==nullptr)
                     return false;
 
                 if(a.currentLine == nullptr || b.currentLine == nullptr)
                     return true;
 
-                return a.currentLine->GetLineAddress() != b.currentLine->GetLineAddress(); 
+                return a.currentLine->GetAddress() != b.currentLine->GetAddress(); 
             };
 
             std::string operator*(){

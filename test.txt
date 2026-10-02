@@ -1,82 +1,26 @@
-this is a testthis s a test does this save? yes it didiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
-iiiiiiiiiiiiiiiiiiiiiiiiithis
-iiiiiiiiiiiiiiiiiiiiiiiiiiithiiiiiiihjjjjjjkkk
-this is a file saving test
+this is a test 
 
-aaabbb this this is a test yipee
-
-int  this s a test with gcc sanitizer
-main(){
-
-this s a test
-hello worlds
-partition pattern
-complex undo operations seems to mess up the document
- - this could be because backspaces do not record commands
- - the FIRST undo does not delete the line
-
-when writting a file- a new line seems to be added
-trhis is a test
-
-end
-end 2
-
-this is a debug test
-this is a insert test for generic gap buffers
- thats a lot of memory oh man
-int main(){
-    int i = 0;
-
-    while(i < 20){
-        std::cout << "hello world" << std::endl;
-        i++;
-    }
-}
-
-int main(){
-    std::cout << "Butt" << endl;
-}
+hello world
 
 
+this is a test where the buffer is a 
+gap buffer instead of a linked list
+or a "doubly index linked list"
+what a crazy data structure
 
+I will now try to split a line 
 
+ta
+da
 
+oh, that did not work :(
 
+i fixed it
 
+now, I will try and split a line and undo it
 
-
-
-
-
-
-
-
+taaaadaaaao
 
 this is a test
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+this text will never be seen

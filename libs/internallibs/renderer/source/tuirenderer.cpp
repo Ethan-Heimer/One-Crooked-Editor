@@ -1,9 +1,7 @@
 #include "tuirenderer.hpp"
 #include "rendercommandtype.hpp"
 #include "tuitexture.hpp"
-#include <iostream>
 #include <memory>
-#include <numbers>
 using namespace Rendering;
 
 struct TUIRenderer::Impl{ 

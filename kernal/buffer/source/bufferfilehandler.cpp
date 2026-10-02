@@ -1,3 +1,4 @@
+#include <iostream>
 #include <memory>
 #include <fstream>
 #include <string>
@@ -44,7 +45,7 @@ void BufferFileInterpreter::SaveToFile(std::string_view fileName,
         auto end = buffer.End();
 
         for(auto line = start; line != end; ++line){
-            saveFile << *line << endl;;
+            saveFile << *line << endl;
         }
 
         saveFile.close();

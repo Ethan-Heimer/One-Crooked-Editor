@@ -6,7 +6,16 @@
 
 using namespace GenericBuffer;
 
+
+class Test{
+    public:
+        const char& TestConst(const GapBuffer<char>& buffer) const {
+            return buffer.At(1);
+        }
+};
+
 int main(){
+    Test t{};
     GapBuffer<char> buffer{0, 5};
 
     buffer.Insert('c');
@@ -52,4 +61,9 @@ int main(){
 
     std::cout << ss.str() << std::endl;
 
+    // const at  
+   const char& ch = t.TestConst(buffer); 
+
+   std::cout << buffer.Data() << std::endl;
+   std::cout << sizeof(buffer) << std::endl;
 }

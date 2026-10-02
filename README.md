@@ -9,6 +9,34 @@ Crooked Editor is an educational project, and its designed to embrace breaking t
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 10/2/2026 - Gap buffers of gap buffers
+In the most recent commit of V0.010, instead of using a "doubly indexed linked list" gap buffers,
+I'm instead using a 'gap buffer of gap buffers' to represent files. 
+I've switched for multiple resons:
+
+ - The code around the old way was gross. To be able use itorators to iterate 
+ through the buffer, i had to create a class that inherited from 'DILL'. That always 
+ gave me a bad code smell.
+
+ - The DILL structure took all the bad parts of LLs and arrays and made an even worse structure.
+ They had indexes, so insert was in theory O(N) to update indexes after the insertion, so there
+ goes the theoretical benfit of LLs. Jumping to an index in the array was also O(N). 
+
+ - Iterating through the buffer is very crutal to the renderer, and when iterating throught a 
+ LL structure, because of pointer chasing and CPU will very often cache miss. Gapbuffers, as they
+ are continuous in memory, will not miss as often. The cache line for my M5 mac is 128 bytes.
+ the gap buffer is 40 bytes (theres a change I can optimize it), so L1 cache (to my understanding), should cache 3 lines. Thats 3x less cashe misses.
+ I understand it kinda crazy to worry about performance to this degree in a text editor, but its fun.
+
+My biggest goal for v0.010 was to make Crooked editor somehow configurable. This and decent archetecure 
+would lead the way for LSPs. My next big step towards this is the C++ plugin layer. 
+
+As I mentioned in the last update, I want to also have a scripting layer. I figured that it was going to be Lua,
+but I've been messing with the idea of using C# instead. The nice thing is, is that because the scripting engine
+will be handled by a C++ plugin, the scripting engine is swappable (maybe even hot-swappable?).
+
+Enabling LSPs is the ultimate goal of this editor. Once I have them I can consider using it full time.
+
 ## 09/22/2026 - Kernals & Rings
 Its been about a month since the last update, and v0.010 is shaping up to be a 
 large restructure of the project. While implementin LPS (a prototype can be found in v0.009), 
