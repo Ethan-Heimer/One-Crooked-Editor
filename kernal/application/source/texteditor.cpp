@@ -96,8 +96,6 @@ struct TextEditor::Impl{
                 CalculateLineNumberColumnValues(lineNumbers, lineColumnSpace, 
                         renderingState.lineNumberColumnWidth, renderingState.lineNumberPaddingWidth);
 
-                app.PrintLog(std::format("line data length: {}", lines.size()));
-
                 renderEditor(renderingState, std::move(lines), std::move(lineNumbers), currentLine);
 
                 renderingState.lastRowNumber = currentLineNumber;
