@@ -138,8 +138,9 @@ namespace CrookedEditor::Application{
             int GetThreadCount();
             std::vector<int> GetThreadIds();
 
-            void Run();
             void Quit();
+
+            bool QuitCalled();
             
  
         private:

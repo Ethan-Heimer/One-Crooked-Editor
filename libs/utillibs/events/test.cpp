@@ -75,12 +75,12 @@ int main(){
     Timer timer{10};
     MemberTest test{};
     
-    timer.OnTimerOff.Subscribe([&](std::string message){
-        std::cout << message << std::endl;
+    timer.OnTimerOff += ([&](std::string message){
+        std::cout << "Lambda: " << message << std::endl;
         timerOff = true;
     });
 
-    timer.OnTimerOff.Subscribe(test, &MemberTest::Message);
+    timer.OnTimerOff += {test, &MemberTest::Message};
     timer.OnTimerOff.Subscribe(test, &MemberTest::MessageTwo);
 
     while(!timerOff){
@@ -88,6 +88,27 @@ int main(){
     }
 
     timer.OnTimerOff.Unsubscribe(test, &MemberTest::Message);
+    timerOff = false;
+    timer.Reset(5);
+
+    while(!timerOff){
+        std::this_thread::yield();
+    }
+
+    timer.OnTimerOff.Subscribe(test, &MemberTest::Message);
+    timer.OnTimerOff.Subscribe(test, &MemberTest::MessageTwo);
+
+    timerOff = false;
+    timer.Reset(5);
+
+    while(!timerOff){
+        std::this_thread::yield();
+    }
+
+    timer.OnTimerOff.UnsubscribeAll(test);
+
+    std::cout << " " << std::endl;
+
     timerOff = false;
     timer.Reset(5);
 

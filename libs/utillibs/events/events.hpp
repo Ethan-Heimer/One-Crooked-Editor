@@ -31,8 +31,8 @@ class MemberFunctionType{
     private:
         struct Contract{
             virtual void Invoke(FuncArgs... args) = 0;
-            virtual bool IsMemberOf(const void* refAddress) = 0;
 
+            virtual bool IsMemberOf(const void* refAddress) = 0;
             virtual bool IsFunctionOf(std::any possableFunctionPointer) = 0;
         };
 
@@ -63,6 +63,7 @@ class MemberFunctionType{
         std::unique_ptr<Contract> impl;
 };
 
+
 template <typename Friend, typename... Args>
 class Event{
     friend Friend;
@@ -92,6 +93,36 @@ class Event{
                 return;
 
             memberFunctions.erase(memberFunctions.begin() + index);
+        }
+
+        template <typename T>
+        void UnsubscribeAll(const T& reference){
+            std::vector<int> indicies;
+            indicies.reserve(memberFunctions.size());
+
+            for(int i = 0; i < memberFunctions.size(); i++){
+                MemberFunctionType<Args...>& memberFunc = memberFunctions[i];
+
+                if(memberFunc.IsMemberOf(reference))
+                    indicies.push_back(i);
+            }
+
+            if(indicies.size() <= 0)
+                return;
+            
+            int offset = 0;
+            for(int i = 0; i< indicies.size(); i++){
+                memberFunctions.erase(memberFunctions.begin() + indicies[i] - offset);
+                offset++; 
+            }
+        }
+
+        void operator+=(std::function<void(Args...)>&& function){
+            Subscribe(std::move(function));
+        }
+
+        void operator+=(MemberFunctionType<Args...>&& memberFunction){
+            memberFunctions.push_back(std::move(memberFunction));
         }
 
     protected:

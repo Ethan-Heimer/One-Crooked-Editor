@@ -124,14 +124,12 @@ struct Application::Impl{
             log << message.data() << std::endl;
         }
 
-        void Run(){
-            while(!quitApplication){
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-        }
-
         void Quit(){
             quitApplication = true;
+        }
+
+        bool QuitCalled(){
+            return quitApplication;
         }
 
     private:
@@ -194,8 +192,8 @@ MemoryUsageData Application::MemoryUsage(){
     return pImpl->MemoryUsage();
 };
 
-void Application::Run(){
-    pImpl->Run();
+bool Application::QuitCalled(){
+    return pImpl->QuitCalled();
 }
 
 void Application::Quit(){
