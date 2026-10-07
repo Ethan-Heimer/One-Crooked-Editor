@@ -3,7 +3,6 @@
 #include <any>
 #include <cassert>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -34,6 +33,8 @@ class MemberFunctionType{
 
             virtual bool IsMemberOf(const void* refAddress) = 0;
             virtual bool IsFunctionOf(std::any possableFunctionPointer) = 0;
+
+            virtual ~Contract(){};
         };
 
         template<typename T>
@@ -68,6 +69,10 @@ template <typename Friend, typename... Args>
 class Event{
     friend Friend;
     public:        
+        Event(){};
+        Event(const Event&) = delete;
+        Event(Event&&) = delete;
+
         void Subscribe(std::function<void(Args...)>&& func){
             functions.push_back({func});
         }
@@ -137,5 +142,9 @@ class Event{
             for(auto& func : memberFunctions){
                 func(args...);
             }
+        }
+
+        void operator()(Args... args){
+            Invoke(args...);
         }
 };

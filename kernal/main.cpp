@@ -4,7 +4,12 @@
 int main(int argc, char** argv){
     CrookedEditor::CrookedEditorCore crookedEditorCore{argc, argv};
 
-    while(!crookedEditorCore.CoreQuit()){
+    bool quit = false;
+    crookedEditorCore.OnCoreQuit += [&](){
+        quit = true;
+    };
+
+    while(!quit){
         std::this_thread::yield();
     }
 }

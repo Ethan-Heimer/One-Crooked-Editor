@@ -12,6 +12,8 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
         return;
     }
 
+    Application.OnQuit += {OnCoreQuit, &Event<CrookedEditorCore>::Invoke};
+
     std::string fileName{argv[1]};
 
     auto renderEditor = [&](const EditorRenderingState renderingState, std::vector<std::string>&& lines,
@@ -30,11 +32,10 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
 }
 
 CrookedEditorCore::~CrookedEditorCore(){
+    Application.OnQuit.UnsubscribeAll(OnCoreQuit);
+
     TextEditor.Stop();
     Renderer.Stop();
     InputHandler.Stop();
 }
 
-bool CrookedEditorCore::CoreQuit(){
-    return Application.QuitCalled();
-}

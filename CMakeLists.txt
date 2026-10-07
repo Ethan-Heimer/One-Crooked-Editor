@@ -43,6 +43,7 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/co
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/subprocess/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/diagnostics/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/genericgapbuffer/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/events/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/buffer/include")

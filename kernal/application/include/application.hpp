@@ -1,5 +1,6 @@
 #pragma once
 
+#include "events.hpp"
 #include <functional>
 #include <memory>
 #include <string_view>
@@ -103,6 +104,8 @@ namespace CrookedEditor::Application{
         public:
             constexpr static int EmpytHandle = -1;
 
+            Event<Application> OnQuit;
+
             Application();
             ~Application();
             Application(const Application&) = delete;
@@ -139,9 +142,6 @@ namespace CrookedEditor::Application{
             std::vector<int> GetThreadIds();
 
             void Quit();
-
-            bool QuitCalled();
-            
  
         private:
             struct Impl;

@@ -128,10 +128,6 @@ struct Application::Impl{
             quitApplication = true;
         }
 
-        bool QuitCalled(){
-            return quitApplication;
-        }
-
     private:
         std::ofstream log{};
         std::map<int, std::atomic<bool>> threadQuitTokens{};
@@ -192,10 +188,7 @@ MemoryUsageData Application::MemoryUsage(){
     return pImpl->MemoryUsage();
 };
 
-bool Application::QuitCalled(){
-    return pImpl->QuitCalled();
-}
-
 void Application::Quit(){
     pImpl->Quit();
+    OnQuit.Invoke();
 }

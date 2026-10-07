@@ -2,6 +2,7 @@
 
 #include "application.hpp"
 #include "configvault.hpp"
+#include "events.hpp"
 #include "inputhandler.hpp"
 #include "terminal.hpp"
 #include "terminalrenderer.hpp"
@@ -10,6 +11,8 @@
 namespace CrookedEditor{
     class CrookedEditorCore{
         public:
+            Event<CrookedEditorCore> OnCoreQuit;
+
             Terminal::TerminalController TerminalController;
 
             Application::Application Application; 
@@ -22,8 +25,6 @@ namespace CrookedEditor{
 
             CrookedEditorCore(int argc, char** argv);
             ~CrookedEditorCore();
-
-            bool CoreQuit();
     };
 
 }
