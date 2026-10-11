@@ -2,8 +2,10 @@
 
 #include "application.hpp"
 #include "configvault.hpp"
-#include "editorrenderingstate.hpp"
 #include "terminal.hpp"
+
+#include "editorrenderingstate.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>

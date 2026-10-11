@@ -1,6 +1,5 @@
 #pragma once
 
-#include "events.hpp"
 #include <functional>
 #include <memory>
 #include <string_view>
@@ -9,8 +8,10 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <subprocess.hpp>
 #include <vector>
+
+#include "events.hpp"
+#include "subprocess.hpp"
 
 namespace CrookedEditor::Application{
     using ThreadHandle = int;
