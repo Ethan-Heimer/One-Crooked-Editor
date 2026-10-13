@@ -1,19 +1,25 @@
 #include "configvault.hpp"
 #include <map>
 #include <memory>
+#include <mutex>
 #include <variant>
+
+/* I may consider making this lock free */
 
 using namespace CrookedEditor::Application;
 
 struct ConfigVault::Impl{
     std::map<std::string, std::variant<const char*, int, bool>> vault;
+    std::mutex mut;
 
     void AddValue(std::string key, std::variant<const char*, int, bool> value){
+        std::lock_guard<std::mutex> lock{mut};
         vault[key] = std::move(value);
     }
 
     template<typename T>
     T FindValueOrDefault(std::string_view key, T fallback){
+        std::lock_guard<std::mutex> lock{mut};
         if(!vault.contains(key.data()))
             return fallback;
 

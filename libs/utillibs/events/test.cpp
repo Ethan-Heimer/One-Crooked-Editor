@@ -3,9 +3,11 @@
 #include <mutex>
 #include <queue>
 #include <thread>
-#include "events.hpp"
 #include <string>
 #include <iostream>
+
+#include "events.hpp"
+#include "hooks.hpp"
 
 class Timer{
     public:
@@ -67,6 +69,19 @@ class MemberTest{
         void MessageTwo(std::string message){
             std::cout << "I recieved: " << message << std::endl;
         }
+
+        int Add(int x, int y){
+            return x + y;
+        }
+};
+
+class HookTest{
+    public:
+        SoliatryHook<HookTest, int, int, int> hook;
+
+        int InvokeMyHook(int x, int y){
+            return hook.Invoke(x, y);
+        };
 };
 
 int main(){
@@ -115,4 +130,11 @@ int main(){
     while(!timerOff){
         std::this_thread::yield();
     }
+
+    std::cout  << "Testing Hooks" << std::endl; 
+    HookTest hookTest{};
+    hookTest.hook.SetCallback(test, &MemberTest::Add);
+
+    int value = hookTest.InvokeMyHook(5, 9);
+    std::cout << value << std::endl;
 }

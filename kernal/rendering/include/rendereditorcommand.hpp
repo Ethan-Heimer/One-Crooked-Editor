@@ -1,28 +1,21 @@
 #pragma once
 
 #include "cursor.hpp"
-#include "ieditable.h"
+#include "editorvisualstate.hpp"
 #include "rendercommandbase.hpp"
 #include "terminal.hpp"
 #include "tuitexture.hpp"
-#include <string>
-#include <vector>
-
-#include "editorrenderingstate.hpp"
+#include <memory>
 
 namespace CrookedEditor::Renderer {
     class RenderEditorCommand : public Rendering::Commands::RenderCommandBase{
         public:
-            const EditorRenderingState renderingState;
-
-            std::vector<std::string> lines;
-            std::vector<std::string> lineNumbers;
-            int currentLine;
+            const std::shared_ptr<const Application::TextEditorVisualState> renderingState;
 
             int row, col;
 
-            RenderEditorCommand(const Terminal::TerminalController& terminalController, EditorRenderingState renderingData,
-                    std::vector<std::string>&& lines, std::vector<std::string>&& lineNumbers, int currentLine);
+            RenderEditorCommand(const Terminal::TerminalController& terminalController, 
+                    std::shared_ptr<const Application::TextEditorVisualState> renderingState);
 
             void Do(Rendering::CursorPosition& cursorPos, Rendering::TUITexture& frameBuffer) override;
     };

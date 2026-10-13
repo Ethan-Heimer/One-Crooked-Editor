@@ -4,9 +4,9 @@
 #include "configvault.hpp"
 
 #include "editorcontext.h"
-#include "editorrenderingstate.hpp"
 #include "editorstateparameters.h"
 #include "editorstates.h"
+#include "editorvisualstate.hpp"
 #include "terminal.hpp"
 
 #include "inputconstants.hpp"
@@ -23,7 +23,6 @@ using namespace CrookedEditor::States;
 using namespace Editor;
 using namespace Editor::States;
 
-using namespace CrookedEditor::Renderer;
 using namespace Terminal;
 
 struct TextEditor::Impl{
@@ -31,30 +30,37 @@ struct TextEditor::Impl{
     ConfigVault& config;
     TerminalController& terminalController;
 
+    CycleCompleteEventType& onCycleCompleteEvent;
+    InputHookType& getNextKey;
+
     ThreadHandle handle{Application::EmpytHandle};
 
-    Impl(Application& app, TerminalController& terminalController, ConfigVault& config) 
-        : app(app), terminalController(terminalController), config(config){} 
+    Impl(Application& app, TerminalController& terminalController, 
+         ConfigVault& config, CycleCompleteEventType& onCycleCompleteEvent,
+         InputHookType& getNextKey) 
+        : app(app), terminalController(terminalController), config(config), 
+          onCycleCompleteEvent(onCycleCompleteEvent), getNextKey(getNextKey){} 
 
-    void Start(std::string_view fileName, std::function<int()> getNextKey, 
-            std::function<void(EditorRenderingState renderingState, std::vector<std::string>&& lines,
-                std::vector<std::string>&& lineNumbers, int isCurrentLine)> renderEditor){
-
+    void Start(){
         if(handle >= 0){
             Stop();
         }
 
-        auto editorJob = [this, fileName, getNextKey, renderEditor](const std::atomic<bool>& quitToken){
-            EditorContext context{BufferFileInterpreter{}, DefaultStates<NormalState, InsertState>{}, fileName.data()};
-            stringstream inputStream;
+        auto editorJob = [this](const std::atomic<bool>& quitToken){
+            std::string fileName = config.FindValueOrDefault("fileName", "newfile.txt");
 
-            EditorRenderingState renderingState{};
+            EditorContext context{BufferFileInterpreter{}, 
+                DefaultStates<NormalState, InsertState>{}, fileName};
+
+            stringstream inputStream;
 
             /* constants for figureing out rendering data, move later */
             const int lineColumnSpace = 4;
             const int verticalScrollThreshhold = 5;
             const int invisableRows = 2; // -- offset of how meny rows should
                                          // not be rendered at the bottom
+            TextEditorVisualState visualState;
+
             while(!quitToken){
                 int key;
 
@@ -77,29 +83,26 @@ struct TextEditor::Impl{
                 int row, col;
                 terminalController.GetTerminalSize(row, col);
 
-                renderingState.cursorCol = context.buffer->GetCursorX();
+                visualState.cursorCol = context.buffer->GetCursorX();
 
                 int currentLineNumber = context.buffer->GetCurrentLineNumber();
                 int visableLines = row - invisableRows;
 
-                ScrollViewVertical(verticalScrollThreshhold, visableLines, currentLineNumber, renderingState);
-                ScrollViewHorizontal(6, col, renderingState.cursorCol, renderingState.colOffset);
-
-                std::vector<std::string> lines;
-                std::vector<std::string> lineNumbers;
+                ScrollViewVertical(verticalScrollThreshhold, visableLines, currentLineNumber, visualState);
+                ScrollViewHorizontal(6, col, visualState);
 
                 int currentLine = context.buffer->GetCurrentLineNumber();
 
-                GetDataInView(visableLines, renderingState, *context.buffer, 
-                        lines, lineNumbers);
+                GetDataInView(visableLines, visualState, *context.buffer);
+                CalculateLineNumberColumnValues(visualState, lineColumnSpace);
 
-                CalculateLineNumberColumnValues(lineNumbers, lineColumnSpace, 
-                        renderingState.lineNumberColumnWidth, renderingState.lineNumberPaddingWidth);
-
-                renderEditor(renderingState, std::move(lines), std::move(lineNumbers), currentLine);
-
-                renderingState.lastRowNumber = currentLineNumber;
+                visualState.lastRowNumber = currentLineNumber;
                 
+                auto temp = visualState.Dispatch();
+                auto visualStatePtr = std::make_shared<const TextEditorVisualState>(std::move(temp));
+
+                onCycleCompleteEvent.Invoke(visualStatePtr);
+                app.PrintLog(fileName);
                 std::this_thread::sleep_for(1ms);
             };
         }; 
@@ -127,98 +130,96 @@ struct TextEditor::Impl{
      *    not be its job.
      */ 
 
-    void ScrollViewVertical(const int& verticalScrollThreshold, const int& visableLines, const int& currentLineNumber, EditorRenderingState& renderingData){
+    void ScrollViewVertical(const int& verticalScrollThreshold, const int& visableLines, const int& currentLineNumber, TextEditorVisualState& visualState){
         /*
          * The offset is kinda backwards as its relative to the current line and not the start of the buffer.
          * Meaning that if the view needs to stay, the offset should change to counteract the difference in position of the new line.
          */
     
-        int lineDelta = currentLineNumber - renderingData.lastRowNumber;
+        int lineDelta = currentLineNumber - visualState.lastRowNumber;
         if(lineDelta > 0){
-            int linesFromBottom = visableLines - (currentLineNumber - (currentLineNumber - renderingData.currentLineViewOffset));
+            int linesFromBottom = visableLines - (currentLineNumber - (currentLineNumber - visualState.currentLineViewOffset));
     
             for(int i = lineDelta; i > 0; i--){
                 if(linesFromBottom - i >= verticalScrollThreshold)
-                    renderingData.currentLineViewOffset++;
+                    visualState.currentLineViewOffset++;
                 else
                     break;
             }
         }
         else if(lineDelta < 0){
-            int linesFromTop = currentLineNumber - (currentLineNumber - renderingData.currentLineViewOffset);
+            int linesFromTop = currentLineNumber - (currentLineNumber - visualState.currentLineViewOffset);
     
             for(int i = 0; i > lineDelta; i--){
                 if(linesFromTop + i >= verticalScrollThreshold)
-                    renderingData.currentLineViewOffset--;
+                    visualState.currentLineViewOffset--;
     
                 else if(currentLineNumber <= verticalScrollThreshold){
-                    renderingData.currentLineViewOffset = currentLineNumber;
+                    visualState.currentLineViewOffset = currentLineNumber;
                 } 
                 else
                     break;
             }
         }
     
-        renderingData.firstLineNumberShown = currentLineNumber - renderingData.currentLineViewOffset;
-        renderingData.lastLineNumberShown = visableLines + renderingData.firstLineNumberShown; 
+        visualState.firstLineNumberShown = currentLineNumber - visualState.currentLineViewOffset;
+        visualState.lastLineNumberShown = visableLines + visualState.firstLineNumberShown; 
     }
     
-    void ScrollViewHorizontal(const int& lineNumberColumnWidth, const int& termCol, const int& cursorCol, int& colOffset){
-        while(cursorCol > termCol + colOffset - lineNumberColumnWidth){
-            colOffset++;
+    void ScrollViewHorizontal(const int& lineNumberColumnWidth, const int& termCol, TextEditorVisualState& visualState){
+        while(visualState.cursorCol > termCol + visualState.colOffset - lineNumberColumnWidth){
+            visualState.colOffset++;
         }
     
-        while(cursorCol < colOffset){
-            colOffset--; 
+        while(visualState.cursorCol < visualState.colOffset){
+            visualState.colOffset--; 
         }
     }
 
-    void GetDataInView(const int& visableLines, const EditorRenderingState& renderingData, const IEditable& buffer,
-            std::vector<std::string>& lines, std::vector<std::string>& lineNumbers){
-        lines.reserve(visableLines);
-        lineNumbers.reserve(visableLines);
+    void GetDataInView(const int& visableLines, TextEditorVisualState& visualState, const IEditable& buffer){
+        visualState.lines.reserve(visableLines);
+        visualState.lines.reserve(visableLines);
     
-        auto start = buffer.BeginStepsFromCurrentLine(-renderingData.currentLineViewOffset);
-        auto end = buffer.EndStepsFromCurrentLine((visableLines-renderingData.currentLineViewOffset));
+        auto start = buffer.BeginStepsFromCurrentLine(-visualState.currentLineViewOffset);
+        auto end = buffer.EndStepsFromCurrentLine((visableLines-visualState.currentLineViewOffset));
 
         for(auto line = start; line != end; ++line){
-            lines.push_back(*line);
-            lineNumbers.push_back(std::to_string(line.LineNumber()));
-        } 
+            visualState.lines.push_back(*line);
+            visualState.lineNumbers.push_back(std::to_string(line.LineNumber()));
+        }
+
     }
 
-    void CalculateLineNumberColumnValues(const std::vector<std::string>& lineNumbers, const int& minLineNumberColWidth, 
-            int& lineNumberColumnWidth, int& lineNumberPaddingWidth){
+    void CalculateLineNumberColumnValues(TextEditorVisualState& visualState, const int& minLineNumberColWidth){
         int lineNumberLength{};
         int maxLineNumberLength{};
     
-        for(size_t i = 0; i < lineNumbers.size(); i++){
-            lineNumberLength = lineNumbers[i].length();
+        for(size_t i = 0; i < visualState.lineNumbers.size(); i++){
+            lineNumberLength = visualState.lineNumbers[i].length();
             if(maxLineNumberLength < lineNumberLength)
                 maxLineNumberLength = lineNumberLength;
         }
     
-        lineNumberPaddingWidth = minLineNumberColWidth - maxLineNumberLength;
-        if(lineNumberPaddingWidth < 0)
-            lineNumberPaddingWidth *= -1;
+        visualState.lineNumberPaddingWidth = minLineNumberColWidth - maxLineNumberLength;
+        if(visualState.lineNumberPaddingWidth < 0)
+            visualState.lineNumberPaddingWidth *= -1;
         
-        lineNumberColumnWidth = lineNumberPaddingWidth + maxLineNumberLength;
+        visualState.lineNumberColumnWidth = visualState.lineNumberPaddingWidth + maxLineNumberLength;
     }
+
 };
 
 
 TextEditor::TextEditor(Application& app, TerminalController& terminalController,
-        ConfigVault& config) : pImpl(std::make_unique<Impl>(app, terminalController, config)){}
+        ConfigVault& config) : pImpl(std::make_unique<Impl>(app, terminalController, 
+                config, OnEditorCycleComplete, SGetNextInputHook)){}
 
 TextEditor::~TextEditor(){
     Stop();
 }
 
-void TextEditor::Start(std::string_view fileName, std::function<int()> getNextKey, 
-        std::function<void(EditorRenderingState renderingState,
-            std::vector<std::string>&& lines, std::vector<std::string>&& lineNumbers,
-            int isCurrentLine)> renderEditor){
-    pImpl->Start(fileName, getNextKey, renderEditor);
+void TextEditor::Start(){
+    pImpl->Start();
 }
 
 void TextEditor::Stop(){

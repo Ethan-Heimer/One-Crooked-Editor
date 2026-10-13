@@ -2,25 +2,27 @@
 
 #include "application.hpp"
 #include "configvault.hpp"
-#include "terminal.hpp"
+#include "events.hpp"
+#include "hooks.hpp"
 
-#include "editorrenderingstate.hpp"
+#include "terminal.hpp"
+#include "editorvisualstate.hpp"
 
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace CrookedEditor::Application{
     class TextEditor{
         public:
+            using CycleCompleteEventType = Event<TextEditor, const std::shared_ptr<const TextEditorVisualState>>;
+            using InputHookType = SoliatryHook<TextEditor, int>;
+
+            CycleCompleteEventType OnEditorCycleComplete;
+            InputHookType SGetNextInputHook;
+
             TextEditor(Application& app, Terminal::TerminalController& terminalController, ConfigVault& config);
             ~TextEditor();
 
-            void Start(std::string_view fileName, std::function<int()> getNextKey, 
-                std::function<void(Renderer::EditorRenderingState renderingState, 
-                    std::vector<std::string>&& lines, std::vector<std::string>&& lineNumbers,
-                    int currentLine)> renderEditor);
-
+            void Start();
             void Stop();
 
         private:
