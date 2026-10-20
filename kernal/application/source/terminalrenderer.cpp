@@ -36,21 +36,21 @@ struct TerminalRenderer::Impl{
                 int row, col{};
                 terminalController.GetTerminalSize(row, col);
 
+                commands.SwapBuffers();
                 if(!commands.IsReadBufferEmpty()){
                     RenderCommand command{};
-                    while(commands.Consume(command)){
+                    while(commands.Consume(command))
                         renderer.DoCommand(std::move(command));
-                    }
 
+                    // this needs to be moved somewhere else
                     auto [vm, rss] = application.MemoryUsage();
                     renderer.DoCommand(RenderString{terminalController, row-1, 0, 
                             std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss)});
+                    //
 
                     renderer.Display();
                 }
                 
-                commands.SwapBuffers();
-
                 milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
                 msd = msa-msb;
                 

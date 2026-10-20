@@ -9,6 +9,16 @@ Crooked Editor is an educational project, and its designed to embrace breaking t
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 10/20/2026 - Double Buffered Ring Buffers
+This refactor I've updated the rendering queue to be a double ring buffer.
+The old system was a simple queue using mutexs for thread synconization. The 
+problem with this is that when the render loop was rendering, the editor loop
+has to wait. this just, does not makes sence archetectually? and as the system
+grows and more things request rendering commands, the more waiting there is. 
+
+The new buffer fixes this, It decouples producer performance from consumer performence,
+and uses atomics so the queues are lock free (not wait free however). 
+
 ## 10/2/2026 - Gap buffers of gap buffers
 In the most recent commit of V0.010, instead of using a "doubly indexed linked list" gap buffers,
 I'm instead using a 'gap buffer of gap buffers' to represent files. 
