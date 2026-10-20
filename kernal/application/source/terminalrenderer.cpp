@@ -1,17 +1,18 @@
 #include "terminalrenderer.hpp"
 #include "application.hpp"
 #include "rendercommandtype.hpp"
-#include "safequeue.h"
 #include "standardrenderercommands.hpp"
 #include "terminal.hpp"
 #include "tuirenderer.hpp"
 #include <chrono>
 #include <format>
+#include "pingpongringbuffer.hpp"
 
 using namespace CrookedEditor::Application;
 using namespace std::chrono;
 using namespace Rendering::Commands;
 using namespace Terminal;
+using namespace Queues;
 
 struct TerminalRenderer::Impl{
     Application& application;
@@ -19,7 +20,7 @@ struct TerminalRenderer::Impl{
 
     ThreadHandle handle{Application::EmpytHandle};
 
-    SafeQueue<RenderCommand> commands;
+    PingPongRingBuffer<RenderCommand, 65536>  commands;
 
     Impl(Application& application, TerminalController& terminalController) 
         : application(application), terminalController(terminalController){}
@@ -35,21 +36,20 @@ struct TerminalRenderer::Impl{
                 int row, col{};
                 terminalController.GetTerminalSize(row, col);
 
-                bool didCommands = !commands.empty();
-                while(!commands.empty()){
-                    RenderCommand command = std::move(commands.front());
-                    renderer.DoCommand(std::move(command));
+                if(!commands.IsReadBufferEmpty()){
+                    RenderCommand command{};
+                    while(commands.Consume(command)){
+                        renderer.DoCommand(std::move(command));
+                    }
 
-                    commands.pop();
-                }
-
-                if(didCommands){
                     auto [vm, rss] = application.MemoryUsage();
                     renderer.DoCommand(RenderString{terminalController, row-1, 0, 
                             std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss)});
 
                     renderer.Display();
                 }
+                
+                commands.SwapBuffers();
 
                 milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
                 msd = msa-msb;
@@ -70,7 +70,7 @@ struct TerminalRenderer::Impl{
     }
 
     void AddCommand(RenderCommand command){
-        commands.move(std::move(command));
+        commands.Produce(std::move(command));
     }
 };
 

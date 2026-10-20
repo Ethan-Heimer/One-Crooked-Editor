@@ -1,21 +1,22 @@
 #include "inputhandler.hpp"
 #include "application.hpp"
-#include "safequeue.h"
 #include "terminal.hpp"
 #include <format>
 #include <memory>
 #include <unistd.h>
+#include "ringbuffer.hpp"
 
 #include "inputconstants.hpp"
 
 using namespace CrookedEditor::Application;
 using namespace Terminal;
+using namespace Queues;
 
 struct InputHandler::Impl{
     Application& application;
     TerminalController& terminalController;
 
-    SafeQueue<int> inputQueue;
+    RingBuffer<int, 65536> inputQueue;
     ThreadHandle threadHandle{Application::EmpytHandle};
 
     Impl(Application& application, TerminalController& terminalController) 
@@ -33,7 +34,7 @@ struct InputHandler::Impl{
                 int bytesRead = read(STDIN_FILENO, &input, 1);
 
                 if(bytesRead > 0)
-                    inputQueue.push(input);
+                    inputQueue.Push(input);
             }
         });
 
@@ -48,11 +49,8 @@ struct InputHandler::Impl{
     }
 
     int GetInput(){
-        if(inputQueue.empty())
-            return Input::NoInput;
-
-        int input = inputQueue.front();
-        inputQueue.pop();
+        int input = Input::NoInput;
+        inputQueue.Pop(input);
 
         return input;
     }

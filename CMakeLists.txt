@@ -36,7 +36,6 @@ target_link_libraries(${NAME} PRIVATE tuirenderer)
 target_include_directories(${NAME} PRIVATE ${CURSES_INCLUDE_DIRS})
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/statemachine/")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/safequeue/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/trees/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/terminal/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/coroutine/")
@@ -44,6 +43,7 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/su
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/diagnostics/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/genericgapbuffer/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/events/")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/ringbuffer/")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/input/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/buffer/include")
