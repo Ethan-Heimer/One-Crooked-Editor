@@ -4,6 +4,8 @@
 #include "configvault.hpp"
 #include "events.hpp"
 #include "inputhandler.hpp"
+#include "pluginlauncher.hpp"
+#include "systemmamager.hpp"
 #include "terminal.hpp"
 #include "terminalrenderer.hpp"
 #include "texteditor.hpp"
@@ -22,6 +24,9 @@ namespace CrookedEditor{
             Application::TerminalRenderer Renderer;
 
             Application::TextEditor TextEditor;
+            Application::PluginLauncher pluginLauncher;
+
+            Application::SystemManager SystemManager;
 
             CrookedEditorCore(int argc, char** argv);
             ~CrookedEditorCore();

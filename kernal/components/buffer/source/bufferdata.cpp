@@ -73,12 +73,13 @@ void BufferData::InsertLine(){
     data.Insert({0, 10});
 }
 
-void BufferData::DeleteLine(){
+bool BufferData::DeleteLine(){
     //preserve first line
-    if(data.Size() <= 1)
-        return;
+    if(GetCurentLineIndex() == 0 || data.Size() <= 1)
+        return false;
 
     data.Remove();
+    return true;
 }
 
 const LineType& BufferData::CurrentLine() const{

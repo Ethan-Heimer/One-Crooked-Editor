@@ -3,9 +3,9 @@
 #include <array>
 #include <csignal>
 #include <cstdio>
+#include <functional>
 #include <string_view>
 #include <sys/wait.h>
-#include <type_traits>
 #include <unistd.h>
 #include <string_view>
 
@@ -55,7 +55,7 @@ namespace Process{
                     execlp(process.data(), process.data(), arguments..., NULL);
                     fflush(stdout);
                     exit(0);
-                } else {
+                } else { 
                     close(parentToChildPipe[ReadEnd]);
                     close(childToParentPipe[WriteEnd]);
                     close(childStdErrorPipe[WriteEnd]);

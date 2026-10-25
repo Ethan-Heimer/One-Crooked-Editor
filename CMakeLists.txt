@@ -22,13 +22,15 @@ message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/internallibs/editor")
 add_subdirectory("${CMAKE_SOURCE_DIR}/libs/internallibs/renderer")
 
+add_subdirectory("${CMAKE_SOURCE_DIR}/plugins/test/")
+
 file(GLOB_RECURSE SOURCE_FILES "${CMAKE_SOURCE_DIR}/kernal/*.cpp")
 add_executable(${NAME}
     ${SOURCE_FILES}
 )
 
-#target_compile_options(${NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
-#target_link_options(${NAME} PRIVATE -fsanitize=address)
+target_compile_options(${NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+target_link_options(${NAME} PRIVATE -fsanitize=address)
 
 target_link_libraries(${NAME} PRIVATE editor)
 target_link_libraries(${NAME} PRIVATE tuirenderer)
@@ -45,9 +47,10 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/ge
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/events/")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/ringbuffer/")
 
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/input/include")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/buffer/include")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/editor/include")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/editor/include/mutators")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/rendering/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/systems/input/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/buffer/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/editor/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/editor/include/mutators")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/rendering/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include")

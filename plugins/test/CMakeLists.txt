@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(LIBNAME test)
+project(${LIBNAME} VERSION 3.0 LANGUAGES CXX)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins/")
+file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+
+# add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/buffer" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+add_library(${LIBNAME} SHARED ${SOURCE_FILES})

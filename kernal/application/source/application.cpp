@@ -1,11 +1,12 @@
 #include "application.hpp"
+#include "ringbuffer.hpp"
 #include "thread"
-#include <chrono>
 #include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <queue>
 #include <thread>
 #include <unistd.h>
 #include <vector>
@@ -15,6 +16,10 @@
 
 using namespace CrookedEditor::Application;
 using namespace Process;
+using namespace Queues;
+
+// use compositon to clean this up. this class has way to meny responsabilities
+// maybe application should be an orcrestraiter class to different sub responsibilities?
 
 struct Application::Impl{
     public: 
@@ -42,12 +47,43 @@ struct Application::Impl{
             log.close();
         }
 
-        ThreadHandle SpawnThread(const ThreadConstructor& threadConstructor){
-            threadQuitTokens[lastThreadID] = false;
-            threads[lastThreadID] = threadConstructor.CreateThread(threadQuitTokens.at(lastThreadID)); 
-            lastThreadID++;
+        void CleanUp(){
+            ThreadHandle tHandle;
+            while(deadThreads.Pop(tHandle)){
+                PrintLog(std::format("Dead Thread {} Found.", tHandle));
+                KillThread(tHandle);
+            }
 
-            return lastThreadID-1;
+            for(auto& [pid, process] : subprocesses){
+                if(!process.IsAlive()){
+                    PrintLog(std::format("Dead Subprocess {} Found.", pid));
+                    deadProcesses.push(pid);
+                }
+            }
+
+            SubprocessHandle sHandle;
+            while (!deadProcesses.empty()) {
+                sHandle = deadProcesses.front(); 
+                deadProcesses.pop();
+    
+                Kill(sHandle);
+            }
+        }
+
+        ThreadHandle SpawnThread(const ThreadConstructor& threadConstructor){
+            int thisThreadsId = nextThreadID;
+            threadQuitTokens[thisThreadsId] = false;
+
+            auto onDoneExecuting = [&, thisThreadsId](){
+                deadThreads.Push(thisThreadsId);
+            };
+
+            threads[thisThreadsId] = threadConstructor.CreateThread(onDoneExecuting, 
+                    threadQuitTokens.at(thisThreadsId)); 
+
+            nextThreadID++;
+
+            return thisThreadsId;
         }
             
         SubprocessInfo SpawnSubprocess(const SubprocessConstructor& processConstructor){
@@ -102,6 +138,10 @@ struct Application::Impl{
             return threads.size();
         }
 
+        bool DoesThreadExist(ThreadHandle handle){
+            return threads.contains(handle);
+        }
+
         std::vector<int> GetThreadIds(){
             std:std::vector<int> ids;
             ids.reserve(threads.size());
@@ -135,16 +175,22 @@ struct Application::Impl{
 
         std::map<int, Subprocess> subprocesses{};
 
-        int lastThreadID{};
+        int nextThreadID{};
         int lastSubprocessID{};
 
         std::atomic<bool> quitApplication{};
 
+        RingBuffer<ThreadHandle, 65536> deadThreads;
+        std::queue<SubprocessHandle> deadProcesses;
 };
 
 Application::Application() : pImpl(std::make_unique<Impl>()){}
 Application::~Application(){
     pImpl.reset();
+}
+
+void Application::CleanUp(){
+    pImpl->CleanUp();
 }
 
 void Application::PrintLog(std::string_view message){
@@ -182,7 +228,10 @@ void Application::Kill(SubprocessHandle handle){
 void Application::KillThread(ThreadHandle handle){
     pImpl->KillThread(handle);
 }
-            
+
+bool Application::DoesThreadExist(ThreadHandle handle){
+    return pImpl->DoesThreadExist(handle);
+};
 
 MemoryUsageData Application::MemoryUsage(){
     return pImpl->MemoryUsage();

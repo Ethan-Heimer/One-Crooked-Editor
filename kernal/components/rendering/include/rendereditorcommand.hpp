@@ -10,12 +10,12 @@
 namespace CrookedEditor::Renderer {
     class RenderEditorCommand : public Rendering::Commands::RenderCommandBase{
         public:
-            const std::shared_ptr<const Application::TextEditorVisualState> renderingState;
+            const std::shared_ptr<const Components::TextEditorVisualState> renderingState;
 
             int row, col;
 
             RenderEditorCommand(const Terminal::TerminalController& terminalController, 
-                    std::shared_ptr<const Application::TextEditorVisualState> renderingState);
+                    std::shared_ptr<const Components::TextEditorVisualState> renderingState);
 
             void Do(Rendering::CursorPosition& cursorPos, Rendering::TUITexture& frameBuffer) override;
     };

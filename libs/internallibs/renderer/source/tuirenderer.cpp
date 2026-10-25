@@ -19,12 +19,12 @@ struct TUIRenderer::Impl{
         
             cursorPos = {1, 1};
         
-            terminalController.EnterAlternateScreen();
+            //terminalController.EnterAlternateScreen();
             terminalController.ClearScreen();
         }; 
 
         ~Impl(){
-            terminalController.ExitAlternteScreen();
+            //terminalController.ExitAlternteScreen();
         }
 
         void DoCommand(Commands::RenderCommand command){

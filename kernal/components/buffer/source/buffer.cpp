@@ -89,7 +89,9 @@ void Buffer::DeleteLine(std::string* remainingText) noexcept{
     if(remainingText)
         *remainingText = SubstringBetween(0, length);
     
-    buffer.DeleteLine();
+    bool result = buffer.DeleteLine();
+    if(!result)
+        *remainingText = {};
 }
 
 void Buffer::DeleteFromCol(unsigned int col, std::string* subString) noexcept{

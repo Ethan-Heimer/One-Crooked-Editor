@@ -32,7 +32,7 @@ namespace CrookedEditor::Buffers {
 
             size_t Size();
             void InsertLine();
-            void DeleteLine();
+            bool DeleteLine();
 
             Editor::LineIterator Begin() const override;
             Editor::LineIterator BeginAtCurrentLine() const override;

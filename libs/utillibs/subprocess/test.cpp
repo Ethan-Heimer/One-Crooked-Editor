@@ -3,6 +3,8 @@
 #include <thread>
 #include <chrono>
 
+using namespace Process;
+
 int main(){
     /*
     Subprocess ls{"ls"};
@@ -18,7 +20,13 @@ int main(){
 
     bool quit = false;
     std::thread job{[&](){
-        Subprocess clangd{"ls", "-a"};
+        int outSideValue = 10;
+
+        auto onDone = [&](int outside){
+
+        };
+
+        Subprocess clangd{onDone, "ls", "-a"};
 
         while(clangd.IsAlive()){
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

@@ -23,12 +23,14 @@ namespace CrookedEditor::Application{
             ThreadConstructor(Func func, Args... args) 
                 : pImpl(std::make_unique<Model<Func, Args...>>(std::move(func), args...)){}
 
-            std::thread CreateThread(const std::atomic<bool>& quit) const{
-                return pImpl->CreateThread(quit);
+            std::thread CreateThread(std::function<void()> onDoneExecuting, 
+                    const std::atomic<bool>& quit) const{
+                return pImpl->CreateThread(onDoneExecuting, quit);
             }
         private:
             struct Contract{
-                virtual std::thread CreateThread(const std::atomic<bool>& quit) const = 0;
+                virtual std::thread CreateThread(std::function<void()> onDoneExecuting, 
+                        const std::atomic<bool>& quit) = 0;
                 virtual ~Contract(){};
             };
 
@@ -38,9 +40,19 @@ namespace CrookedEditor::Application{
                 std::tuple<Args...> args;
                 Model(Func func, Args... args) : func(std::move(func)), args(std::make_tuple(args...)){}
 
+                std::thread CreateThread(std::function<void()> onDoneExecuting,
+                        const std::atomic<bool>& quit) override{
 
-                std::thread CreateThread(const std::atomic<bool>& quit) const override{
-                    return std::apply([&, this](auto... args){ return std::thread{this->func, std::ref(quit), args...}; }, args);
+                    auto applyFunc = [&](auto... args){ 
+
+                        return std::thread{[&](std::function<void()> onDone, Func f, const std::atomic<bool>& q, auto... a){
+                            f(q, a...);
+                            onDone();
+                        }, onDoneExecuting , func, std::ref(quit), args...}; 
+
+                    };
+
+                    return std::apply(applyFunc, args);
                 }
             };
 
@@ -80,7 +92,6 @@ namespace CrookedEditor::Application{
                 std::string_view process;
                 Model(std::string_view process) : process(std::move(process)){}
 
-
                 Process::Subprocess CreateSubprocess() const override{
                     return Process::Subprocess{process};
                 }
@@ -115,6 +126,8 @@ namespace CrookedEditor::Application{
             Application& operator=(const Application&) = delete;
             Application& operator=(Application&&) = delete;
 
+            void CleanUp();
+
             template<typename Func, typename... Args>
             ThreadHandle SpawnThread(Func func, Args... args) const {
                 return SpawnThread({func, args...});
@@ -134,6 +147,8 @@ namespace CrookedEditor::Application{
 
             void Kill(SubprocessHandle handle);
             void KillThread(ThreadHandle handle);
+
+            bool DoesThreadExist(ThreadHandle handle);
 
             void PrintLog(std::string_view message);
 

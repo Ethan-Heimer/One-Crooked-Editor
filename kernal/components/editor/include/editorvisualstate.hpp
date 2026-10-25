@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Components{
     struct TextEditorVisualState{
         int lastRowNumber;
         int currentLineViewOffset;

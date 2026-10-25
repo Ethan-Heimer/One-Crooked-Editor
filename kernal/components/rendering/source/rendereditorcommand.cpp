@@ -7,7 +7,7 @@
 using namespace CrookedEditor::Renderer;
 using namespace Rendering;
 using namespace Terminal;
-using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Components;
 
 void RenderLineNumberColumn(const int& lineNumberPaddingWidth, const std::vector<std::string>& lineNumbers, TUITexture& frameBuffer);
 void RenderLines(const std::vector<std::string>& lines, const int& startingLineNumber, const int& isCurrentLine, 

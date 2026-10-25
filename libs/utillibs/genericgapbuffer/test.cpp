@@ -66,4 +66,17 @@ int main(){
 
    std::cout << buffer.Data() << std::endl;
    std::cout << sizeof(buffer) << std::endl;
+
+   // delete all test
+   GapBuffer<char> buffer2{0, 5};
+
+   for(int i = 0; i < 10; i++){
+        buffer2 << 'c';
+   }
+
+   for(int i = 0; i < 20; i++){
+        buffer2.Remove();
+   }
+
+   buffer2.Remove();
 }
