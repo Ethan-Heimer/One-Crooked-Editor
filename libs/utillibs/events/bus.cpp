@@ -5,6 +5,8 @@
 #include <thread>
 #include <iostream>
 
+using namespace Events;
+
 struct TestTopic : public ITopic<int>{};
 struct TestTopic2 : public ITopic<std::string>{};
 

@@ -44,6 +44,7 @@ struct Application::Impl{
                 pair.second.Kill();
             }
 
+            log << "Closing Log" << std::endl;
             log.close();
         }
 

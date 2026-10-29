@@ -116,7 +116,7 @@ namespace CrookedEditor::Application{
         public:
             constexpr static int EmpytHandle = -1;
 
-            Event<Application> OnQuit;
+            Events::Event<Application> OnQuit;
 
             Application();
             ~Application();

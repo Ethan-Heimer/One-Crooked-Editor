@@ -2,16 +2,14 @@
 
 #include "isystem.hpp"
 #include "systemterminatereasons.hpp"
-#include <fstream>
 
 namespace CrookedEditor::System{
-    class FooSystem final : public Application::ISystem{
+    class FooSystem final : public Application::SystemHandling::ISystem{
         public:
-            Application::SystemStartOptions Start() override;
-            bool Update() override;
-            void Stop(Application::SystemTerminateReasons reason) override;
+            using Application::SystemHandling::ISystem::ISystem;
 
-        private:
-            std::ofstream output{};
+            Application::SystemHandling::SystemStartOptions Start() override;
+            bool Update() override;
+            void Stop(Application::SystemHandling::SystemTerminateReasons reason) override;
     };
 }

@@ -53,4 +53,5 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/component
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/editor/include/mutators")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/rendering/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/include")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/systemhandling")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include")

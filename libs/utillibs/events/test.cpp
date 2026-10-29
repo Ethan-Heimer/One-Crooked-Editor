@@ -9,6 +9,8 @@
 #include "events.hpp"
 #include "hooks.hpp"
 
+using namespace Events;
+
 class Timer{
     public:
         Event<Timer, std::string> OnTimerOff{};

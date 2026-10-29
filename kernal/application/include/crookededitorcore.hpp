@@ -2,10 +2,11 @@
 
 #include "application.hpp"
 #include "configvault.hpp"
+#include "eventbus.hpp"
 #include "events.hpp"
 #include "inputhandler.hpp"
 #include "pluginlauncher.hpp"
-#include "systemmamager.hpp"
+#include "systemmanager.hpp"
 #include "terminal.hpp"
 #include "terminalrenderer.hpp"
 #include "texteditor.hpp"
@@ -13,12 +14,13 @@
 namespace CrookedEditor{
     class CrookedEditorCore{
         public:
-            Event<CrookedEditorCore> OnCoreQuit;
+            Events::Event<CrookedEditorCore> OnCoreQuit;
 
             Terminal::TerminalController TerminalController;
 
             Application::Application Application; 
             Application::ConfigVault ConfigVault;
+            Events::EventBus eventBus;
 
             Application::InputHandler InputHandler;
             Application::TerminalRenderer Renderer;
@@ -26,7 +28,7 @@ namespace CrookedEditor{
             Application::TextEditor TextEditor;
             Application::PluginLauncher pluginLauncher;
 
-            Application::SystemManager SystemManager;
+            Application::SystemHandling::SystemManager SystemManager;
 
             CrookedEditorCore(int argc, char** argv);
             ~CrookedEditorCore();

@@ -1,15 +1,20 @@
+#include "configvault.hpp"
+#include "eventbus.hpp"
 #include "isystem.hpp"
-#include "systemmamager.hpp"
+#include "systemmanager.hpp"
 #include <functional>
 #include <memory>
 #include <map>
 #include <mutex>
+#include <utility>
 #include <vector>
 #include "application.hpp"
-#include "systemstartoptions.hpp"
+#include "systemconstructor.hpp"
 #include "systemterminatereasons.hpp"
 
 using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Application::SystemHandling;
+using namespace Events;
 
 struct SystemManager::Impl{
     struct SystemExecInfo{
@@ -19,19 +24,23 @@ struct SystemManager::Impl{
     };
 
     class Application& application;
+    ConfigVault& configVault;
+    EventBus& eventBus; 
+
     SystemID nextSID = 0;
 
     std::mutex systemsLock;
     std::map<SystemID, SystemExecInfo> systems;
 
-    Impl(class Application& application) : application(application){}
+    std::vector<SystemID> removeQueue;
+
+    Impl(class Application& application, ConfigVault& configVault, EventBus& eventBus) 
+        : application(application), configVault(configVault), eventBus(eventBus){}
 
     void ExecuteSystemQueue(){
-        std::vector<SystemID> removeQueue;
 
         ForEverySystem([&](SystemID SID, SystemExecInfo& info){
             bool result = info.system->Update();
-
             if(result)
                 removeQueue.push_back(SID);
         });
@@ -41,9 +50,10 @@ struct SystemManager::Impl{
         }
     }
 
-    SystemID StartSystem(std::shared_ptr<ISystem> system){
+    SystemID StartSystem(SystemConstructor&& systemConstructor){
         SystemID SID = nextSID;
-        system->SID = SID;
+        std::shared_ptr<ISystem> system = systemConstructor.ConstructSystem(
+                SID, application, configVault, eventBus);
 
         SystemStartOptions opts = system->Start();
         ThreadHandle threadHandle = Application::Application::EmpytHandle;
@@ -71,6 +81,9 @@ struct SystemManager::Impl{
 
     void StopAll(){
         ForEverySystem([&](SystemID SID, SystemExecInfo& info){
+            if(info.threadHandle != Application::Application::EmpytHandle)
+                application.KillThread(info.threadHandle);
+
             info.system->Stop(SystemTerminateReasons::ShutDown);
         });
 
@@ -118,13 +131,14 @@ struct SystemManager::Impl{
     }
 };
 
-SystemManager::SystemManager(class Application& application) 
-    : pImpl(std::make_unique<Impl>(application)){}
+SystemManager::SystemManager(class Application& application, 
+        ConfigVault& configVault, EventBus& eventBus) 
+    : pImpl(std::make_unique<Impl>(application, configVault, eventBus)){}
 
 SystemManager::~SystemManager(){};
 
-SystemID SystemManager::StartSystem(std::shared_ptr<ISystem> system){
-    return pImpl->StartSystem(std::move(system));
+SystemID SystemManager::StartSystem(SystemConstructor&& systemConstructor){
+    return pImpl->StartSystem(std::forward<SystemConstructor>(systemConstructor));
 }
 
 void SystemManager::StopSystem(SystemID SID){

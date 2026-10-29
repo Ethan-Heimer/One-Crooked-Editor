@@ -4,17 +4,18 @@
 #include "foosystem.hpp"
 #include "pluginlauncher.hpp"
 #include "rendereditorcommand.hpp"
-#include "systemmamager.hpp"
+#include "systemmanager.hpp"
+
 #include <chrono>
-#include <format>
 #include <thread>
 
 using namespace CrookedEditor;
 using namespace CrookedEditor::Components;
+using namespace Events;
 
 CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
     : InputHandler(Application, TerminalController), Renderer(Application, TerminalController),
-    TextEditor(Application, TerminalController, ConfigVault), pluginLauncher(), SystemManager(Application){
+    TextEditor(Application, TerminalController, ConfigVault), pluginLauncher(), SystemManager(Application, ConfigVault, eventBus){
 
     bool quit = false;
     Application.OnQuit += {OnCoreQuit, &Event<CrookedEditorCore>::Invoke};
@@ -42,7 +43,6 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
 
     SystemManager.StartSystem<System::FooSystem>();
 
-    // throw away code for testing
     while(!quit){
         Application.CleanUp();
         SystemManager.ExecuteSystemQueue();

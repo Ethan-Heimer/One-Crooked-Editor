@@ -1,17 +1,17 @@
 #include "foosystem.hpp"
 #include "systemterminatereasons.hpp"
+#include <format>
 
 using namespace CrookedEditor::System;
 using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Application::SystemHandling;
 
 SystemStartOptions FooSystem::Start(){
-    output = std::ofstream{"foosystem.log"};
     return SystemStartOptions{.SeperateThread = true};
 }
 
 bool FooSystem::Update(){
-    output << "[foo] This is an update!" << std::endl;
-
+    application.PrintLog("[foo] this is a message from foo");
     return false;
 }
 
@@ -19,19 +19,19 @@ void FooSystem::Stop(SystemTerminateReasons reason){
     std::string reason_string;
 
     switch (reason) {
-        case Application::SystemTerminateReasons::ShutDown:
+        case SystemTerminateReasons::ShutDown:
             reason_string = "Shut Down";
             break;
 
-        case Application::SystemTerminateReasons::ExecutionEnded:
+        case SystemTerminateReasons::ExecutionEnded:
             reason_string = "Execution Ended";
             break;
 
-        case Application::SystemTerminateReasons::Requested:
+        case SystemTerminateReasons::Requested:
             reason_string = "Requested";
             break;
 
     }
 
-    output << "[Stopping...] " << reason_string << std::endl;;
+    application.PrintLog(std::format("foo stopping due to {}", reason_string));
 }

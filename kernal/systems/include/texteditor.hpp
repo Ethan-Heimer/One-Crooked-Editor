@@ -13,8 +13,8 @@
 namespace CrookedEditor::Application{
     class TextEditor{
         public:
-            using CycleCompleteEventType = Event<TextEditor, const std::shared_ptr<const Components::TextEditorVisualState>>;
-            using InputHookType = SoliatryHook<TextEditor, int>;
+            using CycleCompleteEventType = Events::Event<TextEditor, const std::shared_ptr<const Components::TextEditorVisualState>>;
+            using InputHookType = Events::SoliatryHook<TextEditor, int>;
 
             CycleCompleteEventType OnEditorCycleComplete;
             InputHookType SGetNextInputHook;
