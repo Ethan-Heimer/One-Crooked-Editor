@@ -1,19 +1,24 @@
 #pragma once
 
-#include "application.hpp"
-#include "rendercommandtype.hpp"
-#include "terminal.hpp"
+#include "isystem.hpp"
+#include "systemstartoptions.hpp"
+#include "systemterminatereasons.hpp"
+#include "rendercommandconstructor.hpp"
+
 #include <memory>
+
 namespace CrookedEditor::Application{
-    class TerminalRenderer{
+    struct PublishRenderCommand 
+        : public Events::IEvent<std::shared_ptr<Rendering::Commands::IRenderCommandConstructor>>{};
+
+    class TerminalRenderer final : public SystemHandling::ISystem{
         public:
-            TerminalRenderer(Application& application, Terminal::TerminalController& terminalController);
+            TerminalRenderer(SystemHandling::SystemID SID, Events::RequestBus& events);
             ~TerminalRenderer();
 
-            void Start();
-            void Stop();
-
-            void AddCommand(Rendering::Commands::RenderCommand command);
+            SystemHandling::SystemStartOptions Start();
+            bool Update();
+            void Stop(SystemHandling::SystemTerminateReasons reason);
 
         private:
             struct Impl;

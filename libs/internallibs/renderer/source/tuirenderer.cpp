@@ -1,17 +1,20 @@
 #include "tuirenderer.hpp"
 #include "rendercommandtype.hpp"
+#include "terminalinterface.hpp"
 #include "tuitexture.hpp"
+#include <cassert>
 #include <memory>
+
 using namespace Rendering;
 
 struct TUIRenderer::Impl{ 
     public:
-        Impl(Terminal::TerminalController& terminalController) : terminalController(terminalController){ 
-            terminalController.GetTerminalSize(row, col);
-        
-            frameBuffer = TUITexture{col, row};
-            previousFrameBuffer = TUITexture{col, row};
-        
+        void Start(TerminalInterface& terminalInterface){
+            terminalInterface.EnterAlternateScreen();
+            terminalInterface.ClearScreen();
+
+            terminalInterface.GetTerminalSize(row, col);
+
             diffMap.reserve(col * row);
             for(int i = 0; i < col*row; i++){
                 diffMap.push_back(false);
@@ -19,26 +22,33 @@ struct TUIRenderer::Impl{
         
             cursorPos = {1, 1};
         
-            //terminalController.EnterAlternateScreen();
-            terminalController.ClearScreen();
-        }; 
+        
+            frameBuffer = TUITexture{col, row};
+            previousFrameBuffer = TUITexture{col, row};
 
-        ~Impl(){
-            //terminalController.ExitAlternteScreen();
+            started = true;
+        }
+
+        void Stop(TerminalInterface& terminalInterface){
+            started = false;
+
+            terminalInterface.ExitAlternateScreen();
         }
 
         void DoCommand(Commands::RenderCommand command){
             command(cursorPos, frameBuffer);
         }
 
-        void Display(){ 
+        void Display(TerminalInterface terminalInterface){ 
+            assert(started && "Renderer Must be started before displaying.");
+
             unsigned int x = 0;
             unsigned int y = 0;
             TUITexture::DiffMap(frameBuffer, previousFrameBuffer, diffMap);
-        
-            terminalController.StartSyncOut(stream);
-            terminalController.HideCursor(stream);
-            terminalController.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
+            
+            terminalInterface.StartSyncOut(stream);
+            terminalInterface.HideCursor(stream);
+            terminalInterface.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
        
             Pixel pixelData;
             for(int i = 0; i < col * row; i++){
@@ -48,28 +58,24 @@ struct TUIRenderer::Impl{
 
                     pixelData = frameBuffer.GetPixel(x, y);
 
-                    terminalController.MoveCursor(y+1, x+1, stream);
-                    terminalController.SetForgroundTrueColor(pixelData.fRed, pixelData.fGreen, pixelData.fBlue, stream);
+                    terminalInterface.MoveCursor(y+1, x+1, stream);
+                    terminalInterface.SetForgroundTrueColor(pixelData.fRed, pixelData.fGreen, pixelData.fBlue, stream);
                     stream << pixelData.character;
                 }
             }
         
-            terminalController.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
-            terminalController.ShowCursor(stream);
-            terminalController.EndSyncOut(stream);
+            terminalInterface.MoveCursor(cursorPos.row+1, cursorPos.col+1, stream);
+            terminalInterface.ShowCursor(stream);
+            terminalInterface.EndSyncOut(stream);
         
-            terminalController.InstantStreamToSTDOut(stream);
-        
-            stream.clear();
-            stream.str("");
+            terminalInterface.InstantStreamToSTDOut(stream);
                         
             TUITexture::CopyChannels(frameBuffer, previousFrameBuffer);
             frameBuffer.Clear();
         }
 
     private:
-        Terminal::TerminalController& terminalController;
-
+        bool started = false;
         CursorPosition cursorPos;
         int row, col;
 
@@ -80,15 +86,31 @@ struct TUIRenderer::Impl{
         TUITexture frameBuffer;
 };
 
-TUIRenderer::TUIRenderer(Terminal::TerminalController& terminalController) 
-    : pImpl(std::make_unique<Impl>(terminalController)) {}; 
+TUIRenderer::TUIRenderer() : pImpl(std::make_unique<Impl>()) {}; 
 
 TUIRenderer::~TUIRenderer() = default;
+
+TUIRenderer::TUIRenderer(TUIRenderer&& other) = default;
+TUIRenderer& TUIRenderer::operator=(TUIRenderer&& other) = default;
 
 void TUIRenderer::DoCommand(Commands::RenderCommand command){
     pImpl->DoCommand(std::move(command));
 }
 
-void TUIRenderer::Display(){
-    pImpl->Display();
+void TUIRenderer::Start(TerminalInterface& terminalInterface){
+    assert(pImpl && "TUI Renderer's Impl is NULL");
+
+    pImpl->Start(terminalInterface);
+}
+
+void TUIRenderer::Stop(TerminalInterface& terminalInterface){
+    assert(pImpl && "TUI Renderer's Impl is NULL");
+
+    pImpl->Stop(terminalInterface);
+}
+
+void TUIRenderer::Display(TerminalInterface& terminalInterface){
+    assert(pImpl && "TUI Renderer's Impl is NULL");
+
+    pImpl->Display(terminalInterface);
 }

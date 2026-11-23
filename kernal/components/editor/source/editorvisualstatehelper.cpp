@@ -1,23 +1,27 @@
 #include "editorvisualstatehelper.hpp"
+#include "requestbus.hpp"
+#include "terminalenviormentevents.hpp"
 
 using namespace CrookedEditor::Components;
-using namespace Terminal;
 using namespace Editor;
 
-void EditorVisualStateHelper::UpdateVisualState(const TerminalController& terminalController, 
-        const EditorContext& context, TextEditorVisualState& visualState, int invisableRows, 
-        int verticalScrollThreshold, int lineColumnSpace){
+void EditorVisualStateHelper::UpdateVisualState(Events::RequestBus& requestBus, 
+    const Editor::EditorContext& context, TextEditorVisualState& visualState, int invisableRows, 
+    int verticalScrollThreshold, int lineColumnSpace){
+
     /* calculate visual offsets and send it off to the renderer */
-    int row, col;
-    terminalController.GetTerminalSize(row, col);
+    auto response = requestBus.SendRequest<API::TermGetSize>();
+    std::pair<int, int> size;
+    if(response.has_value())
+        size = response.value();
 
     visualState.cursorCol = context.buffer->GetCursorX();
 
     int currentLineNumber = context.buffer->GetCurrentLineNumber();
-    int visableLines = row - invisableRows;
+    int visableLines = size.first - invisableRows;
 
     ScrollViewVertical(verticalScrollThreshold, visableLines, currentLineNumber, visualState);
-    ScrollViewHorizontal(6, col, visualState);
+    ScrollViewHorizontal(6, size.second, visualState);
 
     int currentLine = context.buffer->GetCurrentLineNumber();
 

@@ -1,6 +1,8 @@
 #include "editoractiontree.h"
 #include "trees.h"
 #include "treealgorithms.h"
+
+#include <cassert>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -90,7 +92,6 @@ struct ActionTree::Impl{
 
         if(currentKeyStroke->branches.empty()){
             ResetCurrentAction();
-            return;
         };
     };
 

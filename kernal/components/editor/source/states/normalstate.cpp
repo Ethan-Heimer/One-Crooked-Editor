@@ -63,7 +63,7 @@ void NormalState::OnEnter(){
 void NormalState::OnUpdate(){
     nextState = StateName();
 
-    for(const char c : input){
+    for(auto c : input){
         actions.TraverseToNextAction(c);
     }
 }

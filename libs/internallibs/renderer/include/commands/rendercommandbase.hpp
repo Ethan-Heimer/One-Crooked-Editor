@@ -1,13 +1,12 @@
 #pragma once
 
 #include "cursor.hpp"
-#include "terminal.hpp"
 #include "tuitexture.hpp"
 
 namespace Rendering::Commands{
     class RenderCommandBase{
         public: 
-            RenderCommandBase(const Terminal::TerminalController& terminalController){};
+            size_t CommandID{};
 
             virtual ~RenderCommandBase(){}
             virtual void Do(CursorPosition& cursorPos, TUITexture& frameBuffer) = 0;

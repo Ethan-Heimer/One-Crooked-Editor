@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include "editorfilehandler.h"
 #include "editorstatecontext.h"
 #include "editorundohandler.h"
@@ -21,7 +22,15 @@ namespace Editor{
 
             bool quit;
 
-            EditorContext(FileHandling::FileHandler fileHandler, States::StateParameters stateParams, std::string fileName);
+            // harden with exceptions or other error handling
+            EditorContext(){};
+            EditorContext(FileHandling::FileHandler&& fileHandler, States::StateParameters stateParams, std::string fileName);
+
+            EditorContext(const EditorContext& other) = delete;
+            EditorContext(EditorContext&& other);
+
+            EditorContext& operator=(const EditorContext& other) = delete;
+            EditorContext& operator=(EditorContext&& other);
 
             void Update(std::string_view input);
             std::string CurrentModeName();

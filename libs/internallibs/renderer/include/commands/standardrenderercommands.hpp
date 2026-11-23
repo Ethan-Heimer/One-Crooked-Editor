@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rendercommandbase.hpp"
-#include "terminal.hpp"
 #include <string>
 
 namespace Rendering::Commands{
@@ -10,7 +9,7 @@ namespace Rendering::Commands{
             std::string string;
             int row{}, col{};
 
-            RenderString(const Terminal::TerminalController& terminal, int row, int col, std::string string);
+            RenderString(int row, int col, std::string string);
             void Do(CursorPosition& cursorPos, TUITexture& frameBuffer) override;
     };
 
@@ -18,7 +17,7 @@ namespace Rendering::Commands{
         public:
             int row{}, col{};
 
-            ChangeCursorPosition(const Terminal::TerminalController& terminal, int row, int col);
+            ChangeCursorPosition(int row, int col);
             void Do(CursorPosition& cursorPos, TUITexture& frameBuffer);
     };
 }

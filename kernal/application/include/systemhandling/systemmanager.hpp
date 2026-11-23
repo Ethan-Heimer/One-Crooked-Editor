@@ -1,35 +1,32 @@
 #pragma once
 
-#include "configvault.hpp"
-#include "eventbus.hpp"
-#include "isystem.hpp"
 #include "application.hpp"
+#include "requestbus.hpp"
 #include "systemconstructor.hpp"
 
 namespace CrookedEditor::Application::SystemHandling{
-    class SystemManager{
+    class SystemManager final{
         public:
-            SystemManager(Application& application, ConfigVault& connfigVault, 
-                    Events::EventBus& eventBus);
+            SystemManager(Application& application, Events::RequestBus& requestBus);
 
             ~SystemManager();
 
             void ExecuteSystemQueue();
 
-            template<typename T, typename... Args>
-            requires SystemInterface<T>
-            SystemID StartSystem(Args... args){
-                return StartSystem(SystemConstructor{SystemType<T>{}, args...});
-            }
-
             void StopSystem(SystemID system);
             void StopAll();
+
+            template<typename T>
+            SystemID StartSystem(){
+                return StartSystemP(SystemConstructor{SystemType<T>{}});
+            }
+
+        protected:
+            SystemID StartSystemP(SystemConstructor&& systemConstructor);
 
         private:
             struct Impl;
             std::unique_ptr<Impl> pImpl;
 
-            std::shared_ptr<ISystem> InstanciateSystem();
-            SystemID StartSystem(SystemConstructor&& systemConstructor);
     };
 }

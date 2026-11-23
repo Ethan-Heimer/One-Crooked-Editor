@@ -1,94 +1,80 @@
 #include "terminalrenderer.hpp"
-#include "application.hpp"
+#include "isystem.hpp"
+#include "rendercommandconstructor.hpp"
 #include "rendercommandtype.hpp"
-#include "standardrenderercommands.hpp"
-#include "terminal.hpp"
+#include "requestbus.hpp"
+#include "systemstartoptions.hpp"
+#include "systemterminatereasons.hpp"
+#include "terminalinterface.hpp"
 #include "tuirenderer.hpp"
-#include <chrono>
-#include <format>
 #include "pingpongringbuffer.hpp"
+#include "terminalinterfacehelper.hpp"
 
 using namespace CrookedEditor::Application;
-using namespace std::chrono;
+using namespace CrookedEditor::Renderer;
+using namespace CrookedEditor::Application::SystemHandling;
 using namespace Rendering::Commands;
-using namespace Terminal;
 using namespace Queues;
+using namespace Rendering;
 
 struct TerminalRenderer::Impl{
-    Application& application;
-    TerminalController& terminalController;
+    SystemHandling::SystemID SID;
+    Events::RequestBus& requestBus;
 
-    ThreadHandle handle{Application::EmpytHandle};
+    TerminalInterface terminalInterface;
+    Rendering::TUIRenderer renderer;
 
     PingPongRingBuffer<RenderCommand, 65536>  commands;
 
-    Impl(Application& application, TerminalController& terminalController) 
-        : application(application), terminalController(terminalController){}
+    Impl(SystemID SID, Events::RequestBus& requestBus)
+    : requestBus(requestBus){
+        terminalInterface = MakeTerminalInterface(requestBus);
+    }
 
-    void Start(){
-        handle = application.SpawnThread([&](const std::atomic<bool>& quit){
-            Rendering::TUIRenderer renderer{terminalController};
-
-            milliseconds msd {};
-            while(!quit){
-                milliseconds msb = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
-                int row, col{};
-                terminalController.GetTerminalSize(row, col);
-
-                commands.SwapBuffers();
-                if(!commands.IsReadBufferEmpty()){
-                    RenderCommand command{};
-                    while(commands.Consume(command))
-                        renderer.DoCommand(std::move(command));
-
-                    // this needs to be moved somewhere else
-                    auto [vm, rss] = application.MemoryUsage();
-                    renderer.DoCommand(RenderString{terminalController, row-1, 0, 
-                            std::format("Diagnositcs | MS:{} MEM: {} Mb RSS: {}", msd.count(), vm/1024, rss)});
-                    //
-
-                    renderer.Display();
-                }
-                
-                milliseconds msa = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-                msd = msa-msb;
-                
-                std::this_thread::sleep_for(1ms);
-            }
-
+    SystemStartOptions Start(){
+        requestBus.AddRequest<PublishRenderCommand>([&]
+                (std::shared_ptr<IRenderCommandConstructor> commandConstructor){
+            commands.Produce(commandConstructor->Construct());
         });
 
-        application.PrintLog(std::format("Rednerer has thread {}", handle));
+        renderer.Start(terminalInterface);
+
+        return SystemStartOptions{.SeperateThread = true};
     }
 
-    void Stop(){
-        if(handle != Application::EmpytHandle){
-            application.KillThread(handle);
-            handle = Application::EmpytHandle;
+    bool Update(){
+        commands.SwapBuffers();
+        if(!commands.IsReadBufferEmpty()){
+            RenderCommand command{};
+            while(commands.Consume(command)){
+                renderer.DoCommand(std::move(command));
+            }
+
+            renderer.Display(terminalInterface);
         }
-    }
+                
+        return false;
+    };
 
-    void AddCommand(RenderCommand command){
-        commands.Produce(std::move(command));
+    void Stop(SystemTerminateReasons reasons){
+        renderer.Start(terminalInterface);
     }
 };
 
-TerminalRenderer::TerminalRenderer(Application& application, TerminalController& terminalController) 
-    : pImpl(std::make_unique<Impl>(application, terminalController)) {}
+TerminalRenderer::TerminalRenderer(SystemID SID, Events::RequestBus& requestBus)
+    : ISystem(SID, requestBus),
+    pImpl(std::make_unique<Impl>(SID, requestBus)) {}
 
-TerminalRenderer::~TerminalRenderer(){
-    pImpl->Stop();
+TerminalRenderer::~TerminalRenderer(){};
+
+SystemStartOptions TerminalRenderer::Start(){
+    return pImpl->Start();
 }
 
-void TerminalRenderer::Start(){
-    pImpl->Start();
+bool TerminalRenderer::Update(){
+    return pImpl->Update();
 }
 
-void TerminalRenderer::Stop(){
-    pImpl->Stop();
-}
-
-void TerminalRenderer::AddCommand(RenderCommand command){
-    pImpl->AddCommand(std::move(command));
+void TerminalRenderer::Stop(SystemTerminateReasons reason){
+    pImpl->Stop(reason);
 }

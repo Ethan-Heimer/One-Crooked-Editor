@@ -1,21 +1,15 @@
 #pragma once
 
-#include <cstddef>
-#include "application.hpp"
-#include "configvault.hpp"
-#include "eventbus.hpp"
+#include "requestbus.hpp"
 #include "systemstartoptions.hpp"
 #include "systemterminatereasons.hpp"
 
 namespace CrookedEditor::Application::SystemHandling{
     using SystemID = size_t;
-
     class ISystem{
         public:
-            ISystem(SystemID SID, Application& application, 
-                    ConfigVault& configVault, Events::EventBus& eventBus) 
-                : SID(SID), application(application), configVault(configVault),
-                eventBus(eventBus){};
+            ISystem(SystemID SID, Events::RequestBus& requestBus) 
+                : SID(SID), requestBus(requestBus){};
 
             virtual ~ISystem(){}
 
@@ -25,16 +19,6 @@ namespace CrookedEditor::Application::SystemHandling{
 
         protected:
             SystemID SID;
-            Application& application;
-            ConfigVault& configVault;
-            Events::EventBus& eventBus;
-
-    };
-
-    template<typename T>
-    concept SystemInterface = requires (T x) { 
-            x.Start();
-            x.Update();
-            x.Stop(SystemTerminateReasons::ExecutionEnded);
+            Events::RequestBus& requestBus;
     };
 }

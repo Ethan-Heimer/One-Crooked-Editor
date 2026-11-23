@@ -1,4 +1,6 @@
 #include "application.hpp"
+#include "applicationevents.hpp"
+#include "requestbus.hpp"
 #include "ringbuffer.hpp"
 #include "thread"
 #include <cstddef>
@@ -23,7 +25,11 @@ using namespace Queues;
 
 struct Application::Impl{
     public: 
-        Impl() : log("debug.log"){}
+        Impl(Events::RequestBus& requestBus) : log("debug.log"){
+            requestBus.AddRequest<API::ApplicationQuit>([&](){
+                Quit();
+            });
+        }
 
         ~Impl(){
             log << "in destructor" << std::endl;
@@ -185,7 +191,8 @@ struct Application::Impl{
         std::queue<SubprocessHandle> deadProcesses;
 };
 
-Application::Application() : pImpl(std::make_unique<Impl>()){}
+Application::Application(Events::RequestBus& requestBus) 
+    : pImpl(std::make_unique<Impl>(requestBus)){}
 Application::~Application(){
     pImpl.reset();
 }
@@ -240,5 +247,4 @@ MemoryUsageData Application::MemoryUsage(){
 
 void Application::Quit(){
     pImpl->Quit();
-    OnQuit.Invoke();
 }

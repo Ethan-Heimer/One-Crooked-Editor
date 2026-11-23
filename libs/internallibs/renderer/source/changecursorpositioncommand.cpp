@@ -1,11 +1,9 @@
 #include "commands/standardrenderercommands.hpp"
-#include "terminal.hpp"
 
 using namespace Rendering::Commands;
-using namespace Terminal;
 
-ChangeCursorPosition::ChangeCursorPosition(const TerminalController& terminalController, int row, int col) 
-    : RenderCommandBase(terminalController), row(row), col(col){}
+ChangeCursorPosition::ChangeCursorPosition(int row, int col) 
+    : row(row), col(col){}
 
 void ChangeCursorPosition::Do(CursorPosition& cursorPos, TUITexture& frameBuffer){
     cursorPos.row = row;

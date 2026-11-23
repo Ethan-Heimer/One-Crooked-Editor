@@ -2,6 +2,7 @@
 
 #include "ringbuffer.hpp"
 #include <atomic>
+#include <memory>
 
 namespace Queues{
     template <typename T, int Size>
@@ -48,6 +49,48 @@ namespace Queues{
                 RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
                 return buffer->IsEmpty();
             }
+
+            size_t ReadBufferCount(){
+                RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
+                return buffer->Count();
+            }
+
+            size_t WriteBufferCount(){
+                RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
+                return buffer->Count();
+            }
+
+            size_t WriteHeadIndex() const{
+                RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
+                return buffer->HeadIndex();
+            };
+
+            size_t WriteTailIndex() const{
+                RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
+                return buffer->TailIndex();
+            };
+
+            size_t ReadHeadIndex() const{
+                RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
+                return buffer->HeadIndex();
+            };
+
+            size_t ReadTailIndex() const{
+                RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
+                return buffer->TailIndex();
+            };
+
+            void const* ReadBufferAddress() const{
+                RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
+                return buffer;
+            }
+
+            void const* WriteBufferAddress() const{
+                RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
+                return buffer;
+            }
+
+
         private:
             RingBuffer<T, Size> bufferA;
             RingBuffer<T, Size> bufferB;

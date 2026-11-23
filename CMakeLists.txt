@@ -54,4 +54,9 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/component
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/rendering/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/systemhandling")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/utils")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/interfaces")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include")
+
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/events")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/types")

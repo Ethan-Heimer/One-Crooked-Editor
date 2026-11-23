@@ -3,7 +3,6 @@
 #include "cursor.hpp"
 #include "editorvisualstate.hpp"
 #include "rendercommandbase.hpp"
-#include "terminal.hpp"
 #include "tuitexture.hpp"
 #include <memory>
 
@@ -12,11 +11,8 @@ namespace CrookedEditor::Renderer {
         public:
             const std::shared_ptr<const Components::TextEditorVisualState> renderingState;
 
-            int row, col;
-
-            RenderEditorCommand(const Terminal::TerminalController& terminalController, 
-                    std::shared_ptr<const Components::TextEditorVisualState> renderingState);
+            RenderEditorCommand(std::shared_ptr<const Components::TextEditorVisualState> renderingState);
 
             void Do(Rendering::CursorPosition& cursorPos, Rendering::TUITexture& frameBuffer) override;
-    };
+    };    
 }

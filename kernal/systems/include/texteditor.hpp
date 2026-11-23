@@ -1,29 +1,21 @@
 #pragma once
 
-#include "application.hpp"
-#include "configvault.hpp"
-#include "events.hpp"
-#include "hooks.hpp"
-
-#include "terminal.hpp"
-#include "editorvisualstate.hpp"
+#include "isystem.hpp"
+#include "systemstartoptions.hpp"
+#include "systemterminatereasons.hpp"
 
 #include <memory>
 
 namespace CrookedEditor::Application{
-    class TextEditor{
+    class TextEditor final : public SystemHandling::ISystem{
         public:
-            using CycleCompleteEventType = Events::Event<TextEditor, const std::shared_ptr<const Components::TextEditorVisualState>>;
-            using InputHookType = Events::SoliatryHook<TextEditor, int>;
+            TextEditor(SystemHandling::SystemID SID, Events::RequestBus& eventBus); 
 
-            CycleCompleteEventType OnEditorCycleComplete;
-            InputHookType SGetNextInputHook;
-
-            TextEditor(Application& app, Terminal::TerminalController& terminalController, ConfigVault& config);
             ~TextEditor();
 
-            void Start();
-            void Stop();
+            SystemHandling::SystemStartOptions Start();
+            bool Update();
+            void Stop(SystemHandling::SystemTerminateReasons reason);
 
         private:
             struct Impl;

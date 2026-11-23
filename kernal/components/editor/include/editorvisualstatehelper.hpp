@@ -4,13 +4,13 @@
 #include "ieditable.h"
 
 #include "editorcontext.h"
-#include "terminal.hpp"
 #include "editorvisualstate.hpp"
+#include "requestbus.hpp"
 
 namespace CrookedEditor::Components{
     class EditorVisualStateHelper{
         public:
-            void UpdateVisualState(const Terminal::TerminalController& terminalController, 
+            void UpdateVisualState(Events::RequestBus& terminalController, 
             const Editor::EditorContext& context, TextEditorVisualState& visualState, int invisableRows, 
             int verticalScrollThreshold, int lineColumnSpace);
 

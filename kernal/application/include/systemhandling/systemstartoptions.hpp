@@ -3,5 +3,6 @@
 namespace CrookedEditor::Application::SystemHandling{
     struct SystemStartOptions{
         bool SeperateThread = false;
+        bool SkipUpdateLoop = false;
     };
 }

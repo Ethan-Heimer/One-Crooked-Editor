@@ -22,6 +22,7 @@ namespace Editor::States{
             void Update(std::string_view input);
 
             std::string CurrentStateName(); 
+            void ChangeSaveCallback(std::function<void()> saveBuffer);
 
             private:
                 struct Impl;

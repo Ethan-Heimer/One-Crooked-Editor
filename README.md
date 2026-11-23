@@ -9,6 +9,51 @@ Crooked Editor is an educational project, and its designed to embrace breaking t
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 11/23/2026 - Request Driven Archetecture
+When coming up with the archetecture for Crooked Editors 'kernal', the most important requirement
+for me was that it would be plugin friendly- meaning C++ plugins could interact with it easly. 
+After a month of prototypes and redesigns, I've settled on a complete 'request driven' archetecture
+
+### Runtime and Systems
+
+At the base of the editor is the 'runtime' (Ill be renaming files to follow this terminaligy), 
+The runtime handles all of the applications resources and terminal settings. On top of the runtime is
+the 'system manager'. This, like the name suggests, manages systems
+
+Systems include the renderer, input handler, and the text editor (context) itself. You can think of systems as 
+applications that run on top of the runtime.
+
+I assumed that plugins will want a way to intoduce persistent running code into the editor, and 
+systems provide a way to do that. Systems can be threaded or invoked from the main thread.
+
+### Requests
+Few prototypes gave systems direct refrences to runtime components. This, however, caused 2 main issues:
+- Circular dependencies; systems should be able to spawn subsystems, yet to do this they would beed a ref to 
+the system manager, a runtime component that depends on the base system interface. A tightly coupled circlur
+depenency occurs.
+- I'm building systems as if they are a plugin in them selves, im assuming some plugins will want to do some of 
+the same work that core systems do (ie- render, get/set config info, etc). This means that plugins would need to 
+include lots of core headers to work, which I would like to avoid. I would like plugins to include some core API 
+headers and util headers and thats it. 
+
+The solution: request driven archetecture. 
+
+The terminology for request are simple
+- *Request*: A command that takes in paramaters and returns somthing back to the caller
+- *Event*: A request that takes in paramaters, but does not return back to the caller (returns void)
+- *Notification*- An event that does not take in paramaters
+
+Requests are made on a request bus. a *Request* may have only on listener, but many senders, while *Events* and
+*Notifications* may have many listners and many senders. This is due to that fact that if a request were
+to have multiple listeners, they may disagree on the truth and return different things. But if nothing 
+is being sent back to the sender, then that issue doesn't matter. 
+
+Using lots of template magic, requests are statically typed check, meaning no bugs will occur from
+typos in a magic string or incorrect parameters.
+
+By using RDA, systems are decoupled from eachother, and the runtime. The editor and renderer can communicate
+without knowing they exist, they only need to know that the request type exists. This is great for plugins.
+
 ## 10/20/2026 - Double Buffered Ring Buffers
 This refactor I've updated the rendering queue to be a double ring buffer.
 The old system was a simple queue using mutexs for thread synconization. The 

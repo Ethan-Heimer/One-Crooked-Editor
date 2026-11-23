@@ -8,17 +8,6 @@ namespace Rendering::Commands{
         public:
             RenderCommand(){};
 
-            RenderCommand(const RenderCommand& other) = delete;
-            RenderCommand(RenderCommand&& other){
-                this->impl = std::move(other.impl);
-            }
-
-            RenderCommand& operator=(const RenderCommand& other) = delete;
-            RenderCommand& operator=(RenderCommand&& other){
-                this->impl = std::move(other.impl);
-                return *this;
-            }
-
             template<typename T> 
             RenderCommand(T value) : impl(std::make_unique<Model<T>>(std::move(value))){};
             void Do(CursorPosition& position, TUITexture& frameBuffer){

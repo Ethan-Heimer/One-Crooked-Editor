@@ -1,19 +1,19 @@
 #pragma once
 
 #include <memory>
-#include <variant>
 #include <string>
 
-namespace CrookedEditor::Application{
-    class ConfigVault{
-        public:
-           ConfigVault();
-           ~ConfigVault();
+#include "configtypes.hpp"
+#include "requestbus.hpp"
 
-           void AddValue(std::string key, std::variant<const char*, int, bool> value);
-        
-           template<typename T>
-           T FindValueOrDefault(std::string_view key, T);
+namespace CrookedEditor::Application{
+    class ConfigVault final{
+        public:
+            ConfigVault(Events::RequestBus& requestBus);
+            ~ConfigVault();
+
+            void AddValue(const std::string& key, const API::config_union_type& value);
+            API::config_return_type GetValue(const std::string& key);
             
         private:
             struct Impl;

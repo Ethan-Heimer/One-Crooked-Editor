@@ -1,64 +1,52 @@
 #pragma once
 
-#include "configvault.hpp"
-#include "eventbus.hpp"
-#include <memory>
 #include "isystem.hpp"
+#include <cstddef>
+#include <memory>
 
 namespace CrookedEditor::Application::SystemHandling{
-    template<SystemInterface T>
+    using SystemID = size_t;
+    template<typename T>
     class SystemType{
         public:
        
-        template<typename... Args>
-        std::shared_ptr<T> NewSystem(SystemID SID, Application& application,
-                ConfigVault& configVault, Events::EventBus& eventBus, Args... args){
-            return std::make_shared<T>(SID, application, configVault, eventBus, args...);
+        std::shared_ptr<T> NewSystem(SystemID SID, Events::RequestBus& requestBus){
+            return std::make_shared<T>(SID, requestBus);
         }
     };
 
-    template<typename T, typename... Args>
-    concept SystemErasedType = requires (T x, SystemID SID, Application& application,
-                ConfigVault& configVault, Events::EventBus& eventBus, Args... args) {
-        x.NewSystem(SID, application, configVault, eventBus, args...);
+    template<typename T>
+    concept SystemErasedType = requires (T x, SystemID SID, Events::RequestBus& requestBus) {
+        x.NewSystem(SID, requestBus);
     };
 
     class SystemConstructor{
         public:
-            template <typename T, typename... Args> 
-            requires SystemErasedType<T, Args...>
-            SystemConstructor(T&& systemType, Args... args) 
-            : impl(std::make_unique<Model<T, Args...>>(std::forward<T>(systemType), args...)){}
+            template <typename T> 
+            requires SystemErasedType<T>
+            SystemConstructor(T&& systemType) 
+            : impl(std::make_unique<Model<T>>(std::forward<T>(systemType))){}
 
-            std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Application& application,
-                ConfigVault& configVault, Events::EventBus& eventBus){
-                return impl->ConstructSystem(SID, application, configVault, eventBus);
+            std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus){
+                return impl->ConstructSystem(SID, requestBus);
             }
         private:
             struct Contract{
-                virtual std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Application& application,
-                ConfigVault& configVault, Events::EventBus& eventBus) = 0;
+                virtual std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus) = 0;
+                virtual ~Contract(){};
             };
 
-            template<typename T, typename... Args>
-            requires SystemErasedType<T, Args...>
+            template<typename T>
             struct Model : public Contract{
                 T systemType;
-                std::tuple<Args...> arguments;
 
-                Model(T&& systemType, Args... args) : systemType(systemType){
-                    arguments = std::make_tuple(args...);
-                }
+                Model(T&& systemType) : systemType(systemType){}
 
-                std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Application& application,
-                ConfigVault& configVault, Events::EventBus& eventBus){
-                    return std::apply([&](Args... args){
-                        return systemType.NewSystem(SID, application, configVault, eventBus, args...);
-                    }, arguments);
+                std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus) override{
+                    return systemType.NewSystem(SID, requestBus);
                 }
             };
 
             std::unique_ptr<Contract> impl;
     };
 }
-

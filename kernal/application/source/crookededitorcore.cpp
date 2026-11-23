@@ -1,47 +1,33 @@
 #include "crookededitorcore.hpp"
 #include "application.hpp"
-#include "editorvisualstate.hpp"
-#include "foosystem.hpp"
-#include "pluginlauncher.hpp"
-#include "rendereditorcommand.hpp"
+#include "applicationevents.hpp"
+#include "configvault.hpp"
+#include "inputhandler.hpp"
+#include "requestbus.hpp"
 #include "systemmanager.hpp"
+#include "terminalrenderer.hpp"
+#include "texteditor.hpp"
 
+#include "texteditor.hpp"
 #include <chrono>
 #include <thread>
 
 using namespace CrookedEditor;
-using namespace CrookedEditor::Components;
 using namespace Events;
 
-CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
-    : InputHandler(Application, TerminalController), Renderer(Application, TerminalController),
-    TextEditor(Application, TerminalController, ConfigVault), pluginLauncher(), SystemManager(Application, ConfigVault, eventBus){
-
+CrookedEditorCore::CrookedEditorCore(int argc, char** argv){
     bool quit = false;
-    Application.OnQuit += {OnCoreQuit, &Event<CrookedEditorCore>::Invoke};
-    OnCoreQuit += [&](){
-       quit = true; 
-    };
+    RequestBus.ListenForEvent<API::ApplicationQuit>([&](){
+        quit = true;
+    });
 
     if(argc >= 2){
        ConfigVault.AddValue("fileName", argv[1]);
     }
 
-    TextEditor.OnEditorCycleComplete += [&](const std::shared_ptr<const TextEditorVisualState> visualData){
-        Renderer.AddCommand(Renderer::RenderEditorCommand{TerminalController, visualData});
-    };
-
-    TextEditor.SGetNextInputHook = [&]() mutable {
-        return InputHandler.GetInput();
-    };
-
-    //pluginLauncher.LaunchPluginsIn("plugins");
-
-    InputHandler.Start();
-    Renderer.Start();
-    TextEditor.Start();
-
-    SystemManager.StartSystem<System::FooSystem>();
+    SystemManager.StartSystem<Application::InputHandler>();
+    SystemManager.StartSystem<Application::TerminalRenderer>();
+    SystemManager.StartSystem<Application::TextEditor>();
 
     while(!quit){
         Application.CleanUp();
@@ -53,12 +39,5 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv)
 
 CrookedEditorCore::~CrookedEditorCore(){
     SystemManager.StopAll();
-
-    TextEditor.Stop();
-    Renderer.Stop();
-    InputHandler.Stop();
-
-    Application.OnQuit.UnsubscribeAll(OnCoreQuit);
-
 }
 

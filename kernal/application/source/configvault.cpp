@@ -1,10 +1,14 @@
 #include "configvault.hpp"
+#include "configtypes.hpp"
+#include "configevents.hpp"
+
+#include "requestbus.hpp"
+#include <expected>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <variant>
-
-/* I may consider making this lock free */
 
 using namespace CrookedEditor::Application;
 
@@ -12,38 +16,47 @@ struct ConfigVault::Impl{
     std::map<std::string, std::variant<const char*, int, bool>> vault;
     std::mutex mut;
 
-    void AddValue(std::string key, std::variant<const char*, int, bool> value){
+    Impl(Events::RequestBus& requestBus){
+        requestBus.AddRequest<API::ConfigAddValue>([&](const std::string& key, const API::config_union_type& value){
+            AddValue(key, value);
+        });
+        
+        requestBus.AddRequest<API::ConfigGetValue>([&](const std::string& key) 
+                -> API::ConfigGetValue::request_return_type{
+            auto value = GetValue(key);
+            if(value.has_value()){
+                return value.value();
+            } else {
+                return std::unexpected<std::string>{""};
+            }
+        });
+    }
+
+    void AddValue(const std::string& key, const API::config_union_type& value){
         std::lock_guard<std::mutex> lock{mut};
         vault[key] = std::move(value);
     }
-
-    template<typename T>
-    T FindValueOrDefault(std::string_view key, T fallback){
+           
+    API::config_return_type GetValue(std::string_view key){
         std::lock_guard<std::mutex> lock{mut};
-        if(!vault.contains(key.data()))
-            return fallback;
 
-        if(std::holds_alternative<T>(vault.at(key.data())))
-            return std::get<T>(vault[key.data()]);
-        else
-         return fallback;
+        if(!vault.contains(key.data()))
+            return std::nullopt;
+
+        return vault[key.data()];
     }
 
 };
            
+ConfigVault::ConfigVault(Events::RequestBus& requestBus) 
+    : pImpl(std::make_unique<Impl>(requestBus)){}
 
-ConfigVault::ConfigVault() : pImpl(std::make_unique<Impl>()){}
 ConfigVault::~ConfigVault(){}
 
-void ConfigVault::AddValue(std::string key, std::variant<const char*, int, bool> value){
+void ConfigVault::AddValue(const std::string& key, const API::config_union_type& value){
     pImpl->AddValue(std::move(key), value);
 }
 
-template<typename T>
-T ConfigVault::FindValueOrDefault(std::string_view key, T fallback){
-    return pImpl->FindValueOrDefault(key, fallback);
+CrookedEditor::API::config_return_type ConfigVault::GetValue(const std::string& key){
+    return pImpl->GetValue(key);
 }
-
-template const char* ConfigVault::FindValueOrDefault<const char*>(std::string_view key, const char* fallback);
-template int ConfigVault::FindValueOrDefault<int>(std::string_view key, int fallback);
-template bool ConfigVault::FindValueOrDefault<bool>(std::string_view key, bool fallback);

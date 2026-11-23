@@ -1,23 +1,18 @@
 #pragma once
 
-#include <memory>
-
-#include "application.hpp"
-#include "terminal.hpp"
+#include "systemstartoptions.hpp"
+#include "systemterminatereasons.hpp"
+#include "isystem.hpp"
 
 namespace CrookedEditor::Application{
-    class InputHandler{
+    struct InputCaptured : public Events::IEvent<int>{};
+
+    class InputHandler final : public SystemHandling::ISystem{
         public:
-            InputHandler(Application& application, Terminal::TerminalController& terminalController);
-            ~InputHandler();
+            using SystemHandling::ISystem::ISystem;
 
-            void Start();
-            void Stop();
-
-            int GetInput();
-
-        private:
-            struct Impl;
-            std::unique_ptr<Impl> pImpl;
+            SystemHandling::SystemStartOptions Start();
+            bool Update();
+            void Stop(SystemHandling::SystemTerminateReasons reason);
     };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 namespace Editor::Actions{
     template<typename T>
@@ -13,6 +14,9 @@ namespace Editor::Actions{
             Action(T action) : impl(std::make_unique<Model<T>>(std::move(action))){}
 
             void Invoke(){
+                if(!impl)
+                    throw;
+
                 impl->Invoke();
             }
 

@@ -58,6 +58,11 @@ struct StateContext::Impl{
             return stateMachine->CurrentState()->StateName();
         }
 
+        //temp 
+        void ChangeSaveCallback(function<void()> saveBuffer){
+            this->saveBuffer = saveBuffer;
+        }
+
     private:
         map<string, shared_ptr<IEditorState>> states;
         unique_ptr<StateMachine<IEditorState>> stateMachine;
@@ -89,4 +94,8 @@ void StateContext::ChangeState(const std::string_view state){
 
 std::string StateContext::CurrentStateName(){
     return pImpl->CurrentStateName();
+}
+
+void StateContext::ChangeSaveCallback(function<void()> saveBuffer){
+    pImpl->ChangeSaveCallback(saveBuffer);
 }
