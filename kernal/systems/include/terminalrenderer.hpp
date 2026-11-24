@@ -7,18 +7,18 @@
 
 #include <memory>
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Systems{
     struct PublishRenderCommand 
         : public Events::IEvent<std::shared_ptr<Rendering::Commands::IRenderCommandConstructor>>{};
 
-    class TerminalRenderer final : public SystemHandling::ISystem{
+    class TerminalRenderer final : public API::ISystem{
         public:
-            TerminalRenderer(SystemHandling::SystemID SID, Events::RequestBus& events);
+            TerminalRenderer(API::SystemID SID, Events::RequestBus& events);
             ~TerminalRenderer();
 
-            SystemHandling::SystemStartOptions Start();
+            API::SystemStartOptions Start();
             bool Update();
-            void Stop(SystemHandling::SystemTerminateReasons reason);
+            void Stop(API::SystemTerminateReasons reason);
 
         private:
             struct Impl;

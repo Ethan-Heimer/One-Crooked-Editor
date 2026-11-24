@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CrookedEditor::Application::SystemHandling{
+namespace CrookedEditor::API{
     struct SystemStartOptions{
         bool SeperateThread = false;
         bool SkipUpdateLoop = false;

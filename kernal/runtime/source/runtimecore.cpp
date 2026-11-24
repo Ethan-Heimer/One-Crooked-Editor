@@ -1,6 +1,5 @@
-#include "crookededitorcore.hpp"
-#include "application.hpp"
-#include "applicationevents.hpp"
+#include "runtimecore.hpp"
+#include "runtimeevents.hpp"
 #include "configvault.hpp"
 #include "inputhandler.hpp"
 #include "requestbus.hpp"
@@ -15,9 +14,9 @@
 using namespace CrookedEditor;
 using namespace Events;
 
-CrookedEditorCore::CrookedEditorCore(int argc, char** argv){
+RuntimeCore::RuntimeCore(int argc, char** argv){
     bool quit = false;
-    RequestBus.ListenForEvent<API::ApplicationQuit>([&](){
+    RequestBus.AddRequest<API::RuntimeQuit>([&](){
         quit = true;
     });
 
@@ -25,9 +24,9 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv){
        ConfigVault.AddValue("fileName", argv[1]);
     }
 
-    SystemManager.StartSystem<Application::InputHandler>();
-    SystemManager.StartSystem<Application::TerminalRenderer>();
-    SystemManager.StartSystem<Application::TextEditor>();
+    SystemManager.StartSystem<Systems::InputHandler>();
+    SystemManager.StartSystem<Systems::TerminalRenderer>();
+    SystemManager.StartSystem<Systems::TextEditor>();
 
     while(!quit){
         Application.CleanUp();
@@ -37,7 +36,8 @@ CrookedEditorCore::CrookedEditorCore(int argc, char** argv){
     }
 }
 
-CrookedEditorCore::~CrookedEditorCore(){
+RuntimeCore::~RuntimeCore(){
     SystemManager.StopAll();
+    Application.Quit();
 }
 

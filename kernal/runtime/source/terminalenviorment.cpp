@@ -8,7 +8,7 @@
 
 #include "terminalenviormentevents.hpp"
 
-using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Runtime;
 
 constexpr static std::string ENTER_ALTERNATE = "\e[?1049h";
 constexpr static std::string EXIT_ALTERNATE = "\e[?1049l";

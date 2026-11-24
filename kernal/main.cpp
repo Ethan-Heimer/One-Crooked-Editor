@@ -1,5 +1,5 @@
-#include "crookededitorcore.hpp"
+#include "runtimecore.hpp"
 
 int main(int argc, char** argv){
-    CrookedEditor::CrookedEditorCore crookedEditorCore{argc, argv};
+    CrookedEditor::RuntimeCore crookedEditorCore{argc, argv};
 }

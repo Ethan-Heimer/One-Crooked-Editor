@@ -1,11 +1,8 @@
-#include "application.hpp"
-#include "applicationevents.hpp"
+#include "runtimeresourcemanager.hpp"
 #include "requestbus.hpp"
 #include "ringbuffer.hpp"
 #include "thread"
 #include <cstddef>
-#include <fstream>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <queue>
@@ -16,59 +13,42 @@
 #include "subprocess.hpp"
 #include "memoryusage.h"
 
-using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Runtime;
 using namespace Process;
 using namespace Queues;
 
-// use compositon to clean this up. this class has way to meny responsabilities
-// maybe application should be an orcrestraiter class to different sub responsibilities?
-
-struct Application::Impl{
+struct RuntimeResourceManager::Impl{
     public: 
-        Impl(Events::RequestBus& requestBus) : log("debug.log"){
-            requestBus.AddRequest<API::ApplicationQuit>([&](){
-                Quit();
-            });
-        }
+        Impl(Events::RequestBus& requestBus){}
 
         ~Impl(){
-            log << "in destructor" << std::endl;
-            
             for(auto& pair : threadQuitTokens){
-                log << "signaling " << pair.first << " to quit" << std::endl;
                 threadQuitTokens[pair.first] = true;
             }
 
             for(auto& pair : threads){
-                log << "Killing: " << pair.first << std::endl;
                 if(pair.second.joinable())
                     pair.second.join(); 
-                log << "Killed" << pair.first << std::endl;
             }
 
             for(auto& pair : subprocesses){
                 pair.second.Kill();
             }
-
-            log << "Closing Log" << std::endl;
-            log.close();
         }
 
         void CleanUp(){
-            ThreadHandle tHandle;
+            API::ThreadHandle tHandle;
             while(deadThreads.Pop(tHandle)){
-                PrintLog(std::format("Dead Thread {} Found.", tHandle));
                 KillThread(tHandle);
             }
 
             for(auto& [pid, process] : subprocesses){
                 if(!process.IsAlive()){
-                    PrintLog(std::format("Dead Subprocess {} Found.", pid));
                     deadProcesses.push(pid);
                 }
             }
 
-            SubprocessHandle sHandle;
+            API::SubprocessHandle sHandle;
             while (!deadProcesses.empty()) {
                 sHandle = deadProcesses.front(); 
                 deadProcesses.pop();
@@ -77,7 +57,7 @@ struct Application::Impl{
             }
         }
 
-        ThreadHandle SpawnThread(const ThreadConstructor& threadConstructor){
+        API::ThreadHandle SpawnThread(const ThreadConstructor& threadConstructor){
             int thisThreadsId = nextThreadID;
             threadQuitTokens[thisThreadsId] = false;
 
@@ -93,7 +73,7 @@ struct Application::Impl{
             return thisThreadsId;
         }
             
-        SubprocessInfo SpawnSubprocess(const SubprocessConstructor& processConstructor){
+        API::SubprocessInfo SpawnSubprocess(const SubprocessConstructor& processConstructor){
             Subprocess subprocess = processConstructor.CreateSubprocess();
             
             Process::FileDescripter inputFd = subprocess.input;
@@ -105,7 +85,7 @@ struct Application::Impl{
             return {lastSubprocessID-1, inputFd, outputFd};
         }
 
-        FileDescripter GetInputFileDescriptor(SubprocessHandle handle) const{
+        FileDescripter GetInputFileDescriptor(API::SubprocessHandle handle) const{
             if(!subprocesses.contains(handle))
                 return -1;
 
@@ -113,7 +93,7 @@ struct Application::Impl{
             return subprocess.input;
         }
 
-        FileDescripter GetOutputFileDescriptor(SubprocessHandle handle) const{
+        FileDescripter GetOutputFileDescriptor(API::SubprocessHandle handle) const{
             if(!subprocesses.contains(handle))
                 return -1;
 
@@ -121,11 +101,11 @@ struct Application::Impl{
             return subprocess.input;
         }
 
-        void Kill(SubprocessHandle handle){
+        void Kill(API::SubprocessHandle handle){
             subprocesses.erase(handle);
         }
 
-        void KillThread(ThreadHandle handle){
+        void KillThread(API::ThreadHandle handle){
             if(!threadQuitTokens.contains(handle))
                 return;
 
@@ -145,7 +125,7 @@ struct Application::Impl{
             return threads.size();
         }
 
-        bool DoesThreadExist(ThreadHandle handle){
+        bool DoesThreadExist(API::ThreadHandle handle){
             return threads.contains(handle);
         }
 
@@ -160,23 +140,18 @@ struct Application::Impl{
             return std::move(ids);
         }
 
-        MemoryUsageData MemoryUsage(){
+        API::MemoryUsageData MemoryUsage(){
             double vmUsage, residentSet;
             Diagnostics::process_mem_usage(vmUsage, residentSet);
 
             return {vmUsage, residentSet};
         }
 
-        void PrintLog(std::string_view message){
-            log << message.data() << std::endl;
-        }
-
         void Quit(){
-            quitApplication = true;
+            quit = true;
         }
 
     private:
-        std::ofstream log{};
         std::map<int, std::atomic<bool>> threadQuitTokens{};
         std::map<int, std::thread> threads{};
 
@@ -185,66 +160,62 @@ struct Application::Impl{
         int nextThreadID{};
         int lastSubprocessID{};
 
-        std::atomic<bool> quitApplication{};
+        std::atomic<bool> quit{};
 
-        RingBuffer<ThreadHandle, 65536> deadThreads;
-        std::queue<SubprocessHandle> deadProcesses;
+        RingBuffer<API::ThreadHandle, 65536> deadThreads;
+        std::queue<API::SubprocessHandle> deadProcesses;
 };
 
-Application::Application(Events::RequestBus& requestBus) 
+RuntimeResourceManager::RuntimeResourceManager(Events::RequestBus& requestBus) 
     : pImpl(std::make_unique<Impl>(requestBus)){}
-Application::~Application(){
+RuntimeResourceManager::~RuntimeResourceManager(){
     pImpl.reset();
 }
 
-void Application::CleanUp(){
+void RuntimeResourceManager::CleanUp(){
     pImpl->CleanUp();
 }
 
-void Application::PrintLog(std::string_view message){
-    pImpl->PrintLog(message);
-}
-
-ThreadHandle Application::SpawnThread(ThreadConstructor threadConstructor) const {
+CrookedEditor::API::ThreadHandle RuntimeResourceManager::SpawnThread(ThreadConstructor threadConstructor) const {
     return pImpl->SpawnThread(threadConstructor);
 }
 
-SubprocessInfo Application::SpawnSubprocess(SubprocessConstructor process) const {
+CrookedEditor::API::SubprocessInfo RuntimeResourceManager::SpawnSubprocess(SubprocessConstructor process) const {
     return pImpl->SpawnSubprocess(process);
 }
 
-FileDescripter Application::GetInputFileDescriptor(SubprocessHandle handle) const{
+FileDescripter RuntimeResourceManager::GetInputFileDescriptor(CrookedEditor::API::SubprocessHandle handle) const{
     return pImpl->GetInputFileDescriptor(handle);
 }
 
-FileDescripter Application::GetOutputFileDescriptor(SubprocessHandle handle) const{
+FileDescripter RuntimeResourceManager::GetOutputFileDescriptor(CrookedEditor::API::SubprocessHandle handle) const{
     return pImpl->GetOutputFileDescriptor(handle);
 }
 
-int Application::GetThreadCount(){
+int RuntimeResourceManager::GetThreadCount(){
     return pImpl->GetThreadCount();
 }
 
-std::vector<int> Application::GetThreadIds(){
+std::vector<int> RuntimeResourceManager::GetThreadIds(){
     return pImpl->GetThreadIds();
 }
 
-void Application::Kill(SubprocessHandle handle){
+void RuntimeResourceManager::Kill(CrookedEditor::API::SubprocessHandle handle){
     pImpl->Kill(handle);
 }
 
-void Application::KillThread(ThreadHandle handle){
+void RuntimeResourceManager::KillThread(CrookedEditor::API::ThreadHandle handle){
     pImpl->KillThread(handle);
 }
 
-bool Application::DoesThreadExist(ThreadHandle handle){
+bool RuntimeResourceManager::DoesThreadExist(CrookedEditor::API::ThreadHandle handle){
     return pImpl->DoesThreadExist(handle);
 };
 
-MemoryUsageData Application::MemoryUsage(){
+CrookedEditor::API::MemoryUsageData RuntimeResourceManager::MemoryUsage(){
     return pImpl->MemoryUsage();
 };
 
-void Application::Quit(){
+void RuntimeResourceManager::Quit(){
     pImpl->Quit();
 }

@@ -6,16 +6,16 @@
 
 #include <memory>
 
-namespace CrookedEditor::Application{
-    class TextEditor final : public SystemHandling::ISystem{
+namespace CrookedEditor::Systems{
+    class TextEditor final : public API::ISystem{
         public:
-            TextEditor(SystemHandling::SystemID SID, Events::RequestBus& eventBus); 
+            TextEditor(API::SystemID SID, Events::RequestBus& eventBus); 
 
             ~TextEditor();
 
-            SystemHandling::SystemStartOptions Start();
+            API::SystemStartOptions Start();
             bool Update();
-            void Stop(SystemHandling::SystemTerminateReasons reason);
+            void Stop(API::SystemTerminateReasons reason);
 
         private:
             struct Impl;

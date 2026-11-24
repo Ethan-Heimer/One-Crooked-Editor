@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CrookedEditor::Application::SystemHandling{
+namespace CrookedEditor::API{
     enum class SystemTerminateReasons{
         ShutDown,
         Requested,

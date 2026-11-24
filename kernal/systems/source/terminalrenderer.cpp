@@ -10,15 +10,14 @@
 #include "pingpongringbuffer.hpp"
 #include "terminalinterfacehelper.hpp"
 
-using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Systems;
 using namespace CrookedEditor::Renderer;
-using namespace CrookedEditor::Application::SystemHandling;
 using namespace Rendering::Commands;
 using namespace Queues;
 using namespace Rendering;
 
 struct TerminalRenderer::Impl{
-    SystemHandling::SystemID SID;
+    API::SystemID SID;
     Events::RequestBus& requestBus;
 
     TerminalInterface terminalInterface;
@@ -26,12 +25,12 @@ struct TerminalRenderer::Impl{
 
     PingPongRingBuffer<RenderCommand, 65536>  commands;
 
-    Impl(SystemID SID, Events::RequestBus& requestBus)
+    Impl(API::SystemID SID, Events::RequestBus& requestBus)
     : requestBus(requestBus){
         terminalInterface = MakeTerminalInterface(requestBus);
     }
 
-    SystemStartOptions Start(){
+    API::SystemStartOptions Start(){
         requestBus.AddRequest<PublishRenderCommand>([&]
                 (std::shared_ptr<IRenderCommandConstructor> commandConstructor){
             commands.Produce(commandConstructor->Construct());
@@ -39,7 +38,7 @@ struct TerminalRenderer::Impl{
 
         renderer.Start(terminalInterface);
 
-        return SystemStartOptions{.SeperateThread = true};
+        return API::SystemStartOptions{.SeperateThread = true};
     }
 
     bool Update(){
@@ -56,18 +55,18 @@ struct TerminalRenderer::Impl{
         return false;
     };
 
-    void Stop(SystemTerminateReasons reasons){
+    void Stop(API::SystemTerminateReasons reasons){
         renderer.Start(terminalInterface);
     }
 };
 
-TerminalRenderer::TerminalRenderer(SystemID SID, Events::RequestBus& requestBus)
+TerminalRenderer::TerminalRenderer(API::SystemID SID, Events::RequestBus& requestBus)
     : ISystem(SID, requestBus),
     pImpl(std::make_unique<Impl>(SID, requestBus)) {}
 
 TerminalRenderer::~TerminalRenderer(){};
 
-SystemStartOptions TerminalRenderer::Start(){
+CrookedEditor::API::SystemStartOptions TerminalRenderer::Start(){
     return pImpl->Start();
 }
 
@@ -75,6 +74,6 @@ bool TerminalRenderer::Update(){
     return pImpl->Update();
 }
 
-void TerminalRenderer::Stop(SystemTerminateReasons reason){
+void TerminalRenderer::Stop(CrookedEditor::API::SystemTerminateReasons reason){
     pImpl->Stop(reason);
 }

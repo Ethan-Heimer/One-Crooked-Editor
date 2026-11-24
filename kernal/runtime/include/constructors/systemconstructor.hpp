@@ -3,20 +3,20 @@
 #include "isystem.hpp"
 #include <cstddef>
 #include <memory>
+#include "systemtypes.hpp"
 
-namespace CrookedEditor::Application::SystemHandling{
-    using SystemID = size_t;
+namespace CrookedEditor::Runtime{
     template<typename T>
     class SystemType{
         public:
        
-        std::shared_ptr<T> NewSystem(SystemID SID, Events::RequestBus& requestBus){
+        std::shared_ptr<T> NewSystem(API::SystemID SID, Events::RequestBus& requestBus){
             return std::make_shared<T>(SID, requestBus);
         }
     };
 
     template<typename T>
-    concept SystemErasedType = requires (T x, SystemID SID, Events::RequestBus& requestBus) {
+    concept SystemErasedType = requires (T x, API::SystemID SID, Events::RequestBus& requestBus) {
         x.NewSystem(SID, requestBus);
     };
 
@@ -27,12 +27,12 @@ namespace CrookedEditor::Application::SystemHandling{
             SystemConstructor(T&& systemType) 
             : impl(std::make_unique<Model<T>>(std::forward<T>(systemType))){}
 
-            std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus){
+            std::shared_ptr<API::ISystem> ConstructSystem(API::SystemID SID, Events::RequestBus& requestBus){
                 return impl->ConstructSystem(SID, requestBus);
             }
         private:
             struct Contract{
-                virtual std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus) = 0;
+                virtual std::shared_ptr<API::ISystem> ConstructSystem(API::SystemID SID, Events::RequestBus& requestBus) = 0;
                 virtual ~Contract(){};
             };
 
@@ -42,7 +42,7 @@ namespace CrookedEditor::Application::SystemHandling{
 
                 Model(T&& systemType) : systemType(systemType){}
 
-                std::shared_ptr<ISystem> ConstructSystem(SystemID SID, Events::RequestBus& requestBus) override{
+                std::shared_ptr<API::ISystem> ConstructSystem(API::SystemID SID, Events::RequestBus& requestBus) override{
                     return systemType.NewSystem(SID, requestBus);
                 }
             };

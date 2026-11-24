@@ -1,28 +1,28 @@
 #pragma once
 
-#include "application.hpp"
+#include "runtimeresourcemanager.hpp"
 #include "requestbus.hpp"
 #include "systemconstructor.hpp"
 
-namespace CrookedEditor::Application::SystemHandling{
+namespace CrookedEditor::Runtime{
     class SystemManager final{
         public:
-            SystemManager(Application& application, Events::RequestBus& requestBus);
+            SystemManager(RuntimeResourceManager& application, Events::RequestBus& requestBus);
 
             ~SystemManager();
 
             void ExecuteSystemQueue();
 
-            void StopSystem(SystemID system);
+            void StopSystem(API::SystemID system);
             void StopAll();
 
             template<typename T>
-            SystemID StartSystem(){
+            API::SystemID StartSystem(){
                 return StartSystemP(SystemConstructor{SystemType<T>{}});
             }
 
         protected:
-            SystemID StartSystemP(SystemConstructor&& systemConstructor);
+            API::SystemID StartSystemP(SystemConstructor&& systemConstructor);
 
         private:
             struct Impl;

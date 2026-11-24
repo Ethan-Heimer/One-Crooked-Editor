@@ -2,7 +2,7 @@
 
 #include "subprocess.hpp"
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Runtime{
     struct SubprocessConstructor{
         public:
             template<typename... Args>

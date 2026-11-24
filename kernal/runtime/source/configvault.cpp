@@ -10,7 +10,7 @@
 #include <optional>
 #include <variant>
 
-using namespace CrookedEditor::Application;
+using namespace CrookedEditor::Runtime;
 
 struct ConfigVault::Impl{
     std::map<std::string, std::variant<const char*, int, bool>> vault;

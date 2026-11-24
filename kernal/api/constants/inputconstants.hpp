@@ -1,5 +1,5 @@
 #pragma one
 
-namespace CrookedEditor::Application::Input{
+namespace CrookedEditor::API{
    constexpr int NoInput = -1; 
 }

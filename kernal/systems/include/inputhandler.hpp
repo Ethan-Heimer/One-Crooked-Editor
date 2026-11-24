@@ -4,15 +4,15 @@
 #include "systemterminatereasons.hpp"
 #include "isystem.hpp"
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Systems{
     struct InputCaptured : public Events::IEvent<int>{};
 
-    class InputHandler final : public SystemHandling::ISystem{
+    class InputHandler final : public API::ISystem{
         public:
-            using SystemHandling::ISystem::ISystem;
+            using API::ISystem::ISystem;
 
-            SystemHandling::SystemStartOptions Start();
+            API::SystemStartOptions Start();
             bool Update();
-            void Stop(SystemHandling::SystemTerminateReasons reason);
+            void Stop(API::SystemTerminateReasons reason);
     };
 }

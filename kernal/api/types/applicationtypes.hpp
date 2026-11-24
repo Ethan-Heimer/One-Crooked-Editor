@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::API{
     using ThreadHandle = int;
     using SubprocessHandle = int; 
     

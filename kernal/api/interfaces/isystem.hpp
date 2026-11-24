@@ -4,7 +4,7 @@
 #include "systemstartoptions.hpp"
 #include "systemterminatereasons.hpp"
 
-namespace CrookedEditor::Application::SystemHandling{
+namespace CrookedEditor::API{
     using SystemID = size_t;
     class ISystem{
         public:

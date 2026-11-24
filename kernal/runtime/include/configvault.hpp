@@ -6,7 +6,7 @@
 #include "configtypes.hpp"
 #include "requestbus.hpp"
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Runtime{
     class ConfigVault final{
         public:
             ConfigVault(Events::RequestBus& requestBus);

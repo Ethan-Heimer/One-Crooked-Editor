@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::API{
     struct MemoryUsageData{
         double vmUsage;
         double residentSet;

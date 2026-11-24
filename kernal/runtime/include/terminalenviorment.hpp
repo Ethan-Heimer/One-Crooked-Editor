@@ -3,7 +3,7 @@
 #include "requestbus.hpp"
 #include <termios.h>
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Runtime{
     class TerminalEnviorment final{
         public:
             TerminalEnviorment(Events::RequestBus& requestBus);

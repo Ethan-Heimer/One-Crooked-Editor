@@ -5,7 +5,7 @@
 #include <tuple>
 #include <utility>
 
-namespace CrookedEditor::Application{
+namespace CrookedEditor::Runtime{
     struct ThreadConstructor{
         public:
             template<typename Func, typename... Args>

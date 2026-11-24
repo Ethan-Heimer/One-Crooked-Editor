@@ -2,7 +2,7 @@
 #include "bufferfilehandler.h"
 
 #include "configevents.hpp"
-#include "applicationevents.hpp"
+#include "runtimeevents.hpp"
 
 #include "editorcontext.h"
 #include "editorstateparameters.h"
@@ -25,8 +25,7 @@
 #include <sstream>
 #include <string>
 
-using namespace CrookedEditor::Application;
-using namespace CrookedEditor::Application::SystemHandling;
+using namespace CrookedEditor::Systems;
 using namespace CrookedEditor::Buffers;
 using namespace CrookedEditor::States;
 
@@ -41,7 +40,7 @@ struct TextEditor::Impl{
     const int verticalScrollThreshold = 5;
     const int invisableRows = 2;
 
-    SystemID SID;
+    API::SystemID SID;
     Events::RequestBus& requestBus;
 
     std::string fileName;
@@ -54,10 +53,10 @@ struct TextEditor::Impl{
     TextEditorVisualState visualState{};
     EditorVisualStateHelper visualStateHelper{}; 
 
-    Impl(SystemID& SID, Events::RequestBus& requestBus)
+    Impl(API::SystemID& SID, Events::RequestBus& requestBus)
         : SID(SID), requestBus(requestBus){}
 
-    SystemStartOptions Start(){
+    API::SystemStartOptions Start(){
         auto request = requestBus.SendRequest<API::ConfigGetValue>("fileName");
         if(request.has_value()){
             fileName = std::get<const char*>(request.value()); 
@@ -72,7 +71,7 @@ struct TextEditor::Impl{
             inputQueue.push(input);
         });
 
-        return SystemStartOptions{.SeperateThread = true};
+        return API::SystemStartOptions{.SeperateThread = true};
     }
 
     bool Update(){
@@ -81,7 +80,7 @@ struct TextEditor::Impl{
             key = inputQueue.front();
             inputQueue.pop();
 
-            if(key != Input::NoInput)
+            if(key != API::NoInput)
                 inputStream << static_cast<char>(key);
         }
 
@@ -90,7 +89,7 @@ struct TextEditor::Impl{
         inputStream.str("");
 
         if(context->quit){
-            requestBus.SendRequest<API::ApplicationQuit>();
+            requestBus.SendRequest<API::RuntimeQuit>();
         }
 
         visualStateHelper.UpdateVisualState(requestBus, 
@@ -106,17 +105,17 @@ struct TextEditor::Impl{
         return false;
     }
 
-    void Stop(SystemTerminateReasons reasons){}
+    void Stop(API::SystemTerminateReasons reasons){}
 };
 
-TextEditor::TextEditor(SystemID SID, Events::RequestBus& requestBus) 
+TextEditor::TextEditor(API::SystemID SID, Events::RequestBus& requestBus) 
     : ISystem(SID, requestBus), pImpl(std::make_unique<Impl>(SID, requestBus)){
 }
 
 
 TextEditor::~TextEditor() = default;
 
-SystemHandling::SystemStartOptions TextEditor::Start(){
+CrookedEditor::API::SystemStartOptions TextEditor::Start(){
     return pImpl->Start();
 }
 
@@ -124,6 +123,6 @@ bool TextEditor::Update(){
     return pImpl->Update();
 }
 
-void TextEditor::Stop(SystemTerminateReasons reasons){
+void TextEditor::Stop(CrookedEditor::API::SystemTerminateReasons reasons){
     pImpl->Stop(reasons);
 }

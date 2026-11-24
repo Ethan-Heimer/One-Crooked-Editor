@@ -52,11 +52,13 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/component
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/editor/include")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/editor/include/mutators")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/components/rendering/include")
+
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/systems/include")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/systemhandling")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/utils")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include/interfaces")
-target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/application/include")
+
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/runtime/include/constructors")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/runtime/include")
 
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/events")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/types")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/constants")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/interfaces")

@@ -6,15 +6,14 @@
 #include "inputconstants.hpp"
 #include "terminalenviormentevents.hpp"
 
-using namespace CrookedEditor::Application;
-using namespace CrookedEditor::Application::SystemHandling;
+using namespace CrookedEditor;
+using namespace CrookedEditor::Systems;
 
-SystemStartOptions InputHandler::Start(){
-    // EnterRawMode event
+API::SystemStartOptions InputHandler::Start(){
     requestBus.SendRequest<API::TermEnterRawMode>();
     requestBus.AddRequest<InputCaptured>();
 
-    return SystemStartOptions{.SeperateThread = true};
+    return API::SystemStartOptions{.SeperateThread = true};
 }
 
 bool InputHandler::Update(){
@@ -27,7 +26,6 @@ bool InputHandler::Update(){
     return false;
 }
 
-void InputHandler::Stop(SystemTerminateReasons reason){
-    // ExitRawMode event
+void InputHandler::Stop(API::SystemTerminateReasons reason){
     requestBus.SendRequest<API::TermExitRawMode>();
 }
