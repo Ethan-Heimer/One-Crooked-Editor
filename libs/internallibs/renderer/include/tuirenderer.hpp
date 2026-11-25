@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rendercommandtype.hpp"
+#include "irendercommand.hpp"
 #include "terminalinterface.hpp"
 
 #include <memory>
@@ -17,7 +17,7 @@ namespace Rendering{
             TUIRenderer& operator=(const TUIRenderer& other) = delete;
             TUIRenderer& operator=(TUIRenderer&& other);
 
-            void DoCommand(Commands::RenderCommand command);
+            void DoCommand(Commands::IRenderCommand& command);
 
             void Start(TerminalInterface& interface);
             void Stop(TerminalInterface& interface);

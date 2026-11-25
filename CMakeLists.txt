@@ -62,3 +62,4 @@ target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/event
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/types")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/constants")
 target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/interfaces")
+target_include_directories(${NAME} PRIVATE "${CMAKE_SOURCE_DIR}/kernal/api/renderingcommands")

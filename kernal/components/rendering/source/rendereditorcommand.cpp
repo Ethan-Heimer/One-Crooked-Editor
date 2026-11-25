@@ -29,6 +29,10 @@ void RenderEditorCommand::Do(CursorPosition& cursorPos, TUITexture& frameBuffer)
     cursorPos.row = termCursorLineNumber;
 }
 
+std::unique_ptr<Rendering::Commands::IRenderCommand> RenderEditorCommand::Clone() const{
+    return std::make_unique<RenderEditorCommand>(*this);
+}
+
 void RenderLineNumberColumn(const int& lineNumberPaddingWidth, const std::vector<std::string>& lineNumbers, TUITexture& frameBuffer){
     std::string_view lineNumber{};
     int lineNumberLength{};

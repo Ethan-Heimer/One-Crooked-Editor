@@ -3,14 +3,10 @@
 #include "isystem.hpp"
 #include "systemstartoptions.hpp"
 #include "systemterminatereasons.hpp"
-#include "rendercommandconstructor.hpp"
 
 #include <memory>
 
 namespace CrookedEditor::Systems{
-    struct PublishRenderCommand 
-        : public Events::IEvent<std::shared_ptr<Rendering::Commands::IRenderCommandConstructor>>{};
-
     class TerminalRenderer final : public API::ISystem{
         public:
             TerminalRenderer();

@@ -2,6 +2,8 @@
 #include "bufferfilehandler.h"
 
 #include "configevents.hpp"
+#include "rendereditorcommand.hpp"
+#include "rendererevents.hpp"
 #include "runtimeevents.hpp"
 
 #include "editorcontext.h"
@@ -10,14 +12,12 @@
 #include "editorvisualstate.hpp"
 #include "inputhandler.hpp"
 #include "isystem.hpp"
-#include "rendercommandconstructor.hpp"
-#include "rendereditorcommand.hpp"
+
 #include "systemstartoptions.hpp"
 #include "systemterminatereasons.hpp"
 
 #include "inputconstants.hpp"
 #include "editorvisualstatehelper.hpp"
-#include "terminalrenderer.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -47,7 +47,6 @@ struct TextEditor::Impl{
     std::unique_ptr<EditorContext> context;
 
     std::queue<int> inputQueue;
-
     std::stringstream inputStream;
 
     TextEditorVisualState visualState{};
@@ -85,7 +84,6 @@ struct TextEditor::Impl{
         }
 
         context->Update(std::move(inputStream.str()));
-        inputStream.clear();
         inputStream.str("");
 
         if(context->quit){
@@ -99,8 +97,7 @@ struct TextEditor::Impl{
         auto temp = visualState.Dispatch();
         auto visualStatePtr = std::make_shared<const TextEditorVisualState>(std::move(temp));
 
-        requestBus->SendRequest<PublishRenderCommand>(
-                CreateCommandConstructor<Renderer::RenderEditorCommand>(visualStatePtr));
+        requestBus->SendRequest<API::PublishRenderCommand>(Renderer::RenderEditorCommand{visualStatePtr});
 
         return false;
     }
@@ -112,7 +109,6 @@ TextEditor::TextEditor() : API::ISystem(){};
 TextEditor::TextEditor(API::SystemID SID, Events::RequestBus* requestBus) 
     : ISystem(SID, requestBus), pImpl(std::make_unique<Impl>(SID, requestBus)){
 }
-
 
 TextEditor::~TextEditor() = default;
 

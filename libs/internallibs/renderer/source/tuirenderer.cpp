@@ -1,4 +1,5 @@
 #include "tuirenderer.hpp"
+#include "irendercommand.hpp"
 #include "rendercommandtype.hpp"
 #include "terminalinterface.hpp"
 #include "tuitexture.hpp"
@@ -35,7 +36,7 @@ struct TUIRenderer::Impl{
             terminalInterface.ExitAlternateScreen();
         }
 
-        void DoCommand(Commands::RenderCommand command){
+        void DoCommand(Commands::IRenderCommand& command){
             command(cursorPos, frameBuffer);
         }
 
@@ -93,8 +94,8 @@ TUIRenderer::~TUIRenderer() = default;
 TUIRenderer::TUIRenderer(TUIRenderer&& other) = default;
 TUIRenderer& TUIRenderer::operator=(TUIRenderer&& other) = default;
 
-void TUIRenderer::DoCommand(Commands::RenderCommand command){
-    pImpl->DoCommand(std::move(command));
+void TUIRenderer::DoCommand(Commands::IRenderCommand& command){
+    pImpl->DoCommand(command);
 }
 
 void TUIRenderer::Start(TerminalInterface& terminalInterface){

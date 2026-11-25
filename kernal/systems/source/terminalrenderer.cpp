@@ -1,7 +1,8 @@
 #include "terminalrenderer.hpp"
+#include "irendercommand.hpp"
 #include "isystem.hpp"
-#include "rendercommandconstructor.hpp"
 #include "rendercommandtype.hpp"
+#include "rendererevents.hpp"
 #include "requestbus.hpp"
 #include "systemstartoptions.hpp"
 #include "systemterminatereasons.hpp"
@@ -9,6 +10,7 @@
 #include "tuirenderer.hpp"
 #include "pingpongringbuffer.hpp"
 #include "terminalinterfacehelper.hpp"
+#include <memory>
 
 using namespace CrookedEditor::Systems;
 using namespace CrookedEditor::Renderer;
@@ -23,7 +25,7 @@ struct TerminalRenderer::Impl{
     TerminalInterface terminalInterface;
     Rendering::TUIRenderer renderer;
 
-    PingPongRingBuffer<RenderCommand, 65536>  commands;
+    PingPongRingBuffer<std::unique_ptr<IRenderCommand>, 65536>  commands;
 
     Impl(API::SystemID SID, Events::RequestBus* requestBus)
     : requestBus(requestBus){
@@ -31,9 +33,8 @@ struct TerminalRenderer::Impl{
     }
 
     API::SystemStartOptions Start(){
-        requestBus->AddRequest<PublishRenderCommand>([&]
-                (std::shared_ptr<IRenderCommandConstructor> commandConstructor){
-            commands.Produce(commandConstructor->Construct());
+        requestBus->AddRequest<API::PublishRenderCommand>([&](const IRenderCommand& command){
+            commands.Produce(command.Clone());
         });
 
         renderer.Start(terminalInterface);
@@ -44,9 +45,9 @@ struct TerminalRenderer::Impl{
     bool Update(){
         commands.SwapBuffers();
         if(!commands.IsReadBufferEmpty()){
-            RenderCommand command{};
+            std::unique_ptr<IRenderCommand> command{};
             while(commands.Consume(command)){
-                renderer.DoCommand(std::move(command));
+                renderer.DoCommand(*command);
             }
 
             renderer.Display(terminalInterface);
