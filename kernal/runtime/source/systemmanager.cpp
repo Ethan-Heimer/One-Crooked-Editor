@@ -6,12 +6,11 @@
 #include <map>
 #include <mutex>
 #include <thread>
-#include <utility>
 #include <vector>
 #include "requestbus.hpp"
 #include "runtimeresourcemanager.hpp"
-#include "systemconstructor.hpp"
 #include "systemterminatereasons.hpp"
+#include "systemtypes.hpp"
 
 using namespace CrookedEditor::Runtime;
 using namespace Events;
@@ -28,7 +27,7 @@ struct SystemManager::Impl{
     RuntimeResourceManager& resourceManager;
     RequestBus& requestBus;
 
-    API::SystemID nextSID = 0;
+    API::SystemID nextSID = API::NoSID+1;
 
     std::map<API::SystemID, SystemExecInfo> systems;
     std::vector<API::SystemID> removeQueue;
@@ -44,6 +43,9 @@ struct SystemManager::Impl{
             if(info.threadHandle != API::EmptyHandle)
                 return;
 
+            if(!info.system->IsExecutable())
+                return;
+
             bool result = info.system->Update();
             if(result)
                 removeQueue.push_back(SID);
@@ -54,17 +56,20 @@ struct SystemManager::Impl{
         }
     }
 
-    API::SystemID StartSystem(SystemConstructor&& systemConstructor){
+    API::SystemID StartSystem(const API::ISystem& system){
         API::SystemID SID = nextSID;
-        std::shared_ptr<API::ISystem> system = systemConstructor.ConstructSystem(SID, requestBus);
+        std::shared_ptr<API::ISystem> newSystem = system.Instanciate(nextSID, &requestBus);
 
-        API::SystemStartOptions opts = system->Start();
+        if(!newSystem->IsExecutable())
+            return API::NoSID;
+
         API::ThreadHandle threadHandle = API::EmptyHandle;
+        API::SystemStartOptions opts = newSystem->Start();
 
         if(opts.SeperateThread && !opts.SkipUpdateLoop)
-            threadHandle = CreateSystemThread(SID, system);
+            threadHandle = CreateSystemThread(SID, newSystem);
 
-        AddToSystems(SID, system, opts, threadHandle);
+        AddToSystems(SID, newSystem, opts, threadHandle);
 
         nextSID++;
         return SID;
@@ -83,6 +88,9 @@ struct SystemManager::Impl{
 
     void StopAll(){
         ForEverySystem([&](API::SystemID SID, const SystemExecInfo& info){
+            if(!info.system->IsExecutable())
+                return;
+
             if(info.threadHandle != API::EmptyHandle)
                 resourceManager.KillThread(info.threadHandle);
 
@@ -103,11 +111,17 @@ struct SystemManager::Impl{
 
     void AddToSystems(API::SystemID SID, std::shared_ptr<API::ISystem>& system, 
             API::SystemStartOptions opts, API::ThreadHandle threadHandle){
+        if(DoesSystemExist(SID) && SID != API::NoSID)
+            return;
+
         std::lock_guard<std::mutex> lock{systemsLock};
         systems.emplace(SID, SystemExecInfo{system, opts, threadHandle});
     }
 
     bool DoesSystemExist(API::SystemID SID){
+        if(SID == API::NoSID)
+            return false;
+
         std::lock_guard<std::mutex> lock{systemsLock};
         return systems.contains(SID);
     }
@@ -140,8 +154,8 @@ SystemManager::SystemManager(RuntimeResourceManager& resourceManager, RequestBus
 
 SystemManager::~SystemManager() = default;
 
-CrookedEditor::API::SystemID SystemManager::StartSystemP(SystemConstructor&& systemConstructor){
-    return pImpl->StartSystem(std::move(systemConstructor));
+CrookedEditor::API::SystemID SystemManager::StartSystemP(const API::ISystem& system){
+    return pImpl->StartSystem(system);
 }
 
 void SystemManager::StopSystem(API::SystemID SID){

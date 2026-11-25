@@ -4,4 +4,5 @@
 
 namespace CrookedEditor::API{ 
     using SystemID = std::size_t;
+    constexpr static int NoSID = 0;
 }

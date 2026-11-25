@@ -13,12 +13,17 @@ namespace CrookedEditor::Systems{
 
     class TerminalRenderer final : public API::ISystem{
         public:
-            TerminalRenderer(API::SystemID SID, Events::RequestBus& events);
+            TerminalRenderer();
+            TerminalRenderer(API::SystemID SID, Events::RequestBus* events);
+
             ~TerminalRenderer();
 
             API::SystemStartOptions Start();
             bool Update();
             void Stop(API::SystemTerminateReasons reason);
+
+            std::shared_ptr<API::ISystem> Instanciate(API::SystemID SID, 
+                    Events::RequestBus* requestBus) const;
 
         private:
             struct Impl;

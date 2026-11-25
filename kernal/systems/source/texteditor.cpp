@@ -41,7 +41,7 @@ struct TextEditor::Impl{
     const int invisableRows = 2;
 
     API::SystemID SID;
-    Events::RequestBus& requestBus;
+    Events::RequestBus* requestBus;
 
     std::string fileName;
     std::unique_ptr<EditorContext> context;
@@ -53,11 +53,11 @@ struct TextEditor::Impl{
     TextEditorVisualState visualState{};
     EditorVisualStateHelper visualStateHelper{}; 
 
-    Impl(API::SystemID& SID, Events::RequestBus& requestBus)
+    Impl(API::SystemID& SID, Events::RequestBus* requestBus)
         : SID(SID), requestBus(requestBus){}
 
     API::SystemStartOptions Start(){
-        auto request = requestBus.SendRequest<API::ConfigGetValue>("fileName");
+        auto request = requestBus->SendRequest<API::ConfigGetValue>("fileName");
         if(request.has_value()){
             fileName = std::get<const char*>(request.value()); 
         } else {
@@ -67,7 +67,7 @@ struct TextEditor::Impl{
         context = std::make_unique<EditorContext>(BufferFileInterpreter{}, 
             DefaultStates<NormalState, InsertState>{}, fileName);
 
-        requestBus.ListenForEvent<InputCaptured>([&](int input){
+        requestBus->ListenForEvent<InputCaptured>([&](int input){
             inputQueue.push(input);
         });
 
@@ -89,17 +89,17 @@ struct TextEditor::Impl{
         inputStream.str("");
 
         if(context->quit){
-            requestBus.SendRequest<API::RuntimeQuit>();
+            requestBus->SendRequest<API::RuntimeQuit>();
         }
 
-        visualStateHelper.UpdateVisualState(requestBus, 
+        visualStateHelper.UpdateVisualState(*requestBus, 
                         *context, visualState, invisableRows, verticalScrollThreshold, 
                         lineColumnSpace);
         
         auto temp = visualState.Dispatch();
         auto visualStatePtr = std::make_shared<const TextEditorVisualState>(std::move(temp));
 
-        requestBus.SendRequest<PublishRenderCommand>(
+        requestBus->SendRequest<PublishRenderCommand>(
                 CreateCommandConstructor<Renderer::RenderEditorCommand>(visualStatePtr));
 
         return false;
@@ -108,7 +108,8 @@ struct TextEditor::Impl{
     void Stop(API::SystemTerminateReasons reasons){}
 };
 
-TextEditor::TextEditor(API::SystemID SID, Events::RequestBus& requestBus) 
+TextEditor::TextEditor() : API::ISystem(){};
+TextEditor::TextEditor(API::SystemID SID, Events::RequestBus* requestBus) 
     : ISystem(SID, requestBus), pImpl(std::make_unique<Impl>(SID, requestBus)){
 }
 
@@ -125,4 +126,9 @@ bool TextEditor::Update(){
 
 void TextEditor::Stop(CrookedEditor::API::SystemTerminateReasons reasons){
     pImpl->Stop(reasons);
+}
+
+std::shared_ptr<CrookedEditor::API::ISystem> TextEditor::Instanciate(CrookedEditor::API::SystemID SID, 
+        Events::RequestBus* requestBus) const{
+    return std::make_shared<TextEditor>(SID, requestBus);
 }

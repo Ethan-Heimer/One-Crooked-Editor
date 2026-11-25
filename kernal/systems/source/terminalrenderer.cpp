@@ -18,20 +18,20 @@ using namespace Rendering;
 
 struct TerminalRenderer::Impl{
     API::SystemID SID;
-    Events::RequestBus& requestBus;
+    Events::RequestBus* requestBus;
 
     TerminalInterface terminalInterface;
     Rendering::TUIRenderer renderer;
 
     PingPongRingBuffer<RenderCommand, 65536>  commands;
 
-    Impl(API::SystemID SID, Events::RequestBus& requestBus)
+    Impl(API::SystemID SID, Events::RequestBus* requestBus)
     : requestBus(requestBus){
-        terminalInterface = MakeTerminalInterface(requestBus);
+        terminalInterface = MakeTerminalInterface(*requestBus);
     }
 
     API::SystemStartOptions Start(){
-        requestBus.AddRequest<PublishRenderCommand>([&]
+        requestBus->AddRequest<PublishRenderCommand>([&]
                 (std::shared_ptr<IRenderCommandConstructor> commandConstructor){
             commands.Produce(commandConstructor->Construct());
         });
@@ -60,7 +60,8 @@ struct TerminalRenderer::Impl{
     }
 };
 
-TerminalRenderer::TerminalRenderer(API::SystemID SID, Events::RequestBus& requestBus)
+TerminalRenderer::TerminalRenderer() : API::ISystem(){};
+TerminalRenderer::TerminalRenderer(API::SystemID SID, Events::RequestBus* requestBus)
     : ISystem(SID, requestBus),
     pImpl(std::make_unique<Impl>(SID, requestBus)) {}
 
@@ -76,4 +77,9 @@ bool TerminalRenderer::Update(){
 
 void TerminalRenderer::Stop(CrookedEditor::API::SystemTerminateReasons reason){
     pImpl->Stop(reason);
+}
+
+std::shared_ptr<CrookedEditor::API::ISystem> TerminalRenderer::Instanciate(CrookedEditor::API::SystemID SID, 
+        Events::RequestBus* requestBus) const{
+    return std::make_shared<TerminalRenderer>(SID, requestBus);
 }
