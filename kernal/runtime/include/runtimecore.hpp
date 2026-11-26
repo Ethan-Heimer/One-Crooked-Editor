@@ -11,14 +11,13 @@ namespace CrookedEditor{
         public:
             Events::RequestBus RequestBus;
 
-            Runtime::RuntimeResourceManager Application{RequestBus}; 
+            Runtime::RuntimeResourceManager ResourceManager{RequestBus}; 
             Runtime::ConfigVault ConfigVault{RequestBus};
             Runtime::TerminalEnviorment TerminalController{RequestBus};
 
-            Runtime::SystemManager SystemManager{Application, RequestBus};
+            Runtime::SystemManager SystemManager{ResourceManager, RequestBus};
 
             RuntimeCore(int argc, char** argv);
-            ~RuntimeCore();
     };
 
 }

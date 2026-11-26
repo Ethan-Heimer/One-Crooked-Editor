@@ -51,7 +51,6 @@ namespace Editor::FileHandling {
 
                 virtual std::shared_ptr<Editor::IEditable> LoadFromFile(std::string_view fileName) = 0;
                 virtual void SaveToFile(std::string_view fileName, const IEditable& fileSaver) = 0;
-                virtual void Test() = 0;
             };
 
             template <typename T>
@@ -68,10 +67,6 @@ namespace Editor::FileHandling {
 
                     return interpreter.SaveToFile(fileName, fileSaver);
                 }
-
-                void Test() override{
-                    std::cout << "Test" << std::endl;
-                };
             };
 
             std::unique_ptr<Contract> impl{};

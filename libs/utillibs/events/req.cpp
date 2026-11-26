@@ -50,9 +50,11 @@ int main(){
         return "Test";
     });
 
+    /*
     bus.AddRequest<VoidTest>([&](int x){
         std::cout << x << std::endl;
     });
+    */
 
     bus.ListenForEvent<VoidTest>([](int x){
         std::cout << x + 20 << std::endl;
@@ -70,5 +72,5 @@ int main(){
     if(r.has_value())
         std::cout << r.value() << std::endl;
     
-    bus.SendRequest<VoidTest>(10);
+    auto t = bus.SendRequest<VoidTest>(10);
 }

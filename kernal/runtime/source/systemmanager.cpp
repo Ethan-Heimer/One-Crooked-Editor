@@ -1,16 +1,21 @@
-#include "applicationtypes.hpp"
-#include "isystem.hpp"
-#include "systemmanager.hpp"
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <map>
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <ranges>
+
 #include "requestbus.hpp"
 #include "runtimeresourcemanager.hpp"
 #include "systemterminatereasons.hpp"
 #include "systemtypes.hpp"
+
+#include "applicationtypes.hpp"
+#include "isystem.hpp"
+#include "systemmanager.hpp"
 
 using namespace CrookedEditor::Runtime;
 using namespace Events;
@@ -87,17 +92,15 @@ struct SystemManager::Impl{
     } 
 
     void StopAll(){
-        ForEverySystem([&](API::SystemID SID, const SystemExecInfo& info){
-            if(!info.system->IsExecutable())
-                return;
+        auto keyView = std::views::keys(systems);
+        std::vector<API::SystemID> ids{keyView.begin(), keyView.end()};
 
-            if(info.threadHandle != API::EmptyHandle)
-                resourceManager.KillThread(info.threadHandle);
+        int count = 0;
+        for(auto& id : ids){
+            StopSystem(id, API::SystemTerminateReasons::ShutDown);
+        }
 
-            info.system->Stop(API::SystemTerminateReasons::ShutDown);
-        });
-
-        systems={};
+        systems = {};
     }
 
     void RemoveFromSystems(API::SystemID SID, API::SystemTerminateReasons reason){

@@ -28,7 +28,7 @@ std::shared_ptr<Editor::ILineData> BufferData::LineData::PreviousLine() const{
 };
 
 std::string BufferData::LineData::ToString() const{
-    assert(CurrentIndex < Buffer.data.Size());
+    assert(CurrentIndex < Buffer.data.Size() && "LineData Current Index OOB");
 
     const LineType& line = Buffer.data.At(CurrentIndex);
     int end = line.Size();
@@ -43,7 +43,8 @@ std::string BufferData::LineData::ToString() const{
 }
 
 void* BufferData::LineData::GetAddress() const{
-    assert(CurrentIndex < Buffer.data.Size());
+    assert(CurrentIndex < Buffer.data.Size() && "LineData Current Index OOB");
+
     const LineType& line = Buffer.data.At(CurrentIndex);
     void* addr = (void*)&line;
 
@@ -52,6 +53,12 @@ void* BufferData::LineData::GetAddress() const{
 
 int BufferData::LineData::LineNumber() const{
     return CurrentIndex + 1;
+}
+
+size_t BufferData::LineData::CharacterCount() const{
+    assert(CurrentIndex < Buffer.data.Size() && "LineData Current Index OOB");
+
+    return Buffer.data.At(CurrentIndex).Size();
 }
 
 int BufferData::GetCurentLineIndex() const{
@@ -65,7 +72,7 @@ void BufferData::SetCurrentLine(int index){
     data.MoveGapTo(index+1);
 }
 
-size_t BufferData::Size(){
+size_t BufferData::Size() const{
     return data.Size();
 }
 
@@ -132,6 +139,9 @@ Editor::LineIterator BufferData::EndStepsFromCurrentLine(unsigned int steps) con
 };
 
 Editor::LineIterator BufferData::AtLine(unsigned int line) const{
+    if(line >= data.Size())
+        return Editor::LineIterator{nullptr};
+
     auto data = std::make_shared<LineData>(*this, line);
     return Editor::LineIterator{data};
 }

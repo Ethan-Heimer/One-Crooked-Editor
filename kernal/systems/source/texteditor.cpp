@@ -17,7 +17,7 @@
 #include "systemterminatereasons.hpp"
 
 #include "inputconstants.hpp"
-#include "editorvisualstatehelper.hpp"
+#include "terminalenviormentevents.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -36,10 +36,6 @@ using namespace CrookedEditor::Components;
 using namespace Rendering::Commands;
 
 struct TextEditor::Impl{
-    const int lineColumnSpace = 4;
-    const int verticalScrollThreshold = 5;
-    const int invisableRows = 2;
-
     API::SystemID SID;
     Events::RequestBus* requestBus;
 
@@ -50,7 +46,6 @@ struct TextEditor::Impl{
     std::stringstream inputStream;
 
     TextEditorVisualState visualState{};
-    EditorVisualStateHelper visualStateHelper{}; 
 
     Impl(API::SystemID& SID, Events::RequestBus* requestBus)
         : SID(SID), requestBus(requestBus){}
@@ -90,14 +85,13 @@ struct TextEditor::Impl{
             requestBus->SendRequest<API::RuntimeQuit>();
         }
 
-        visualStateHelper.UpdateVisualState(*requestBus, 
-                        *context, visualState, invisableRows, verticalScrollThreshold, 
-                        lineColumnSpace);
-        
-        auto temp = visualState.Dispatch();
-        auto visualStatePtr = std::make_shared<const TextEditorVisualState>(std::move(temp));
-
-        requestBus->SendRequest<API::PublishRenderCommand>(Renderer::RenderEditorCommand{visualStatePtr});
+        auto response = requestBus->SendRequest<API::TermGetSize>();
+        std::pair<int, int> size;
+        if(response.has_value())
+            size = response.value();
+ 
+        Renderer::RenderEditorCommand renderEditorCommand{*context->buffer, visualState, size.first, size.second};
+        requestBus->SendRequest<API::PublishRenderCommand>(std::move(renderEditorCommand));
 
         return false;
     }

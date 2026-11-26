@@ -13,6 +13,7 @@ namespace Events{
         public:
             using request_return_type = std::expected<Ret, std::string>;
             using request_callback_type = std::function<request_return_type(const Args&...)>;
+            using request_success_type = Ret;
 
             friend Friend;
 
@@ -37,7 +38,8 @@ namespace Events{
     template<typename Friend, typename... Args>
     class Request<Friend, void, Args...>{
         public:
-            using request_return_type = void;
+            using request_success_type = void;
+            using request_return_type = std::expected<void, std::string>;
             using request_callback_type = std::function<void(const Args&...)>;
 
             friend Friend;
@@ -49,10 +51,12 @@ namespace Events{
         private:
             std::vector<request_callback_type> callbacks;  
 
-            void Send(const Args&... args){    
+            request_return_type Send(const Args&... args){    
                 for(auto& func : callbacks){
                     func(args...);
                 }
+
+                return {};
             }
             
     };

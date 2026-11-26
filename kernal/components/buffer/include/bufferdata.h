@@ -21,6 +21,8 @@ namespace CrookedEditor::Buffers {
                 std::string ToString() const override;
                 int LineNumber() const override;
                 void* GetAddress() const override;
+
+                size_t CharacterCount() const override;
             };
 
 
@@ -30,7 +32,7 @@ namespace CrookedEditor::Buffers {
             int GetCurentLineIndex() const;
             void SetCurrentLine(int index);
 
-            size_t Size();
+            size_t Size() const;
             void InsertLine();
             bool DeleteLine();
 

@@ -1,14 +1,21 @@
 # One Crooked Editor
 
-Crooked Editor is an educational project, and its designed to embrace breaking things. No AI.
+Crooked Editor is an educational project, and its designed to embrace breaking things. *No AI Tools Used*
 
 #Requrements
  - Unix System
- - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty and ITerm2 are supported)**
+ - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty, Ghostty, & ITerm2 are supported)**
 
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 11/25/2026
+V0.010 is in main, althought a bit unsable. 
+
+I feel that the main archetectural things are done! But I want to develop a testing harness around the editor to make it more robust
+
+v0.011 will focus on plugins and testing
+
 ## 11/23/2026 - Request Driven Archetecture
 When coming up with the archetecture for Crooked Editors 'kernal', the most important requirement
 for me was that it would be plugin friendly- meaning C++ plugins could interact with it easly. 
@@ -305,7 +312,3 @@ The goal for the next 'phase' of this project is to turn it into a modal editor.
 
 ### Known bugs
  - The cursor can 'desync' from its real position in the editor, meaning the visual cursor may be in one place but the physical place is in another. 
-
-
-
-

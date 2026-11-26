@@ -13,7 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-#add_compile_options(-O3)
+add_compile_options(-O3)
 #add_compile_options(-Wall -Wextra)
 
 message(STATUS "C Compiler:   ${CMAKE_C_COMPILER}")
@@ -29,8 +29,8 @@ add_executable(${NAME}
     ${SOURCE_FILES}
 )
 
-target_compile_options(${NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
-target_link_options(${NAME} PRIVATE -fsanitize=address)
+# target_compile_options(${NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+target_link_options(${NAME} PRIVATE -fsanitize=address -g)
 
 target_link_libraries(${NAME} PRIVATE editor)
 target_link_libraries(${NAME} PRIVATE tuirenderer)

@@ -2,6 +2,7 @@
 
 #include "irequestchannel.hpp"
 #include <any>
+#include <expected>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -52,12 +53,11 @@ namespace Events{
             template<typename T>
             void AddRequest(typename T::request_callback_type&& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
-
                 AddChannelFor<T>(std::move(callback)); 
             }
 
             template<typename T>
-            requires std::is_same_v<typename T::request_return_type, void>
+            requires std::is_same_v<typename T::request_successful_type, void>
             void AddRequest(){
                 std::unique_lock<std::mutex> lock{topicLock};
                 AddChannelFor<T>(); 
@@ -69,6 +69,9 @@ namespace Events{
             auto SendRequest(Args&&... params) -> typename Request::request_return_type{
                 std::unique_lock<std::mutex> lock{topicLock};
 
+                if(!channels.contains(typeid(Request)))
+                    return std::unexpected<std::string>{"Request not found"};
+
                 auto& channel = GetChannelFor<Request>();
 
                 RequestSender<typename Request::request_params_type> sender;
@@ -76,9 +79,12 @@ namespace Events{
             }
 
             template <typename T>
-            requires std::is_same_v<typename T::request_return_type, void>
+            requires std::is_same_v<typename T::request_successful_type, void>
             void ListenForEvent(typename T::request_callback_type&& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
+
+                if(!channels.contains(typeid(T)))
+                    return;
 
                 auto& channel = GetChannelFor<T>(); 
                 channel.On(std::move(callback));
@@ -97,7 +103,7 @@ namespace Events{
             }
 
             template <typename T>
-            requires std::is_same_v<typename T::request_return_type, void>
+            requires std::is_same_v<typename T::request_successful_type, void>
             void AddChannelFor(){
                 auto channel = std::make_shared<typename T::request_channel_type>();
                 channels.insert({typeid(T), channel});

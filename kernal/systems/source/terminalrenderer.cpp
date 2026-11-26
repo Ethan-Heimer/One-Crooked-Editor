@@ -1,7 +1,6 @@
 #include "terminalrenderer.hpp"
 #include "irendercommand.hpp"
 #include "isystem.hpp"
-#include "rendercommandtype.hpp"
 #include "rendererevents.hpp"
 #include "requestbus.hpp"
 #include "systemstartoptions.hpp"

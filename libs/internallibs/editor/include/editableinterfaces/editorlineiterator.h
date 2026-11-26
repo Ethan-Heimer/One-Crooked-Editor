@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <string>
-#include <iostream>
 
 namespace Editor {
     class ILineData{
@@ -13,6 +12,7 @@ namespace Editor {
             virtual std::string ToString() const = 0;
             virtual void* GetAddress() const = 0;
             virtual int LineNumber() const = 0;
+            virtual size_t CharacterCount() const = 0;
             
             bool IsCurrentLine = false;
     };
@@ -69,6 +69,13 @@ namespace Editor {
                     return false;
 
                 return currentLine->IsCurrentLine;
+            }
+
+            size_t CharacterCount() const{
+                if(currentLine == nullptr)
+                    return false;
+              
+                return currentLine->CharacterCount();
             }
 
         private:

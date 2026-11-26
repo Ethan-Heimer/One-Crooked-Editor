@@ -29,15 +29,12 @@ RuntimeCore::RuntimeCore(int argc, char** argv){
     SystemManager.StartSystem<Systems::TextEditor>();
 
     while(!quit){
-        Application.CleanUp();
+        ResourceManager.CleanUp();
         SystemManager.ExecuteSystemQueue();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-}
 
-RuntimeCore::~RuntimeCore(){
     SystemManager.StopAll();
-    Application.Quit();
+    ResourceManager.Quit();
 }
-

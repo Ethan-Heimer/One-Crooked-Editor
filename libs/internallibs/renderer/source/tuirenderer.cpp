@@ -1,10 +1,11 @@
 #include "tuirenderer.hpp"
 #include "irendercommand.hpp"
-#include "rendercommandtype.hpp"
 #include "terminalinterface.hpp"
 #include "tuitexture.hpp"
 #include <cassert>
+#include <iostream>
 #include <memory>
+#include <ostream>
 
 using namespace Rendering;
 
@@ -32,7 +33,6 @@ struct TUIRenderer::Impl{
 
         void Stop(TerminalInterface& terminalInterface){
             started = false;
-
             terminalInterface.ExitAlternateScreen();
         }
 
