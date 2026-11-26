@@ -1,0 +1,23 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     test
+relocations:
+  - { offset: 0xD617, size: 0x8, addend: 0x0, symName: __ZStL8__ioinit, symObjAddr: 0x4EFA0, symBinAddr: 0x1000082A0, symSize: 0x0 }
+  - { offset: 0xD917, size: 0x8, addend: 0x0, symName: __GLOBAL__sub_I_test.cpp, symObjAddr: 0x1EBC, symBinAddr: 0x100002044, symSize: 0x24 }
+  - { offset: 0xD92E, size: 0x8, addend: 0x0, symName: __Z41__static_initialization_and_destruction_0v, symObjAddr: 0x1E80, symBinAddr: 0x100002008, symSize: 0x3C }
+  - { offset: 0xD9BF, size: 0x8, addend: 0x0, symName: __ZNSt5arrayIiLm64EEixEm, symObjAddr: 0x1764, symBinAddr: 0x100001F4C, symSize: 0x74 }
+  - { offset: 0xDAA3, size: 0x8, addend: 0x0, symName: __ZN6Queues10RingBufferIiLm64EE3PopERi, symObjAddr: 0x1250, symBinAddr: 0x100001A38, symSize: 0x514 }
+  - { offset: 0xDBD5, size: 0x8, addend: 0x0, symName: __ZNK6Queues10RingBufferIiLm64EE9TailIndexEv, symObjAddr: 0x115C, symBinAddr: 0x100001944, symSize: 0xF4 }
+  - { offset: 0xDC2E, size: 0x8, addend: 0x0, symName: __ZNK6Queues10RingBufferIiLm64EE9HeadIndexEv, symObjAddr: 0x106C, symBinAddr: 0x100001854, symSize: 0xF0 }
+  - { offset: 0xDC87, size: 0x8, addend: 0x0, symName: __ZN6Queues10RingBufferIiLm64EE5CountEv, symObjAddr: 0xE9C, symBinAddr: 0x100001684, symSize: 0x1D0 }
+  - { offset: 0xDD2F, size: 0x8, addend: 0x0, symName: __ZN6Queues10RingBufferIiLm64EE4PushERKi, symObjAddr: 0x9A0, symBinAddr: 0x100001188, symSize: 0x4FC }
+  - { offset: 0xDE89, size: 0x8, addend: 0x0, symName: __ZN6Queues10RingBufferIiLm64EEC1Ev, symObjAddr: 0x96C, symBinAddr: 0x100001154, symSize: 0x34 }
+  - { offset: 0xDED2, size: 0x8, addend: 0x0, symName: __ZNSt13__atomic_baseImEC2Em, symObjAddr: 0x91C, symBinAddr: 0x100001104, symSize: 0x50 }
+  - { offset: 0xDF01, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x26C, symBinAddr: 0x100000A54, symSize: 0x6B0 }
+  - { offset: 0xDF60, size: 0x8, addend: 0x0, symName: __ZNSt6atomicImEC1Em, symObjAddr: 0x244, symBinAddr: 0x100000A2C, symSize: 0x28 }
+  - { offset: 0xDF88, size: 0x8, addend: 0x0, symName: __ZSt32__is_valid_cmpexch_failure_orderSt12memory_order, symObjAddr: 0x1FC, symBinAddr: 0x1000009E4, symSize: 0x48 }
+  - { offset: 0xDFAF, size: 0x8, addend: 0x0, symName: __ZSt23__cmpexch_failure_orderSt12memory_order, symObjAddr: 0x1B4, symBinAddr: 0x10000099C, symSize: 0x48 }
+  - { offset: 0xDFD6, size: 0x8, addend: 0x0, symName: __ZSt24__cmpexch_failure_order2St12memory_order, symObjAddr: 0x40, symBinAddr: 0x100000828, symSize: 0x174 }
+  - { offset: 0xDFFD, size: 0x8, addend: 0x0, symName: __ZStanSt12memory_orderSt23__memory_order_modifier, symObjAddr: 0x20, symBinAddr: 0x100000808, symSize: 0x20 }
+  - { offset: 0xE033, size: 0x8, addend: 0x0, symName: __ZStorSt12memory_orderSt23__memory_order_modifier, symObjAddr: 0x0, symBinAddr: 0x1000007E8, symSize: 0x20 }
+...

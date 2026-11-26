@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(LIBNAME editor)
+project(${LIBNAME} VERSION 3.0 LANGUAGES CXX)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dist)
+file(GLOB_RECURSE SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
+
+# add_subdirectory("${CMAKE_SOURCE_DIR}/libs/editorlibs/buffer" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+add_library(${LIBNAME} SHARED ${SOURCE_FILES})
+
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/gapbuffer/")
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/linkedlist/")
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/statemachine/")
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/undoing/")
+target_include_directories(${LIBNAME} PRIVATE "${CMAKE_SOURCE_DIR}/libs/utillibs/trees/")
+
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editorstatecontext/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editorstates/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editorstates/interfaces/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editorcontext/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editormutations/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editoractions/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/editableinterfaces/")
+target_include_directories(${LIBNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")

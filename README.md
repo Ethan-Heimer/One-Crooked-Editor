@@ -1,16 +1,143 @@
 # One Crooked Editor
 
-Crooked Editor is an educational project, and its designed to embrace breaking things. No AI.
+Crooked Editor is an educational project, and its designed to embrace breaking things.
 The codebase is not the best, but it's slowly improving. If reading it `client/main.cpp` is a good place to start.
 I don't want to make things 'perfect' until I have to, meaining a disorganized code-base until it matters
 
+*I DO NOT USE AI TOOLS*
+
 # Requrements
  - Unix System
- - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty and ITerm2 are supported)**
+ - True color & DEC 2026 Syncronization modes **(Most modern terminals should support this. Alacritty, Ghostty, & ITerm2 are supported)**
 
 looking for [documentation](https://github.com/Ethan-Heimer/One-Crooked-Editor/wiki)?
 
 # Updates!
+## 11/25/2026
+V0.010 is in main, althought a bit unsable. 
+
+I feel that the main archetectural things are done! But I want to develop a testing harness around the editor to make it more robust
+
+v0.011 will focus on plugins and testing
+
+## 11/23/2026 - Request Driven Archetecture
+When coming up with the archetecture for Crooked Editors 'kernal', the most important requirement
+for me was that it would be plugin friendly- meaning C++ plugins could interact with it easly. 
+After a month of prototypes and redesigns, I've settled on a complete 'request driven' archetecture
+
+### Runtime and Systems
+
+At the base of the editor is the 'runtime' (Ill be renaming files to follow this terminaligy), 
+The runtime handles all of the applications resources and terminal settings. On top of the runtime is
+the 'system manager'. This, like the name suggests, manages systems
+
+Systems include the renderer, input handler, and the text editor (context) itself. You can think of systems as 
+applications that run on top of the runtime.
+
+I assumed that plugins will want a way to intoduce persistent running code into the editor, and 
+systems provide a way to do that. Systems can be threaded or invoked from the main thread.
+
+### Requests
+Few prototypes gave systems direct refrences to runtime components. This, however, caused 2 main issues:
+- Circular dependencies; systems should be able to spawn subsystems, yet to do this they would beed a ref to 
+the system manager, a runtime component that depends on the base system interface. A tightly coupled circlur
+depenency occurs.
+- I'm building systems as if they are a plugin in them selves, im assuming some plugins will want to do some of 
+the same work that core systems do (ie- render, get/set config info, etc). This means that plugins would need to 
+include lots of core headers to work, which I would like to avoid. I would like plugins to include some core API 
+headers and util headers and thats it. 
+
+The solution: request driven archetecture. 
+
+The terminology for request are simple
+- *Request*: A command that takes in paramaters and returns somthing back to the caller
+- *Event*: A request that takes in paramaters, but does not return back to the caller (returns void)
+- *Notification*- An event that does not take in paramaters
+
+Requests are made on a request bus. a *Request* may have only on listener, but many senders, while *Events* and
+*Notifications* may have many listners and many senders. This is due to that fact that if a request were
+to have multiple listeners, they may disagree on the truth and return different things. But if nothing 
+is being sent back to the sender, then that issue doesn't matter. 
+
+Using lots of template magic, requests are statically typed check, meaning no bugs will occur from
+typos in a magic string or incorrect parameters.
+
+By using RDA, systems are decoupled from eachother, and the runtime. The editor and renderer can communicate
+without knowing they exist, they only need to know that the request type exists. This is great for plugins.
+
+## 10/20/2026 - Double Buffered Ring Buffers
+This refactor I've updated the rendering queue to be a double ring buffer.
+The old system was a simple queue using mutexs for thread synconization. The 
+problem with this is that when the render loop was rendering, the editor loop
+has to wait. this just, does not makes sence archetectually? and as the system
+grows and more things request rendering commands, the more waiting there is. 
+
+The new buffer fixes this, It decouples producer performance from consumer performence,
+and uses atomics so the queues are lock free (not wait free however). 
+
+## 10/2/2026 - Gap buffers of gap buffers
+In the most recent commit of V0.010, instead of using a "doubly indexed linked list" gap buffers,
+I'm instead using a 'gap buffer of gap buffers' to represent files. 
+I've switched for multiple resons:
+
+ - The code around the old way was gross. To be able use itorators to iterate 
+ through the buffer, i had to create a class that inherited from 'DILL'. That always 
+ gave me a bad code smell.
+
+ - The DILL structure took all the bad parts of LLs and arrays and made an even worse structure.
+ They had indexes, so insert was in theory O(N) to update indexes after the insertion, so there
+ goes the theoretical benfit of LLs. Jumping to an index in the array was also O(N). 
+
+ - Iterating through the buffer is very crutal to the renderer, and when iterating throught a 
+ LL structure, because of pointer chasing and CPU will very often cache miss. Gapbuffers, as they
+ are continuous in memory, will not miss as often. The cache line for my M5 mac is 128 bytes.
+ the gap buffer is 40 bytes (theres a change I can optimize it), so L1 cache (to my understanding), should cache 3 lines. Thats 3x less cashe misses.
+ I understand it kinda crazy to worry about performance to this degree in a text editor, but its fun.
+
+My biggest goal for v0.010 was to make Crooked editor somehow configurable. This and decent archetecure 
+would lead the way for LSPs. My next big step towards this is the C++ plugin layer. 
+
+As I mentioned in the last update, I want to also have a scripting layer. I figured that it was going to be Lua,
+but I've been messing with the idea of using C# instead. The nice thing is, is that because the scripting engine
+will be handled by a C++ plugin, the scripting engine is swappable (maybe even hot-swappable?).
+
+Enabling LSPs is the ultimate goal of this editor. Once I have them I can consider using it full time.
+
+## 09/22/2026 - Kernals & Rings
+Its been about a month since the last update, and v0.010 is shaping up to be a 
+large restructure of the project. While implementin LPS (a prototype can be found in v0.009), 
+I realized that crooked editor needed more structure to implement lsp support properly. There needed
+to be a stable, configurable, core that a LSP implementation could depend on to properly support 
+the protocalls capability. This got me thinking about how I could archetect this editor into proper layers.
+
+### The Kernal and Rings
+Im kinda stealing terms from OS and for this, but it makes the project sound cooler so whatever. 
+The 'Kernal' is the core of Crooked Editor. As of right now, it containes the application layer, which 
+is responsable for managing resources like threads and subprocesses. It provides mechenisms for these resources 
+to be cleaned up gracefully when its time to terminate the program. A configuration layer lives above the app layer, 
+and the custom renderer above that. Finaly at the top is the text editor itself, which depends on all layers. 
+
+What is going to make the kernal special however, is the ablility for to start up c++ plugins an a 'ring' 
+above it. Ring one, I guess, and this is where features that are not 'core' to a text editor will go. 
+Ring one plugins will still be fast, and they will interact with the editors c++ APIS. This is where
+the editors LSP API will live, and beacuse there is a strong kernal underneath, I can poperly support
+the capabilities of the protocalls.
+
+Above ring one will be ring two, the Lua layer. Because the layer beneth the Lua layer is flexable, so 
+will the Lua API. Ill provide some API to add resources to the Lua runtime so that ring one plugins
+can be configured in ring two. Some plugins don't need to be fast, and some people dont like to work
+in C++. So ring two is where these plugins will live. Honestly, I think of ring one being more for
+development plugins and ring two being more for lua plugins
+
+### Whats next 
+
+That being said, I havent started on the rings yet, only the kernal. My goal it to optimize
+and clean it up. After the kernal has the capabilities to execute ring one c++ plugins, I want 
+to shift my focus a bit, and I'm going to make an improved Json-For-C++ parser. My goal 
+is to make a parser that is 100% compile time capable using C++ 26 reflection and 
+actually develop it agains the JSON specification. This is an impotant project as this is 
+how i'll parse LSP responses.
+
 ## 08/12/2026 - Rendering
 I hate NCurses. I've never had a good time using it and it just feels so clunky. So I got rid of it and opted to do all the terminal
 shinanigans myself. v0.008 removes Ncurses as a dependancy and uses a new custom solution for this project. With that, this editor is no
@@ -189,7 +316,3 @@ The goal for the next 'phase' of this project is to turn it into a modal editor.
 
 ### Known bugs
  - The cursor can 'desync' from its real position in the editor, meaning the visual cursor may be in one place but the physical place is in another. 
-
-
-
-
