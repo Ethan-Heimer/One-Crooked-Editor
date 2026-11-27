@@ -1,4 +1,5 @@
 #include "requestbus.hpp"
+#include "requests.hpp"
 #include <expected>
 #include <iostream>
 #include <string>
@@ -29,8 +30,29 @@ struct CopyTest : public Events::IRequest<std::string, CopyTracer>{};
 struct CopyTest2 : public Events::IRequest<CopyTracer, int>{};
 struct VoidTest : public Events::IRequest<void, int>{};
 struct Void2Test : public Events::IRequest<void, int>{};
+struct RemoveTest : public Events::IRequest<void, int, int>{};
+
+struct RequestTest{
+    Events::Request<RequestTest, void, int> test;
+
+    void Send(){
+        auto _ = test.Send(100);
+    }
+};
 
 int main(){
+    //reqest test
+    RequestTest rt;
+    auto func = [&](auto arg){
+        std::cout << arg << std::endl;
+    };
+
+    rt.test.On(func);
+    rt.Send();
+    rt.test.RemoveCallback(func);
+    rt.Send();
+
+    // request bus test 
     Events::RequestBus bus;
     std::unordered_map<std::string, std::string> config;
 
@@ -50,11 +72,9 @@ int main(){
         return "Test";
     });
 
-    /*
     bus.AddRequest<VoidTest>([&](int x){
         std::cout << x << std::endl;
     });
-    */
 
     bus.ListenForEvent<VoidTest>([](int x){
         std::cout << x + 20 << std::endl;
@@ -63,6 +83,20 @@ int main(){
     bus.AddRequest<CopyTest2>([&](const int& tracer){
         return CopyTracer{};
     });
+
+    bus.AddRequest<RemoveTest>([&](int x, int y){
+        std::cout << x << " " << y <<  std::endl;
+    });
+
+    auto x = [](int x, int y){
+        std::cout << x << std::endl;
+    };
+    bus.ListenForEvent<RemoveTest>(x);
+
+    auto y = [](int x, int y){
+        std::cout << y << std::endl;
+    };
+    bus.ListenForEvent<RemoveTest>(y);
 
 
     auto _ = bus.SendRequest<AddConfig>(std::pair<std::string, std::string>{"Test", "Hello World!"});
@@ -73,4 +107,13 @@ int main(){
         std::cout << r.value() << std::endl;
     
     auto t = bus.SendRequest<VoidTest>(10);
+    t = bus.SendRequest<RemoveTest>(50, 70);
+
+    bus.RemoveEventListener<RemoveTest>(x);
+    t = bus.SendRequest<RemoveTest>(50, 70);
+
+    t = bus.RemoveRequest<RemoveTest>();
+    t = bus.SendRequest<RemoveTest>(50, 70);
+    if(!t.has_value())
+        std::cout << t.error() << std::endl;
 }

@@ -10,8 +10,12 @@ namespace Events{
             using RequestType = Request<RequestChannel, Ret, Params...>;
             RequestType request;
 
-            void On(typename RequestType::request_callback_type&& listener){
-                request.On(std::move(listener));
+            void On(const typename RequestType::request_callback_type& listener){
+                request.On(listener);
+            }
+
+            void RemoveCallback(const typename RequestType::request_callback_type& listener){
+                request.RemoveCallback(listener);
             }
     
             auto Send(Params&&... args) -> typename RequestType::request_return_type{

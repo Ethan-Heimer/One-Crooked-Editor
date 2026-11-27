@@ -51,9 +51,9 @@ namespace Events{
     class RequestBus{
         public: 
             template<typename T>
-            void AddRequest(typename T::request_callback_type&& callback){
+            void AddRequest(const typename T::request_callback_type& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
-                AddChannelFor<T>(std::move(callback)); 
+                AddChannelFor<T>(callback); 
             }
 
             template<typename T>
@@ -63,6 +63,16 @@ namespace Events{
                 AddChannelFor<T>(); 
             }
     
+            template<typename T>
+            std::expected<void, std::string>RemoveRequest(){
+                std::unique_lock<std::mutex> lock{topicLock};
+
+                if(!channels.contains(typeid(T)))
+                    return std::unexpected<std::string>{"Request not found"};
+
+                channels.erase(typeid(T));
+                return {};
+            };
                 
             template<typename Request, typename... Args>
             [[nodiscard("Return of SendRequest must be observed")]]
@@ -80,14 +90,26 @@ namespace Events{
 
             template <typename T>
             requires std::is_same_v<typename T::request_successful_type, void>
-            void ListenForEvent(typename T::request_callback_type&& callback){
+            void ListenForEvent(const typename T::request_callback_type& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
 
                 if(!channels.contains(typeid(T)))
                     return;
 
                 auto& channel = GetChannelFor<T>(); 
-                channel.On(std::move(callback));
+                channel.On(callback);
+            }
+
+            template <typename T>
+            requires std::is_same_v<typename T::request_successful_type, void>
+            void RemoveEventListener(const typename T::request_callback_type& callback){
+                std::unique_lock<std::mutex> lock{topicLock};
+
+                if(!channels.contains(typeid(T)))
+                    return;
+
+                auto& channel = GetChannelFor<T>(); 
+                channel.RemoveCallback(callback);
             }
  
         private:
@@ -95,10 +117,10 @@ namespace Events{
             std::mutex topicLock;
 
             template <typename T>
-            void AddChannelFor(typename T::request_callback_type&& callback){
+            void AddChannelFor(const typename T::request_callback_type& callback){
                 auto channel = std::make_shared<typename T::request_channel_type>();
 
-                channel->On(std::move(callback));
+                channel->On(callback);
                 channels.insert({typeid(T), channel});
             }
 

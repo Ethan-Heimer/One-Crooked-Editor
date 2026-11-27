@@ -29,9 +29,15 @@ namespace Events{
             bool hasBehavior = false;
             request_callback_type callback;  
 
-            void On(request_callback_type&& callback){
+            void On(const request_callback_type& callback){
                 this->callback = callback;
                 hasBehavior = true;
+            }
+
+            void RemoveCallback(const request_callback_type& callback){
+                if(this->callback.target_type() == callback.target_type()){
+                    this->callback = nullptr;
+                }
             }
     };
 
@@ -44,8 +50,14 @@ namespace Events{
 
             friend Friend;
 
-            void On(request_callback_type&& callback){
+            void On(const request_callback_type& callback){
                 callbacks.push_back(callback);
+            }
+
+            void RemoveCallback(const request_callback_type& callback){
+                std::erase_if(callbacks, [&](const request_callback_type& element){
+                    return element.target_type() == callback.target_type();
+                });
             }
             
         private:
