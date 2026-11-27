@@ -51,20 +51,33 @@ namespace Events{
     class RequestBus{
         public: 
             template<typename T>
-            void AddRequest(const typename T::request_callback_type& callback){
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> AddRequest(const typename T::request_callback_type& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
+
+                if(channels.contains(typeid(T)))
+                    return std::unexpected<std::string>{"Request is already regestered."};
+
                 AddChannelFor<T>(callback); 
+                return {};
             }
 
             template<typename T>
             requires std::is_same_v<typename T::request_successful_type, void>
-            void AddRequest(){
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> AddRequest(){
                 std::unique_lock<std::mutex> lock{topicLock};
+
+                if(channels.contains(typeid(T)))
+                    return std::unexpected<std::string>{"Request is already regestered."};
+
                 AddChannelFor<T>(); 
+                return {};
             }
     
             template<typename T>
-            std::expected<void, std::string>RemoveRequest(){
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> RemoveRequest(){
                 std::unique_lock<std::mutex> lock{topicLock};
 
                 if(!channels.contains(typeid(T)))
@@ -75,7 +88,7 @@ namespace Events{
             };
                 
             template<typename Request, typename... Args>
-            [[nodiscard("Return of SendRequest must be observed")]]
+            [[nodiscard("Result should be observed")]]
             auto SendRequest(Args&&... params) -> typename Request::request_return_type{
                 std::unique_lock<std::mutex> lock{topicLock};
 
@@ -90,26 +103,31 @@ namespace Events{
 
             template <typename T>
             requires std::is_same_v<typename T::request_successful_type, void>
-            void ListenForEvent(const typename T::request_callback_type& callback){
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> ListenForEvent(const typename T::request_callback_type& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
 
                 if(!channels.contains(typeid(T)))
-                    return;
+                    return std::unexpected<std::string>{"Request not found"};
 
                 auto& channel = GetChannelFor<T>(); 
                 channel.On(callback);
+
+                return {};
             }
 
             template <typename T>
             requires std::is_same_v<typename T::request_successful_type, void>
-            void RemoveEventListener(const typename T::request_callback_type& callback){
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> RemoveEventListener(const typename T::request_callback_type& callback){
                 std::unique_lock<std::mutex> lock{topicLock};
 
                 if(!channels.contains(typeid(T)))
-                    return;
+                    return std::unexpected<std::string>{"Request not found"};
 
                 auto& channel = GetChannelFor<T>(); 
                 channel.RemoveCallback(callback);
+                return {};
             }
  
         private:

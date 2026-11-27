@@ -3,6 +3,7 @@
 #include <expected>
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 
 
@@ -56,47 +57,47 @@ int main(){
     Events::RequestBus bus;
     std::unordered_map<std::string, std::string> config;
 
-    bus.AddRequest<AddConfig>([&](const std::pair<std::string, std::string>& pair){
+    std::ignore = bus.AddRequest<AddConfig>([&](const std::pair<std::string, std::string>& pair){
         config[pair.first] = pair.second;
         return pair.second;
     });
 
-    bus.AddRequest<GetConfig>([&](const std::string& key) -> GetConfig::request_return_type{
+    std::ignore = bus.AddRequest<GetConfig>([&](const std::string& key) -> GetConfig::request_return_type{
         if(!config.contains(key))
             return std::unexpected<std::string>("Key Not Found");
         else 
             return config[key];
     });
 
-    bus.AddRequest<CopyTest>([&](const CopyTracer& tracer){
+    std::ignore = bus.AddRequest<CopyTest>([&](const CopyTracer& tracer){
         return "Test";
     });
 
-    bus.AddRequest<VoidTest>([&](int x){
+    std::ignore = bus.AddRequest<VoidTest>([&](int x){
         std::cout << x << std::endl;
     });
 
-    bus.ListenForEvent<VoidTest>([](int x){
+    std::ignore = bus.ListenForEvent<VoidTest>([](int x){
         std::cout << x + 20 << std::endl;
     });
 
-    bus.AddRequest<CopyTest2>([&](const int& tracer){
+    std::ignore = bus.AddRequest<CopyTest2>([&](const int& tracer){
         return CopyTracer{};
     });
 
-    bus.AddRequest<RemoveTest>([&](int x, int y){
+    std::ignore = bus.AddRequest<RemoveTest>([&](int x, int y){
         std::cout << x << " " << y <<  std::endl;
     });
 
     auto x = [](int x, int y){
         std::cout << x << std::endl;
     };
-    bus.ListenForEvent<RemoveTest>(x);
+    std::ignore = bus.ListenForEvent<RemoveTest>(x);
 
     auto y = [](int x, int y){
         std::cout << y << std::endl;
     };
-    bus.ListenForEvent<RemoveTest>(y);
+    std::ignore = bus.ListenForEvent<RemoveTest>(y);
 
 
     auto _ = bus.SendRequest<AddConfig>(std::pair<std::string, std::string>{"Test", "Hello World!"});
@@ -109,7 +110,7 @@ int main(){
     auto t = bus.SendRequest<VoidTest>(10);
     t = bus.SendRequest<RemoveTest>(50, 70);
 
-    bus.RemoveEventListener<RemoveTest>(x);
+    t = bus.RemoveEventListener<RemoveTest>(x);
     t = bus.SendRequest<RemoveTest>(50, 70);
 
     t = bus.RemoveRequest<RemoveTest>();
