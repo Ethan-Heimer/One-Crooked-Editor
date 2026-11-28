@@ -2,7 +2,6 @@
 
 #include "ringbuffer.hpp"
 #include <atomic>
-#include <memory>
 
 namespace Queues{
     template <typename T, int Size>
@@ -38,16 +37,6 @@ namespace Queues{
             bool Consume(T& value){
                 RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
                 return buffer->Consume(value);
-            }
-
-            bool IsReadBufferEmpty(){
-                RingBuffer<T, Size>* buffer = readBuffer.load(std::memory_order_acquire);
-                return buffer->IsEmpty();
-            }
-            
-            bool IsWriteBufferEmpty(){
-                RingBuffer<T, Size>* buffer = writeBuffer.load(std::memory_order_acquire);
-                return buffer->IsEmpty();
             }
 
             size_t ReadBufferCount(){

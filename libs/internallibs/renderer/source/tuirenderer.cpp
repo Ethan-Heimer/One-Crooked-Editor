@@ -3,9 +3,7 @@
 #include "terminalinterface.hpp"
 #include "tuitexture.hpp"
 #include <cassert>
-#include <iostream>
 #include <memory>
-#include <ostream>
 
 using namespace Rendering;
 

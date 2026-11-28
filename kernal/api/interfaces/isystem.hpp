@@ -25,6 +25,10 @@ namespace CrookedEditor::API{
                 return SID != NoSID || requestBus != nullptr;
             }
 
+            SystemID GetSID() const {
+                return SID;
+            }
+
         protected:
             SystemID SID;
             Events::RequestBus* requestBus;

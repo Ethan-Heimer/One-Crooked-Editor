@@ -1,14 +1,17 @@
-#include <fstream>
+#include <cstdlib>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <map>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <vector>
 #include <ranges>
 
 #include "requestbus.hpp"
+#include "runtimeevents.hpp"
 #include "runtimeresourcemanager.hpp"
 #include "systemterminatereasons.hpp"
 #include "systemtypes.hpp"
@@ -51,7 +54,7 @@ struct SystemManager::Impl{
             if(!info.system->IsExecutable())
                 return;
 
-            bool result = info.system->Update();
+            bool result = ExecuteUpdate(info.system);
             if(result)
                 removeQueue.push_back(SID);
         });
@@ -139,7 +142,7 @@ struct SystemManager::Impl{
     API::ThreadHandle CreateSystemThread(API::SystemID SID, std::shared_ptr<API::ISystem>& system){
         return resourceManager.SpawnThread([this, SID, system](const std::atomic<bool>& quit){
             while(!quit){
-                bool result = system->Update();
+                bool result = ExecuteUpdate(system);
 
                 if(result){
                     RemoveFromSystems(SID, API::SystemTerminateReasons::ExecutionEnded);
@@ -149,6 +152,21 @@ struct SystemManager::Impl{
             }
 
         });
+    }
+
+    bool ExecuteUpdate(const std::shared_ptr<API::ISystem>& system){
+        try{
+            return system->Update();
+        } catch (const std::exception& e) {
+            std::stringstream log;
+            log << "An Error Occured and system of ID ";
+            log << system->GetSID();
+            log << " has been shutdown: ";
+            log << e.what();
+
+            std::ignore = requestBus.SendRequest<API::RuntimeLog>(log.str());
+            return true; 
+        }
     }
 };
 

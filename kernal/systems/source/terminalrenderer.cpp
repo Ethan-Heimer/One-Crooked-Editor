@@ -1,15 +1,16 @@
 #include "terminalrenderer.hpp"
-#include "irendercommand.hpp"
-#include "isystem.hpp"
 #include "rendererevents.hpp"
-#include "requestbus.hpp"
-#include "systemstartoptions.hpp"
-#include "systemterminatereasons.hpp"
+#include "resultbatch.hpp"
+#include "runtimeevents.hpp"
 #include "terminalinterface.hpp"
 #include "tuirenderer.hpp"
+
 #include "pingpongringbuffer.hpp"
 #include "terminalinterfacehelper.hpp"
+
+#include <cassert>
 #include <memory>
+#include <stdexcept>
 
 using namespace CrookedEditor::Systems;
 using namespace CrookedEditor::Renderer;
@@ -26,15 +27,17 @@ struct TerminalRenderer::Impl{
 
     PingPongRingBuffer<std::unique_ptr<IRenderCommand>, 65536>  commands;
 
+    Events::ResultBatch batch;
     Impl(API::SystemID SID, Events::RequestBus* requestBus)
     : requestBus(requestBus){
         terminalInterface = MakeTerminalInterface(*requestBus);
     }
 
     API::SystemStartOptions Start(){
-        requestBus->AddRequest<API::PublishRenderCommand>([&](const IRenderCommand& command){
+        batch = requestBus->AddRequest<API::PublishRenderCommand>([&](const IRenderCommand& command){
             commands.Produce(command.Clone());
         });
+        batch.Log<API::RuntimeLog>(*requestBus);
 
         renderer.Start(terminalInterface);
 
@@ -43,20 +46,29 @@ struct TerminalRenderer::Impl{
 
     bool Update(){
         commands.SwapBuffers();
-        if(!commands.IsReadBufferEmpty()){
-            std::unique_ptr<IRenderCommand> command{};
-            while(commands.Consume(command)){
-                renderer.DoCommand(*command);
-            }
 
-            renderer.Display(terminalInterface);
+        bool doDisplay = false;
+
+        std::unique_ptr<IRenderCommand> command{};     
+        while(commands.Consume(command)){
+            if(command == nullptr)
+                throw std::runtime_error{"A rendering command of nullptr encountered"};
+
+            renderer.DoCommand(*command);
+            doDisplay = true;
         }
+        
+        if(doDisplay)
+            renderer.Display(terminalInterface);
                 
         return false;
     };
 
     void Stop(API::SystemTerminateReasons reasons){
-        renderer.Start(terminalInterface);
+        renderer.Stop(terminalInterface);
+
+        batch = requestBus->RemoveRequest<API::PublishRenderCommand>();
+        batch.Log<API::RuntimeLog>(*requestBus);
     }
 };
 

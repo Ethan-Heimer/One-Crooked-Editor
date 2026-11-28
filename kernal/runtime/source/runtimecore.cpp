@@ -1,28 +1,30 @@
 #include "runtimecore.hpp"
 #include "runtimeevents.hpp"
-#include "configvault.hpp"
 #include "inputhandler.hpp"
-#include "requestbus.hpp"
-#include "systemmanager.hpp"
 #include "terminalrenderer.hpp"
 #include "texteditor.hpp"
 
-#include "texteditor.hpp"
-#include <chrono>
-#include <thread>
+#include <algorithm>
+#include <fstream>
 
 using namespace CrookedEditor;
 using namespace Events;
 
+inline void ParseArgs(int argc, char** argv, Runtime::ConfigVault& vault);
+
 RuntimeCore::RuntimeCore(int argc, char** argv){
     bool quit = false;
-    RequestBus.AddRequest<API::RuntimeQuit>([&](){
+    std::ofstream log{"debug.log"};
+
+    ParseArgs(argc, argv, ConfigVault);
+
+    std::ignore = RequestBus.AddRequest<API::RuntimeQuit>([&](){
         quit = true;
     });
 
-    if(argc >= 2){
-       ConfigVault.AddValue("fileName", argv[1]);
-    }
+    std::ignore = RequestBus.AddRequest<API::RuntimeLog>([&](const std::string& message){
+        log << message << std::endl;
+    });
 
     SystemManager.StartSystem<Systems::InputHandler>();
     SystemManager.StartSystem<Systems::TerminalRenderer>();
@@ -37,4 +39,34 @@ RuntimeCore::RuntimeCore(int argc, char** argv){
 
     SystemManager.StopAll();
     ResourceManager.Quit();
+
+    std::ignore = RequestBus.RemoveRequest<API::RuntimeLog>();
+    std::ignore = RequestBus.RemoveRequest<API::RuntimeQuit>();
+}
+
+inline void ParseArgs(int argc, char** argv, Runtime::ConfigVault& vault){
+    for(int i = 0; i < argc; i++){
+        std::stringstream stream{argv[i]};
+
+        std::string key, value;
+
+        std::getline(stream, key, '=');
+        std::getline(stream, value);
+        
+        if(value.empty()) 
+            continue;
+
+        if(std::all_of(value.begin(), value.end(), [](auto& c){
+            return std::isdigit(c);
+        })){
+            int number = std::stoi(value);
+            vault.AddValue(key, number);
+        }else if(value == "true"){
+            vault.AddValue(key, true);
+        } else if(value == "false"){
+            vault.AddValue(key, false);
+        } else {
+            vault.AddValue(key, value.c_str());
+        }
+    }
 }

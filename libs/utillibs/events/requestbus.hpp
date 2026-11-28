@@ -1,8 +1,11 @@
 #pragma once
 
 #include "irequestchannel.hpp"
+
 #include <any>
+#include <atomic>
 #include <expected>
+#include <format>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -47,16 +50,32 @@ namespace Events{
             return channel.Send(args...);
         }
     };
-    
+
+    struct LockKeeper{
+        std::unique_lock<std::mutex> lock;
+        std::atomic<bool>& doWait;
+
+        LockKeeper(std::atomic<bool>& doWait, std::mutex& mtx)
+        : doWait(doWait){
+            doWait.store(true, std::memory_order_release);
+            lock = std::unique_lock<std::mutex>{mtx};
+        }
+
+        ~LockKeeper(){
+            lock.unlock(); 
+            doWait.store(false, std::memory_order_release);
+        }
+    };
+
     class RequestBus{
         public: 
             template<typename T>
             [[nodiscard("Result should be observed")]]
             std::expected<void, std::string> AddRequest(const typename T::request_callback_type& callback){
-                std::unique_lock<std::mutex> lock{topicLock};
+                LockKeeper lock{doWait, mtx};
 
                 if(channels.contains(typeid(T)))
-                    return std::unexpected<std::string>{"Request is already regestered."};
+                    return std::unexpected<std::string>{Error<T>("Request is already regestered.")};
 
                 AddChannelFor<T>(callback); 
                 return {};
@@ -66,10 +85,10 @@ namespace Events{
             requires std::is_same_v<typename T::request_successful_type, void>
             [[nodiscard("Result should be observed")]]
             std::expected<void, std::string> AddRequest(){
-                std::unique_lock<std::mutex> lock{topicLock};
+                LockKeeper lock{doWait, mtx};
 
                 if(channels.contains(typeid(T)))
-                    return std::unexpected<std::string>{"Request is already regestered."};
+                    return std::unexpected<std::string>{Error<T>("Request is already regestered.")};
 
                 AddChannelFor<T>(); 
                 return {};
@@ -78,22 +97,51 @@ namespace Events{
             template<typename T>
             [[nodiscard("Result should be observed")]]
             std::expected<void, std::string> RemoveRequest(){
-                std::unique_lock<std::mutex> lock{topicLock};
+                LockKeeper lock{doWait, mtx};
 
                 if(!channels.contains(typeid(T)))
-                    return std::unexpected<std::string>{"Request not found"};
+                    return std::unexpected<std::string>{Error<T>("Request not found")};
 
                 channels.erase(typeid(T));
                 return {};
             };
-                
+
+            template <typename T>
+            requires std::is_same_v<typename T::request_successful_type, void>
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> RemoveEventListener(const typename T::request_callback_type& callback){
+                LockKeeper lock{doWait, mtx};
+
+                if(!channels.contains(typeid(T)))
+                    return std::unexpected<std::string>{Error<T>("Request not found")};
+
+                auto& channel = GetChannelFor<T>(); 
+                channel.RemoveCallback(callback);
+                return {};
+            }
+
+            template <typename T>
+            requires std::is_same_v<typename T::request_successful_type, void>
+            [[nodiscard("Result should be observed")]]
+            std::expected<void, std::string> ListenForEvent(const typename T::request_callback_type& callback){
+                WaitUntilSafe();
+
+                if(!channels.contains(typeid(T)))
+                    return std::unexpected<std::string>{Error<T>("Request not found")};
+
+                auto& channel = GetChannelFor<T>(); 
+                channel.On(callback);
+
+                return {};
+            }
+     
             template<typename Request, typename... Args>
             [[nodiscard("Result should be observed")]]
             auto SendRequest(Args&&... params) -> typename Request::request_return_type{
-                std::unique_lock<std::mutex> lock{topicLock};
+                WaitUntilSafe();
 
                 if(!channels.contains(typeid(Request)))
-                    return std::unexpected<std::string>{"Request not found"};
+                    return std::unexpected<std::string>{Error<Request>("Request not found")};
 
                 auto& channel = GetChannelFor<Request>();
 
@@ -101,38 +149,12 @@ namespace Events{
                 return sender.Send(channel, std::forward<Args>(params)...); 
             }
 
-            template <typename T>
-            requires std::is_same_v<typename T::request_successful_type, void>
-            [[nodiscard("Result should be observed")]]
-            std::expected<void, std::string> ListenForEvent(const typename T::request_callback_type& callback){
-                std::unique_lock<std::mutex> lock{topicLock};
 
-                if(!channels.contains(typeid(T)))
-                    return std::unexpected<std::string>{"Request not found"};
-
-                auto& channel = GetChannelFor<T>(); 
-                channel.On(callback);
-
-                return {};
-            }
-
-            template <typename T>
-            requires std::is_same_v<typename T::request_successful_type, void>
-            [[nodiscard("Result should be observed")]]
-            std::expected<void, std::string> RemoveEventListener(const typename T::request_callback_type& callback){
-                std::unique_lock<std::mutex> lock{topicLock};
-
-                if(!channels.contains(typeid(T)))
-                    return std::unexpected<std::string>{"Request not found"};
-
-                auto& channel = GetChannelFor<T>(); 
-                channel.RemoveCallback(callback);
-                return {};
-            }
- 
         private:
             std::map<std::type_index, std::any> channels;
-            std::mutex topicLock;
+
+            std::mutex mtx;
+            std::atomic<bool> doWait;
 
             template <typename T>
             void AddChannelFor(const typename T::request_callback_type& callback){
@@ -155,6 +177,16 @@ namespace Events{
                     <typename T::request_channel_type>>(channels[typeid(T)]);
 
                 return *channel_ptr;
+            }
+
+            template <typename T>
+            constexpr std::string Error(const std::string& message){
+                return std::format("Request Bus Error: {} {}", typeid(T).name(), message);
+            }
+
+            void WaitUntilSafe(){
+                if(doWait.load(std::memory_order_acquire))
+                    std::unique_lock<std::mutex> lock{mtx};
             }
     };
 }

@@ -1,16 +1,20 @@
 #include "texteditor.hpp"
 #include "bufferfilehandler.h"
 
+#include "configconstants.hpp"
 #include "configevents.hpp"
-#include "rendereditorcommand.hpp"
 #include "rendererevents.hpp"
+#include "resultbatch.hpp"
 #include "runtimeevents.hpp"
+#include "inputevents.hpp"
+
+#include "rendereditorcommand.hpp"
+#include "ringbuffer.hpp"
 
 #include "editorcontext.h"
 #include "editorstateparameters.h"
 #include "editorstates.h"
 #include "editorvisualstate.hpp"
-#include "inputhandler.hpp"
 #include "isystem.hpp"
 
 #include "systemstartoptions.hpp"
@@ -21,7 +25,6 @@
 
 #include <cstdlib>
 #include <memory>
-#include <queue>
 #include <sstream>
 #include <string>
 
@@ -36,24 +39,27 @@ using namespace CrookedEditor::Components;
 using namespace Rendering::Commands;
 
 struct TextEditor::Impl{
-    API::SystemID SID;
+    TextEditorVisualState visualState{};
     Events::RequestBus* requestBus;
 
     std::string fileName;
     std::unique_ptr<EditorContext> context;
 
-    std::queue<int> inputQueue;
+    Queues::RingBuffer<int, 256> inputBuffer;
+
     std::stringstream inputStream;
+    std::function<void(int)> inputListener = [&](int input){ 
+        inputBuffer.Push(input);
+    };
 
-    TextEditorVisualState visualState{};
-
+    Events::ResultBatch batch;
     Impl(API::SystemID& SID, Events::RequestBus* requestBus)
-        : SID(SID), requestBus(requestBus){}
+        : requestBus(requestBus){}
 
     API::SystemStartOptions Start(){
-        auto request = requestBus->SendRequest<API::ConfigGetValue>("fileName");
+        auto request = requestBus->SendRequest<API::ConfigGetValue>(API::FileArgName);
         if(request.has_value()){
-            fileName = std::get<const char*>(request.value()); 
+            fileName = std::get<std::string>(request.value()); 
         } else {
             fileName = "newfile.txt";
         }
@@ -61,19 +67,15 @@ struct TextEditor::Impl{
         context = std::make_unique<EditorContext>(BufferFileInterpreter{}, 
             DefaultStates<NormalState, InsertState>{}, fileName);
 
-        requestBus->ListenForEvent<InputCaptured>([&](int input){
-            inputQueue.push(input);
-        });
+        batch = requestBus->ListenForEvent<API::InputCaptured>(inputListener);
+        batch.Log<API::RuntimeLog>(*requestBus);
 
         return API::SystemStartOptions{.SeperateThread = true};
     }
 
     bool Update(){
         int key;
-        while(!inputQueue.empty()){
-            key = inputQueue.front();
-            inputQueue.pop();
-
+        while(inputBuffer.Consume(key)){
             if(key != API::NoInput)
                 inputStream << static_cast<char>(key);
         }
@@ -82,7 +84,7 @@ struct TextEditor::Impl{
         inputStream.str("");
 
         if(context->quit){
-            requestBus->SendRequest<API::RuntimeQuit>();
+            batch = requestBus->SendRequest<API::RuntimeQuit>();
         }
 
         auto response = requestBus->SendRequest<API::TermGetSize>();
@@ -91,12 +93,16 @@ struct TextEditor::Impl{
             size = response.value();
  
         Renderer::RenderEditorCommand renderEditorCommand{*context->buffer, visualState, size.first, size.second};
-        requestBus->SendRequest<API::PublishRenderCommand>(std::move(renderEditorCommand));
+        batch = requestBus->SendRequest<API::PublishRenderCommand>(std::move(renderEditorCommand));
+        batch.Log<API::RuntimeLog>(*requestBus);
 
         return false;
     }
 
-    void Stop(API::SystemTerminateReasons reasons){}
+    void Stop(API::SystemTerminateReasons reasons){
+        batch = requestBus->RemoveEventListener<API::InputCaptured>(inputListener);
+        batch.Log<API::RuntimeLog>(*requestBus);
+    }
 };
 
 TextEditor::TextEditor() : API::ISystem(){};

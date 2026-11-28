@@ -6,6 +6,8 @@
 #include <iostream>
 #include <utility>
 
+#include "resultbatch.hpp"
+#include "runtimeevents.hpp"
 #include "terminalenviormentevents.hpp"
 
 using namespace CrookedEditor::Runtime;
@@ -37,72 +39,93 @@ TerminalEnviorment::TerminalEnviorment(Events::RequestBus& requestBus)
         throw;
     }
 
-    requestBus.AddRequest<API::TermGetSize>([&](){
+    Events::ResultBatch batch;
+    batch = requestBus.AddRequest<API::TermGetSize>([&](){
        return GetTerminalSize();
     });
 
-    requestBus.AddRequest<API::TermGetStartSyncOutEsc>([&](){
+    batch = requestBus.AddRequest<API::TermGetStartSyncOutEsc>([&](){
         return DECSET;
     });
 
-    requestBus.AddRequest<API::TermGetEndSyncOutEsc>([&](){
+    batch = requestBus.AddRequest<API::TermGetEndSyncOutEsc>([&](){
         return DECRST;
     });
 
-    requestBus.AddRequest<API::TermGetHideCursorEsc>([&](){
+    batch = requestBus.AddRequest<API::TermGetHideCursorEsc>([&](){
         return HIDE_CURSOR;
     });
 
-    requestBus.AddRequest<API::TermGetShowCursorEsc>([&](){
+    batch = requestBus.AddRequest<API::TermGetShowCursorEsc>([&](){
         return SHOW_CURSOR;
     });
 
-    requestBus.AddRequest<API::TermGetMoveCursorEsc>([&](int row, int col){
+    batch = requestBus.AddRequest<API::TermGetMoveCursorEsc>([&](int row, int col){
         return std::format("\e[{};{}H", row, col);
     });
 
-    requestBus.AddRequest<API::TermGetForgroundColorEsc>([&](unsigned char r, unsigned char g, unsigned char b){
+    batch = requestBus.AddRequest<API::TermGetForgroundColorEsc>([&](unsigned char r, unsigned char g, unsigned char b){
         return std::format("\e[38;2;{};{};{}m", r, g, b);
     });
 
-    requestBus.AddRequest<API::TermDisplayStream>([&](const std::ostringstream& stream){
+    batch = requestBus.AddRequest<API::TermDisplayStream>([&](const std::ostringstream& stream){
         InstantStreamToSTDOut(stream);
     });
 
-    requestBus.AddRequest<API::TermEnterRawMode>([&](){
+    batch = requestBus.AddRequest<API::TermEnterRawMode>([&](){
         EnterRawMode();
     });
 
-    requestBus.AddRequest<API::TermExitRawMode>([&](){
+    batch = requestBus.AddRequest<API::TermExitRawMode>([&](){
         ExitRawMode();
     });
 
-    requestBus.AddRequest<API::TermEnterAlternateScreen>([&](){
+    batch = requestBus.AddRequest<API::TermEnterAlternateScreen>([&](){
         EnterAlternateScreen();
     });
 
-    requestBus.AddRequest<API::TermExitAlternateScreen>([&](){
+    batch = requestBus.AddRequest<API::TermExitAlternateScreen>([&](){
         ExitAlternteScreen();
     });
 
-    requestBus.AddRequest<API::TermHideCursor>([&](){
+    batch = requestBus.AddRequest<API::TermHideCursor>([&](){
         HideCursor();
     });
 
-    requestBus.AddRequest<API::TermShowCursor>([&](){
+    batch = requestBus.AddRequest<API::TermShowCursor>([&](){
         ShowCursor();
     });
 
-    requestBus.AddRequest<API::TermMoveCursor>([&](int x, int y){
+    batch = requestBus.AddRequest<API::TermMoveCursor>([&](int x, int y){
         MoveCursor(x, y);
     });
 
-    requestBus.AddRequest<API::TermClearScreen>([&](){
+    batch = requestBus.AddRequest<API::TermClearScreen>([&](){
         ClearScreen();
     });
+    batch.Log<API::RuntimeLog>(requestBus);
 }
 
 TerminalEnviorment::~TerminalEnviorment(){
+    Events::ResultBatch batch;
+    batch = requestBus.RemoveRequest<API::TermGetSize>();
+    batch = requestBus.RemoveRequest<API::TermGetStartSyncOutEsc>();
+    batch = requestBus.RemoveRequest<API::TermGetEndSyncOutEsc>();
+    batch = requestBus.RemoveRequest<API::TermGetHideCursorEsc>();
+    batch = requestBus.RemoveRequest<API::TermGetShowCursorEsc>();
+    batch = requestBus.RemoveRequest<API::TermGetMoveCursorEsc>();
+    batch = requestBus.RemoveRequest<API::TermGetForgroundColorEsc>();
+    batch = requestBus.RemoveRequest<API::TermDisplayStream>();
+    batch = requestBus.RemoveRequest<API::TermEnterRawMode>();
+    batch = requestBus.RemoveRequest<API::TermExitRawMode>();
+    batch = requestBus.RemoveRequest<API::TermEnterAlternateScreen>();
+    batch = requestBus.RemoveRequest<API::TermExitAlternateScreen>();
+    batch = requestBus.RemoveRequest<API::TermHideCursor>();
+    batch = requestBus.RemoveRequest<API::TermShowCursor>();
+    batch = requestBus.RemoveRequest<API::TermMoveCursor>();
+    batch = requestBus.RemoveRequest<API::TermClearScreen>();
+    batch.Log<API::RuntimeLog>(requestBus);
+
     ExitRawMode();
     ExitAlternteScreen();
 }
